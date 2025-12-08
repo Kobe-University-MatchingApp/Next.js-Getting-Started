@@ -102,7 +102,16 @@ export default function CreateEventPage() {
             languages: selectedLanguages,
         };
         console.log('イベント作成:', submitData);
-        // ここでAPIにデータを送信
+
+        // TODO(DB): 将来ここで /api/events に POST して MySQL などのDBに保存する
+        // 例:
+        // await fetch('/api/events', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify(submitData),
+        // });
+
+        // 現時点ではデモのためアラートのみ
         alert('イベントが作成されました！');
     };
 
