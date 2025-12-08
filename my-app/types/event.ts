@@ -4,7 +4,8 @@ export interface Event {
     description: string;
     category: EventCategory;
     date: string;
-    time: string;
+    dayOfWeek: string; // 'mon', 'tue', 'wed', 'thu', 'fri'
+    period: number; // 1-5 (1コマ90分固定)
     location: string;
     maxParticipants: number;
     currentParticipants: number;
@@ -32,7 +33,8 @@ export interface EventFormData {
     description: string;
     category: EventCategory;
     date: string;
-    time: string;
+    dayOfWeek: string;
+    period: number;
     location: string;
     maxParticipants: number;
     fee?: number;
