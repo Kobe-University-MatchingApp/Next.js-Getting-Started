@@ -24,10 +24,15 @@ const sampleEvents: { [key: string]: Event } = {
             name: '山田 太郎',
             avatar:
                 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+            rating: { average: 4.5, count: 32 },
         },
         images: [
             'https://images.unsplash.com/photo-1521017432531-fbd92d768814?w=800&h=600&fit=crop',
         ],
+        introvertExtrovertStats: {
+            introvertCount: 5,
+            extrovertCount: 3,
+        },
         tags: ['初心者歓迎', 'カフェ', '気軽'],
     },
     '2': {
@@ -48,10 +53,15 @@ const sampleEvents: { [key: string]: Event } = {
             name: 'キム ミンジ',
             avatar:
                 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop',
+            rating: { average: 4.8, count: 20 },
         },
         images: [
             'https://images.unsplash.com/photo-1498654896293-37aacf113fd9?w=800&h=600&fit=crop',
         ],
+        introvertExtrovertStats: {
+            introvertCount: 6,
+            extrovertCount: 6,
+        },
         tags: ['料理', '韓国文化', '食事付き'],
     },
     '3': {
@@ -72,10 +82,15 @@ const sampleEvents: { [key: string]: Event } = {
             name: '佐藤 花子',
             avatar:
                 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
+            rating: { average: 4.7, count: 15 },
         },
         images: [
             'https://images.unsplash.com/photo-1528164344705-47542687000d?w=800&h=600&fit=crop',
         ],
+        introvertExtrovertStats: {
+            introvertCount: 4,
+            extrovertCount: 6,
+        },
         tags: ['着物', '観光', '写真撮影'],
     },
     '4': {
@@ -96,10 +111,15 @@ const sampleEvents: { [key: string]: Event } = {
             name: '田中 健太',
             avatar:
                 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop',
+            rating: { average: 4.2, count: 25 },
         },
         images: [
             'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=800&h=600&fit=crop',
         ],
+        introvertExtrovertStats: {
+            introvertCount: 8,
+            extrovertCount: 12,
+        },
         tags: ['スポーツ', '運動', 'チームワーク'],
     },
     '5': {
@@ -120,10 +140,15 @@ const sampleEvents: { [key: string]: Event } = {
             name: '鈴木 一郎',
             avatar:
                 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop',
+            rating: { average: 4.9, count: 40 },
         },
         images: [
             'https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=800&h=600&fit=crop',
         ],
+        introvertExtrovertStats: {
+            introvertCount: 10,
+            extrovertCount: 12,
+        },
         tags: ['観光', '富士山', 'バスツアー'],
     },
     '6': {
@@ -144,10 +169,15 @@ const sampleEvents: { [key: string]: Event } = {
             name: '王 麗',
             avatar:
                 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
+            rating: { average: 4.6, count: 18 },
         },
         images: [
             'https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=800&h=600&fit=crop',
         ],
+        introvertExtrovertStats: {
+            introvertCount: 2,
+            extrovertCount: 6,
+        },
         tags: ['お茶', '文化', 'リラックス'],
     },
 };
@@ -239,6 +269,14 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
                     <div>
                         <p className="text-xs text-gray-500">主催者</p>
                         <p className="font-medium text-gray-800">{event.organizer.name}</p>
+                        {event.organizer.rating && (
+                            <p className="text-xs text-yellow-500 flex items-center gap-1 mt-0.5">
+                                <span>★ {event.organizer.rating.average.toFixed(1)}</span>
+                                <span className="text-gray-400">
+                                    ({event.organizer.rating.count}件)
+                                </span>
+                            </p>
+                        )}
                     </div>
                 </div>
             </div>
@@ -365,6 +403,69 @@ export default function EventDetailPage({ params }: { params: { id: string } }) 
                         </div>
                     </div>
                 </div>
+
+                {/* I / E 分布 */}
+                {event.introvertExtrovertStats && (
+                    <div className="flex items-start gap-3">
+                        <svg
+                            className="w-5 h-5 text-purple-500 mt-0.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                            />
+                        </svg>
+                        <div className="flex-1">
+                            <p className="text-sm text-gray-500 mb-2">参加者のI/Eバランス</p>
+                            {(() => {
+                                const { introvertCount, extrovertCount } =
+                                    event.introvertExtrovertStats!;
+                                const total = introvertCount + extrovertCount || 1;
+                                const introPercent = Math.round(
+                                    (introvertCount / total) * 100
+                                );
+                                const extroPercent = 100 - introPercent;
+                                return (
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-14 text-xs font-medium text-gray-700">
+                                                Introvert
+                                            </span>
+                                            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-2 bg-purple-500"
+                                                    style={{ width: `${introPercent}%` }}
+                                                />
+                                            </div>
+                                            <span className="w-10 text-right text-xs text-gray-600">
+                                                {introPercent}%
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-14 text-xs font-medium text-gray-700">
+                                                Extrovert
+                                            </span>
+                                            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-2 bg-pink-500"
+                                                    style={{ width: `${extroPercent}%` }}
+                                                />
+                                            </div>
+                                            <span className="w-10 text-right text-xs text-gray-600">
+                                                {extroPercent}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* イベント説明 */}

@@ -133,16 +133,27 @@ const categories: (EventCategory | '全て')[] = [
 ];
 
 export default function FindEventsPage() {
+    const [events, setEvents] = useState<Event[]>(sampleEvents);
     const [selectedCategory, setSelectedCategory] = useState<EventCategory | '全て'>('全て');
     const [searchQuery, setSearchQuery] = useState('');
 
-    const filteredEvents = sampleEvents.filter((event) => {
+    const handleDelete = (id: string) => {
+        if (!confirm('このイベントを削除しますか？')) return;
+        setEvents((prev) => prev.filter((e) => e.id !== id));
+    };
+
+    const handleEdit = (id: string) => {
+        alert(`イベント「${id}」の編集画面はまだ実装されていません（デモ）`);
+    };
+
+    const filteredEvents = events.filter((event) => {
         const matchesCategory =
             selectedCategory === '全て' || event.category === selectedCategory;
+        const q = searchQuery.toLowerCase();
         const matchesSearch =
-            event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            event.tags?.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+            event.title.toLowerCase().includes(q) ||
+            event.description.toLowerCase().includes(q) ||
+            event.tags?.some((tag) => tag.toLowerCase().includes(q));
         return matchesCategory && matchesSearch;
     });
 
@@ -207,8 +218,11 @@ export default function FindEventsPage() {
             {/* イベント一覧 */}
             <div className="space-y-2 mx-2 pb-4">
                 {filteredEvents.map((event) => (
-                    <Link key={event.id} href={`/find/${event.id}`}>
-                        <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-3">
+                    <div
+                        key={event.id}
+                        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-3"
+                    >
+                        <Link href={`/find/${event.id}`} className="block">
                             {/* タイトルとカテゴリー */}
                             <div className="flex items-start justify-between mb-2">
                                 <h3 className="text-sm font-bold text-gray-800 line-clamp-2 flex-1">
@@ -234,28 +248,52 @@ export default function FindEventsPage() {
                                     <span className="line-clamp-1">{event.location}</span>
                                 </div>
                             </div>
+                        </Link>
 
-                            {/* 下部情報 */}
-                            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                                <div className="flex items-center gap-2">
-                                    <img src={event.organizer.avatar} alt={event.organizer.name} className="w-5 h-5 rounded-full" />
-                                    <span className="text-xs text-gray-600 truncate max-w-[100px]">{event.organizer.name}</span>
+                        {/* 下部情報 + 操作ボタン */}
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-100 mt-2">
+                            <div className="flex items-center gap-2">
+                                <img
+                                    src={event.organizer.avatar}
+                                    alt={event.organizer.name}
+                                    className="w-5 h-5 rounded-full"
+                                />
+                                <span className="text-xs text-gray-600 truncate max-w-[100px]">
+                                    {event.organizer.name}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="flex gap-0.5">
+                                    {event.languages.slice(0, 2).map((lang) => (
+                                        <span
+                                            key={lang}
+                                            className="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-xs"
+                                        >
+                                            {lang}
+                                        </span>
+                                    ))}
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="flex gap-0.5">
-                                        {event.languages.slice(0, 2).map((lang) => (
-                                            <span key={lang} className="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-xs">
-                                                {lang}
-                                            </span>
-                                        ))}
-                                    </div>
-                                    <span className="text-xs font-bold text-purple-600">
-                                        {event.fee ? `¥${event.fee.toLocaleString()}` : '無料'}
-                                    </span>
-                                </div>
+                                <span className="text-xs font-bold text-purple-600 mr-1">
+                                    {event.fee ? `¥${event.fee.toLocaleString()}` : '無料'}
+                                </span>
+                                {/* 編集・削除ボタン（デモ用） */}
+                                <button
+                                    type="button"
+                                    onClick={() => handleEdit(event.id)}
+                                    className="px-2 py-1 text-[10px] border border-gray-300 rounded text-gray-600 hover:bg-gray-50"
+                                >
+                                    編集
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleDelete(event.id)}
+                                    className="px-2 py-1 text-[10px] border border-red-300 text-red-500 rounded hover:bg-red-50"
+                                >
+                                    削除
+                                </button>
                             </div>
                         </div>
-                    </Link>
+                    </div>
                 ))}
             </div>
 

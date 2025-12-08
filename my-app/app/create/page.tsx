@@ -20,6 +20,7 @@ const availableLanguages = [
     'スペイン語',
     'フランス語',
     'ドイツ語',
+    'ポルトガル語',
     'その他',
 ];
 
@@ -34,11 +35,13 @@ export default function CreateEventPage() {
         maxParticipants: 10,
         fee: 0,
         languages: [],
+        images: [],
         tags: [],
     });
 
     const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState('');
+    const [imageInput, setImageInput] = useState('');
 
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -72,6 +75,23 @@ export default function CreateEventPage() {
         setFormData((prev) => ({
             ...prev,
             tags: prev.tags?.filter((t) => t !== tag),
+        }));
+    };
+
+    const addImage = () => {
+        if (imageInput.trim()) {
+            setFormData((prev) => ({
+                ...prev,
+                images: [...(prev.images || []), imageInput.trim()],
+            }));
+            setImageInput('');
+        }
+    };
+
+    const removeImage = (url: string) => {
+        setFormData((prev) => ({
+            ...prev,
+            images: prev.images?.filter((img) => img !== url),
         }));
     };
 
@@ -240,6 +260,49 @@ export default function CreateEventPage() {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-none text-sm"
                         required
                     />
+                </div>
+
+                {/* 画像URL */}
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                        画像URL（任意・複数可）
+                    </label>
+                    <div className="flex gap-1.5 mb-2">
+                        <input
+                            type="url"
+                            value={imageInput}
+                            onChange={(e) => setImageInput(e.target.value)}
+                            onKeyPress={(e) =>
+                                e.key === 'Enter' && (e.preventDefault(), addImage())
+                            }
+                            placeholder="https://example.com/image.jpg"
+                            className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
+                        />
+                        <button
+                            type="button"
+                            onClick={addImage}
+                            className="px-4 py-1.5 bg-purple-500 text-white rounded-lg text-xs font-medium"
+                        >
+                            追加
+                        </button>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                        {formData.images?.map((url) => (
+                            <span
+                                key={url}
+                                className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-[10px] flex items-center gap-1 max-w-full"
+                            >
+                                <span className="truncate max-w-[140px]">{url}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => removeImage(url)}
+                                    className="text-gray-500 hover:text-gray-700"
+                                >
+                                    ×
+                                </button>
+                            </span>
+                        ))}
+                    </div>
                 </div>
 
                 {/* タグ */}
