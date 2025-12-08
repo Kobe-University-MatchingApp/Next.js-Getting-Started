@@ -103,6 +103,28 @@ export default function CreateEventPage() {
         };
         console.log('イベント作成:', submitData);
 
+        // 一時対応: localStorage に保存して /find から読めるようにする（ブラウザ単位）
+        try {
+            const key = 'userEvents';
+            const raw = typeof window !== 'undefined' ? window.localStorage.getItem(key) : null;
+            const prev: any[] = raw ? JSON.parse(raw) : [];
+            // 簡易ID発行（本番ではサーバー側で行う）
+            const newId = `local-${Date.now()}`;
+            const newEvent = {
+                id: newId,
+                currentParticipants: 0,
+                organizer: {
+                    id: 'local-organizer',
+                    name: '未設定',
+                    avatar: 'https://via.placeholder.com/40?text=U',
+                },
+                ...submitData,
+            };
+            window.localStorage.setItem(key, JSON.stringify([...prev, newEvent]));
+        } catch (err) {
+            console.error('localStorageへの保存に失敗しました', err);
+        }
+
         // TODO(DB): 将来ここで /api/events に POST して MySQL などのDBに保存する
         // 例:
         // await fetch('/api/events', {

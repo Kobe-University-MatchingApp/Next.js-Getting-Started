@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Event, EventCategory } from '@/types/event';
 import Link from 'next/link';
 
@@ -137,9 +137,44 @@ export default function FindEventsPage() {
     const [selectedCategory, setSelectedCategory] = useState<EventCategory | '全て'>('全て');
     const [searchQuery, setSearchQuery] = useState('');
 
+    useEffect(() => {
+        // 一時対応: /create で保存した localStorage のイベントを読み込む
+        try {
+            const key = 'userEvents';
+            const raw = typeof window !== 'undefined' ? window.localStorage.getItem(key) : null;
+            const userEvents: Event[] = raw ? JSON.parse(raw) : [];
+
+            if (userEvents.length > 0) {
+                // 既存のsampleEventsと結合（IDが重複しない前提）
+                setEvents((prev) => {
+                    const existingIds = new Set(prev.map((e) => e.id));
+                    const merged = [
+                        ...prev,
+                        ...userEvents.filter((e) => !existingIds.has(e.id)),
+                    ];
+                    return merged;
+                });
+            }
+        } catch (err) {
+            console.error('localStorageからのイベント読込に失敗しました', err);
+        }
+    }, []);
+
     const handleDelete = (id: string) => {
         if (!confirm('このイベントを削除しますか？')) return;
         setEvents((prev) => prev.filter((e) => e.id !== id));
+
+        // TODO(DB): 将来ここで /api/events/:id に DELETE を投げる
+        // いまは localStorage の userEvents も同期的に削除しておく
+        try {
+            const key = 'userEvents';
+            const raw = typeof window !== 'undefined' ? window.localStorage.getItem(key) : null;
+            const userEvents: Event[] = raw ? JSON.parse(raw) : [];
+            const next = userEvents.filter((e) => e.id !== id);
+            window.localStorage.setItem(key, JSON.stringify(next));
+        } catch (err) {
+            console.error('localStorageの削除同期に失敗しました', err);
+        }
     };
 
     const handleEdit = (id: string) => {
@@ -253,14 +288,22 @@ export default function FindEventsPage() {
                         {/* 下部情報 + 操作ボタン */}
                         <div className="flex items-center justify-between pt-2 border-t border-gray-100 mt-2">
                             <div className="flex items-center gap-2">
-                                <img
-                                    src={event.organizer.avatar}
-                                    alt={event.organizer.name}
-                                    className="w-5 h-5 rounded-full"
-                                />
-                                <span className="text-xs text-gray-600 truncate max-w-[100px]">
-                                    {event.organizer.name}
-                                </span>
+                                {event.organizer ? (
+                                    <>
+                                        <img
+                                            src={event.organizer.avatar}
+                                            alt={event.organizer.name}
+                                            className="w-5 h-5 rounded-full"
+                                        />
+                                        <span className="text-xs text-gray-600 truncate max-w-[100px]">
+                                            {event.organizer.name}
+                                        </span>
+                                    </>
+                                ) : (
+                                    <span className="text-xs text-gray-400">
+                                        主催者: N/A
+                                    </span>
+                                )}
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="flex gap-0.5">
