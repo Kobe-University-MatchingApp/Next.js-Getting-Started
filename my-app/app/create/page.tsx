@@ -29,7 +29,8 @@ export default function CreateEventPage() {
         description: '',
         category: '言語交換',
         date: '',
-        time: '',
+        dayOfWeek: '',
+        period: 1,
         location: '',
         maxParticipants: 10,
         fee: 0,
@@ -46,7 +47,7 @@ export default function CreateEventPage() {
         const { name, value } = e.target;
         setFormData((prev) => ({
             ...prev,
-            [name]: name === 'maxParticipants' || name === 'fee' ? Number(value) : value,
+            [name]: name === 'maxParticipants' || name === 'fee' || name === 'period' ? Number(value) : value,
         }));
     };
 
@@ -137,7 +138,7 @@ export default function CreateEventPage() {
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         開催日時 <span className="text-red-500">*</span>
                     </label>
-                    <div className="grid grid-cols-2 gap-2 mb-3">
+                    <div className="grid grid-cols-3 gap-2 mb-3">
                         <input
                             type="date"
                             name="date"
@@ -146,14 +147,34 @@ export default function CreateEventPage() {
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
                             required
                         />
-                        <input
-                            type="time"
-                            name="time"
-                            value={formData.time}
+                        <select
+                            name="dayOfWeek"
+                            value={formData.dayOfWeek}
                             onChange={handleInputChange}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
                             required
-                        />
+                        >
+                            <option value="">曜日</option>
+                            <option value="mon">月</option>
+                            <option value="tue">火</option>
+                            <option value="wed">水</option>
+                            <option value="thu">木</option>
+                            <option value="fri">金</option>
+                        </select>
+                        <select
+                            name="period"
+                            value={formData.period}
+                            onChange={handleInputChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
+                            required
+                        >
+                            <option value="">時限</option>
+                            <option value="1">1限</option>
+                            <option value="2">2限</option>
+                            <option value="3">3限</option>
+                            <option value="4">4限</option>
+                            <option value="5">5限</option>
+                        </select>
                     </div>
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         場所 <span className="text-red-500">*</span>
