@@ -1,7 +1,7 @@
 import { getProfile } from '@/lib/profile';
 
 export default async function ProfilePage() {
-    const profile = await getProfile();
+    const profile = await getProfile('John Smith'); // 例として 'John Smith' のプロフィールを取得
 
     if (!profile) {
         return <div className="p-10 text-center text-gray-500">プロフィールが見つかりませんでした。</div>;
@@ -126,4 +126,4 @@ export default async function ProfilePage() {
         </div>
 
     );
-}   
+}

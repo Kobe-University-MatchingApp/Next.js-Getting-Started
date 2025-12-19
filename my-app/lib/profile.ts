@@ -1,12 +1,12 @@
 import { supabase } from '@/lib/supabaseClient';
 import { Profile } from '@/types/profile';
 
-export async function getProfile() {
+export async function getProfile(name: String): Promise<Profile | null> {
     // 'profiles'テーブルからデータを1件取得
     const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('name', 'John Smith') // ★ここを追加！名前で検索します
+        .eq('name', name) // ★ここを追加！名前で検索します
         .single(); // .limit(1) の代わりに .single() だけでOK（1件に絞っているため）
 
 
