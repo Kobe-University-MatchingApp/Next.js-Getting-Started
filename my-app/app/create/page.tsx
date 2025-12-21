@@ -2,6 +2,53 @@
 
 import { useState } from 'react';
 import { EventCategory, EventFormData } from '@/types/event';
+import { createClient } from '@supabase/supabase-js';
+
+// NOTE(DB/Supabase placeholder):
+// We will use Supabase Postgres (not MySQL). Supabase provides:
+// - SQL editor (DDL/DML similar to your example)
+// - JS client for queries from Next.js
+//
+// TODO(DB): When the team is ready, add and use a shared client like:
+// import { createClient } from '@supabase/supabase-js';
+// const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+//
+// Example (DDL) in Supabase SQL editor:
+// create schema if not exists create_event;
+// create table create_event.created_data (
+//   id uuid primary key default gen_random_uuid(),
+//   title text not null,
+//   category text not null,
+//   event_date date not null,
+//   event_time text not null,
+//   location text not null,
+//   max_participants int not null,
+//   fee int not null default 0,
+//   languages text[] not null default '{}',
+//   description text not null,
+//   tags text[] not null default '{}',
+//   images text[] not null default '{}',
+//   created_at timestamptz not null default now()
+// );
+//
+// Example (insert) from this page later:
+// await supabase.schema('create_event').from('created_data').insert({
+//   title, category, event_date: date, event_time: time, location,
+//   max_participants: maxParticipants,
+//   fee, languages, description, tags, images,
+// });
+//
+// Example (update/delete) later:
+// await supabase.schema('create_event').from('created_data').update({ title: 'New' }).eq('id', eventId);
+// await supabase.schema('create_event').from('created_data').delete().eq('id', eventId);
+
+// Supabase client (client-side)
+// IMPORTANT:
+// - In Next.js client components, only NEXT_PUBLIC_* env vars are available.
+// - Use the anon key for client-side inserts (RLS must allow it) or move writes to an API route.
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 const categories: EventCategory[] = [
     '言語交換',
@@ -43,6 +90,14 @@ export default function CreateEventPage() {
     const [tagInput, setTagInput] = useState('');
     const [imageInput, setImageInput] = useState('');
 
+    // images are not part of EventFormData in this repo snapshot, so keep separate state
+    const [images, setImages] = useState<string[]>([]);
+    const [imageInput, setImageInput] = useState('');
+
+    // images are not part of EventFormData in this repo snapshot, so keep separate state
+    const [images, setImages] = useState<string[]>([]);
+    const [imageInput, setImageInput] = useState('');
+
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
     ) => {
@@ -79,16 +134,30 @@ export default function CreateEventPage() {
     };
 
     const addImage = () => {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         if (imageInput.trim()) {
             setFormData((prev) => ({
                 ...prev,
                 images: [...(prev.images || []), imageInput.trim()],
             }));
+=======
+        const next = imageInput.trim();
+        if (next && !images.includes(next)) {
+            setImages((prev) => [...prev, next]);
+>>>>>>> Stashed changes
+=======
+        const next = imageInput.trim();
+        if (next && !images.includes(next)) {
+            setImages((prev) => [...prev, next]);
+>>>>>>> Stashed changes
             setImageInput('');
         }
     };
 
     const removeImage = (url: string) => {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         setFormData((prev) => ({
             ...prev,
             images: prev.images?.filter((img) => img !== url),
@@ -96,13 +165,30 @@ export default function CreateEventPage() {
     };
 
     const handleSubmit = (e: React.FormEvent) => {
+=======
+=======
+>>>>>>> Stashed changes
+        setImages((prev) => prev.filter((img) => img !== url));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
         e.preventDefault();
+
         const submitData = {
             ...formData,
             languages: selectedLanguages,
+            tags: formData.tags || [],
+            images,
         };
+
         console.log('イベント作成:', submitData);
 
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         // 一時対応: localStorage に保存して /find から読めるようにする（ブラウザ単位）
         try {
             const key = 'userEvents';
@@ -135,6 +221,43 @@ export default function CreateEventPage() {
 
         // 現時点ではデモのためアラートのみ
         alert('イベントが作成されました！');
+=======
+=======
+>>>>>>> Stashed changes
+        if (!supabase) {
+            alert('Supabaseの設定が見つかりません（環境変数を確認してください）');
+            return;
+        }
+
+        const { error } = await supabase
+            .schema('create_event')
+            .from('created_data')
+            .insert({
+                title: submitData.title,
+                category: submitData.category,
+                event_date: submitData.date,
+                event_time: submitData.time,
+                location: submitData.location,
+                description: submitData.description,
+                max_participants: submitData.maxParticipants,
+                fee: submitData.fee ?? 0,
+                current_participants: 0,
+                languages: submitData.languages,
+                tags: submitData.tags,
+                images: submitData.images,
+            });
+
+        if (error) {
+            console.error('Supabase insert error:', error);
+            alert(`保存に失敗しました: ${error.message}`);
+            return;
+        }
+
+        alert('イベントが作成されました！（Supabaseに保存しました）');
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
     };
 
     return (
@@ -303,9 +426,17 @@ export default function CreateEventPage() {
                             type="url"
                             value={imageInput}
                             onChange={(e) => setImageInput(e.target.value)}
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
                             onKeyPress={(e) =>
                                 e.key === 'Enter' && (e.preventDefault(), addImage())
                             }
+=======
+                            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addImage())}
+>>>>>>> Stashed changes
+=======
+                            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addImage())}
+>>>>>>> Stashed changes
                             placeholder="https://example.com/image.jpg"
                             className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
                         />
@@ -318,7 +449,15 @@ export default function CreateEventPage() {
                         </button>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
                         {formData.images?.map((url) => (
+=======
+                        {images.map((url) => (
+>>>>>>> Stashed changes
+=======
+                        {images.map((url) => (
+>>>>>>> Stashed changes
                             <span
                                 key={url}
                                 className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-[10px] flex items-center gap-1 max-w-full"
