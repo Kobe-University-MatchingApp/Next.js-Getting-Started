@@ -1,241 +1,136 @@
 'use client';
 
-<<<<<<< Updated upstream
-import { useState, useEffect } from 'react';
-=======
 import { useState } from 'react';
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-import { Event, EventCategory } from '@/types/event';
+import { EventCategory } from '@/types/event'; // Eventのインポートは不要になります
 import Link from 'next/link';
+import { sampleEvents } from '@/data/events'; // ★ここを変更：外部ファイルから読み込み
 
-// サンプルデータ
-const sampleEvents: Event[] = [
-    {
-        id: '1',
-        title: '日本語&英語で話そう！カフェ交流会',
-        description: '渋谷のおしゃれなカフェで、日本語と英語を使って楽しく交流しましょう！初心者の方も大歓迎です。お茶を飲みながらリラックスした雰囲気で異文化交流を楽しみましょう。',
-        category: '言語交換',
-        date: '2025-12-15',
-        time: '14:00',
-        location: '渋谷カフェ スターバックス 渋谷店',
-        maxParticipants: 15,
-        currentParticipants: 8,
-        fee: 500,
-        languages: ['日本語', '英語'],
-        organizer: {
-            id: 'u1',
-            name: '山田 太郎',
-            avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
-        },
-        tags: ['初心者歓迎', 'カフェ', '気軽'],
-    },
-    {
-        id: '2',
-        title: '韓国料理を作ろう！料理教室',
-        description: '本場の韓国料理を一緒に作りましょう！キムチチゲとチヂミを作ります。料理しながら韓国の文化についても学べます。',
-        category: '料理体験',
-        date: '2025-12-20',
-        time: '18:00',
-        location: '新宿クッキングスタジオ',
-        maxParticipants: 12,
-        currentParticipants: 5,
-        fee: 3000,
-        languages: ['日本語', '韓国語'],
-        organizer: {
-            id: 'u2',
-            name: 'キム ミンジ',
-            avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop',
-        },
-        tags: ['料理', '韓国文化', '食事付き'],
-    },
-    {
-        id: '3',
-        title: '着物体験＆浅草散策',
-        description: '日本の伝統文化、着物を体験してみませんか？着付けから写真撮影、浅草の観光まで楽しめます。外国の方大歓迎！',
-        category: '文化体験',
-        date: '2025-12-22',
-        time: '10:00',
-        location: '浅草 着物レンタル店',
-        maxParticipants: 10,
-        currentParticipants: 7,
-        fee: 4000,
-        languages: ['日本語', '英語', '中国語'],
-        organizer: {
-            id: 'u3',
-            name: '佐藤 花子',
-            avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-        },
-        tags: ['着物', '観光', '写真撮影'],
-    },
-    {
-        id: '4',
-        title: 'サッカーで国際交流！',
-        description: '国籍関係なく、サッカーを通じて友達を作りましょう！初心者から経験者まで大歓迎。試合後は懇親会もあります。',
-        category: 'スポーツ',
-        date: '2025-12-18',
-        time: '16:00',
-        location: '代々木公園 フットサルコート',
-        maxParticipants: 20,
-        currentParticipants: 15,
-        fee: 1000,
-        languages: ['日本語', '英語', 'スペイン語'],
-        organizer: {
-            id: 'u4',
-            name: '田中 健太',
-            avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop',
-        },
-        tags: ['スポーツ', '運動', 'チームワーク'],
-    },
-    {
-        id: '5',
-        title: '富士山日帰りツアー',
-        description: '日本のシンボル、富士山を見に行きましょう！日帰りバスツアーで、富士五湖周辺を観光します。写真スポットもたくさん！',
-        category: '観光',
-        date: '2025-12-25',
-        time: '07:00',
-        location: '新宿駅西口 集合',
-        maxParticipants: 30,
-        currentParticipants: 22,
-        fee: 8000,
-        languages: ['日本語', '英語'],
-        organizer: {
-            id: 'u5',
-            name: '鈴木 一郎',
-            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop',
-        },
-        tags: ['観光', '富士山', 'バスツアー'],
-    },
-    {
-        id: '6',
-        title: '中国茶会で文化交流',
-        description: '本格的な中国茶を楽しみながら、中国の文化や歴史について語り合いましょう。お茶菓子も用意しています。',
-        category: 'その他',
-        date: '2025-12-28',
-        time: '15:00',
-        location: '銀座 中国茶カフェ',
-        maxParticipants: 8,
-        currentParticipants: 3,
-        fee: 2000,
-        languages: ['日本語', '中国語'],
-        organizer: {
-            id: 'u6',
-            name: '王 麗',
-            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
-        },
-        tags: ['お茶', '文化', 'リラックス'],
-    },
-];
-
-const categories: (EventCategory | '全て')[] = [
-    '全て',
-    '言語交換',
-    '料理体験',
-    '文化体験',
-    'スポーツ',
-    '観光',
-    'その他',
-];
+// サンプルデータは data/events.ts に移動しました
 
 export default function FindEventsPage() {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    const [events, setEvents] = useState<Event[]>(sampleEvents);
-    const [selectedCategory, setSelectedCategory] = useState<EventCategory | '全て'>('全て');
     const [searchQuery, setSearchQuery] = useState('');
+    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+    const [filters, setFilters] = useState({
+        location: '',
+        timeSlots: [] as string[], // 'mon-1', 'tue-2'などの形式
+        minParticipants: null as number | null,
+        maxParticipants: null as number | null,
+        languages: [] as string[],
+        tags: [] as string[],
+        maxFee: null as number | null,
+    });
 
-    useEffect(() => {
-        // 一時対応: /create で保存した localStorage のイベントを読み込む
-        try {
-            const key = 'userEvents';
-            const raw = typeof window !== 'undefined' ? window.localStorage.getItem(key) : null;
-            const userEvents: Event[] = raw ? JSON.parse(raw) : [];
+    // 利用可能な選択肢
+    const availableLocations = ['食堂', 'スターバックス', 'ラーニングコモンズ', '学生会館', '教室'];
+    const availableLanguages = ['日本語', '英語', '中国語', '韓国語', 'スペイン語'];
+    const availableTags = ['カフェ', '料理', '音楽', '映画', '読書', '写真', 'スポーツ', 'アウトドア', '旅行', 'アート', 'ファッション'];
 
-            if (userEvents.length > 0) {
-                // 既存のsampleEventsと結合（IDが重複しない前提）
-                setEvents((prev) => {
-                    const existingIds = new Set(prev.map((e) => e.id));
-                    const merged = [
-                        ...prev,
-                        ...userEvents.filter((e) => !existingIds.has(e.id)),
-                    ];
-                    return merged;
-                });
-            }
-        } catch (err) {
-            console.error('localStorageからのイベント読込に失敗しました', err);
-        }
-    }, []);
+    // 時間割の定義
+    const daysOfWeek = [
+        { id: 'mon', label: '月' },
+        { id: 'tue', label: '火' },
+        { id: 'wed', label: '水' },
+        { id: 'thu', label: '木' },
+        { id: 'fri', label: '金' },
+    ];
 
-    const handleDelete = (id: string) => {
-        if (!confirm('このイベントを削除しますか？')) return;
-        setEvents((prev) => prev.filter((e) => e.id !== id));
+    const periods = [
+        { id: 1, label: '1限', time: '09:00-10:30' },
+        { id: 2, label: '2限', time: '10:40-12:10' },
+        { id: 3, label: '3限', time: '13:10-14:40' },
+        { id: 4, label: '4限', time: '14:50-16:20' },
+        { id: 5, label: '5限', time: '16:30-18:00' },
+    ];
 
-        // TODO(DB): 将来ここで /api/events/:id に DELETE を投げる
-        // いまは localStorage の userEvents も同期的に削除しておく
-        try {
-            const key = 'userEvents';
-            const raw = typeof window !== 'undefined' ? window.localStorage.getItem(key) : null;
-            const userEvents: Event[] = raw ? JSON.parse(raw) : [];
-            const next = userEvents.filter((e) => e.id !== id);
-            window.localStorage.setItem(key, JSON.stringify(next));
-        } catch (err) {
-            console.error('localStorageの削除同期に失敗しました', err);
-        }
+    // 時限選択のトグル
+    const toggleTimeSlot = (dayId: string, periodId: number) => {
+        const slotId = `${dayId}-${periodId}`;
+        const newSlots = filters.timeSlots.includes(slotId)
+            ? filters.timeSlots.filter(s => s !== slotId)
+            : [...filters.timeSlots, slotId];
+        setFilters({ ...filters, timeSlots: newSlots });
     };
 
-    const handleEdit = (id: string) => {
-        alert(`イベント「${id}」の編集画面はまだ実装されていません（デモ）`);
+    // アクティブなフィルター数を計算
+    const activeFilterCount = [
+        filters.location,
+        filters.timeSlots.length > 0,
+        filters.minParticipants,
+        filters.maxParticipants,
+        filters.languages.length > 0,
+        filters.tags.length > 0,
+        filters.maxFee !== null,
+    ].filter(Boolean).length;
+
+    // フィルターをクリア
+    const clearFilter = (key: string) => {
+        setFilters({ ...filters, [key]: key === 'languages' || key === 'tags' || key === 'timeSlots' ? [] : key === 'minParticipants' || key === 'maxParticipants' || key === 'maxFee' ? null : '' });
     };
 
-    const filteredEvents = events.filter((event) => {
-        const matchesCategory =
-            selectedCategory === '全て' || event.category === selectedCategory;
-        const q = searchQuery.toLowerCase();
-        const matchesSearch =
-            event.title.toLowerCase().includes(q) ||
-            event.description.toLowerCase().includes(q) ||
-            event.tags?.some((tag) => tag.toLowerCase().includes(q));
-=======
-    const [selectedCategory, setSelectedCategory] = useState<EventCategory | '全て'>('全て');
-    const [searchQuery, setSearchQuery] = useState('');
-=======
-    const [selectedCategory, setSelectedCategory] = useState<EventCategory | '全て'>('全て');
-    const [searchQuery, setSearchQuery] = useState('');
->>>>>>> Stashed changes
+    const clearAllFilters = () => {
+        setFilters({
+            location: '',
+            timeSlots: [],
+            minParticipants: null,
+            maxParticipants: null,
+            languages: [],
+            tags: [],
+            maxFee: null,
+        });
+    };
+
+    // 時間の長さのラベル
+    const getDurationLabel = (minutes: number) => {
+        const hours = Math.floor(minutes / 60);
+        return `${hours}時間以内`;
+    };
+
+    // 予算のラベル
+    const getFeeLabel = (fee: number) => {
+        if (fee === 0) return '無料';
+        return `¥${fee.toLocaleString()}以下`;
+    };
 
     const filteredEvents = sampleEvents.filter((event) => {
-        const matchesCategory =
-            selectedCategory === '全て' || event.category === selectedCategory;
         const matchesSearch =
             event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            event.tags?.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-        return matchesCategory && matchesSearch;
+            event.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+        const matchesLocation = !filters.location || event.location.includes(filters.location);
+
+        // 時限フィルタ: 選択された時限とイベントの時限が一致するかチェック
+        const eventSlot = `${event.dayOfWeek}-${event.period}`;
+        const matchesTimeSlots = filters.timeSlots.length === 0 || filters.timeSlots.includes(eventSlot);
+
+        const matchesMinParticipants = !filters.minParticipants || event.maxParticipants >= filters.minParticipants;
+        const matchesMaxParticipants = !filters.maxParticipants || event.maxParticipants <= filters.maxParticipants;
+        const matchesLanguages = filters.languages.length === 0 ||
+            filters.languages.some(lang => event.languages.includes(lang));
+        const matchesTags = filters.tags.length === 0 ||
+            filters.tags.some(tag => event.tags?.includes(tag));
+        const matchesFee = filters.maxFee === null || (event.fee || 0) <= filters.maxFee;
+
+        return matchesSearch && matchesLocation && matchesTimeSlots &&
+            matchesMinParticipants && matchesMaxParticipants && matchesLanguages &&
+            matchesTags && matchesFee;
     });
 
     return (
-        <div className="py-3 space-y-3">
+        <div className="py-3 space-y-3 bg-gray-50 min-h-screen">
             {/* ヘッダー */}
-            <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
-                <h1 className="text-lg font-bold text-gray-800">イベント検索</h1>
+            <div className="bg-white border-b border-gray-200 p-4 mx-0">
+                <h1 className="text-xl font-bold text-gray-900">イベント検索</h1>
             </div>
 
             {/* 検索バー */}
-            <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+            <div className="bg-white border-b border-gray-200 p-3 mx-0">
                 <div className="relative">
                     <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="検索..."
-                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
+                        placeholder="イベントを検索"
+                        className="w-full pl-9 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-none text-sm"
                     />
                     <svg
                         className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
@@ -253,23 +148,329 @@ export default function FindEventsPage() {
                 </div>
             </div>
 
-            {/* カテゴリーフィルター */}
-            <div className="overflow-x-auto mx-2">
-                <div className="flex gap-1.5 pb-2">
-                    {categories.map((category) => (
+            {/* 選択中のフィルターと絞り込みボタン */}
+            <div className="mx-2">
+                <div className="flex items-center gap-2 overflow-x-auto pb-2">
+                    {/* 絞り込みボタン */}
+                    <button
+                        onClick={() => setIsFilterModalOpen(true)}
+                        className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                        絞り込み
+                        {activeFilterCount > 0 && (
+                            <span className="bg-white text-blue-600 px-1.5 py-0.5 rounded-md text-xs font-bold">
+                                {activeFilterCount}
+                            </span>
+                        )}
+                    </button>
+
+                    {/* すべてクリアボタン */}
+                    {activeFilterCount > 0 && (
                         <button
-                            key={category}
-                            onClick={() => setSelectedCategory(category)}
-                            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${selectedCategory === category
-                                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                                : 'bg-white text-gray-700 shadow-sm'
-                                }`}
+                            onClick={clearAllFilters}
+                            className="flex-shrink-0 px-3 py-2 bg-gray-200 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-300 transition-colors"
                         >
-                            {category}
+                            クリア
+                        </button>
+                    )}
+
+                    {/* 場所フィルター */}
+                    {filters.location && (
+                        <button
+                            onClick={() => clearFilter('location')}
+                            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
+                        >
+                            {filters.location}
+                            <span className="text-gray-400">×</span>
+                        </button>
+                    )}
+
+                    {/* 開始時間フィルター */}
+                    {filters.timeSlots.length > 0 && filters.timeSlots.map(slot => {
+                        const [dayId, periodId] = slot.split('-');
+                        const day = daysOfWeek.find(d => d.id === dayId);
+                        const period = periods.find(p => p.id === Number(periodId));
+                        return (
+                            <button
+                                key={slot}
+                                onClick={() => toggleTimeSlot(dayId, Number(periodId))}
+                                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
+                            >
+                                {day?.label}{period?.label}
+                                <span className="text-gray-400">×</span>
+                            </button>
+                        );
+                    })}
+
+                    {/* 最小人数フィルター */}
+                    {filters.minParticipants && (
+                        <button
+                            onClick={() => clearFilter('minParticipants')}
+                            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
+                        >
+                            {filters.minParticipants}人以上
+                            <span className="text-gray-400">×</span>
+                        </button>
+                    )}
+
+                    {/* 最大人数フィルター */}
+                    {filters.maxParticipants && (
+                        <button
+                            onClick={() => clearFilter('maxParticipants')}
+                            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
+                        >
+                            {filters.maxParticipants}人以下
+                            <span className="text-gray-400">×</span>
+                        </button>
+                    )}
+
+                    {/* 言語フィルター */}
+                    {filters.languages.map(lang => (
+                        <button
+                            key={lang}
+                            onClick={() => {
+                                const newLangs = filters.languages.filter(l => l !== lang);
+                                setFilters({ ...filters, languages: newLangs });
+                            }}
+                            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
+                        >
+                            {lang}
+                            <span className="text-gray-400">×</span>
                         </button>
                     ))}
+
+                    {/* タグフィルター */}
+                    {filters.tags.map(tag => (
+                        <button
+                            key={tag}
+                            onClick={() => {
+                                const newTags = filters.tags.filter(t => t !== tag);
+                                setFilters({ ...filters, tags: newTags });
+                            }}
+                            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
+                        >
+                            {tag}
+                            <span className="text-gray-400">×</span>
+                        </button>
+                    ))}
+
+                    {/* 予算フィルター */}
+                    {filters.maxFee !== null && (
+                        <button
+                            onClick={() => clearFilter('maxFee')}
+                            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
+                        >
+                            {getFeeLabel(filters.maxFee)}
+                            <span className="text-gray-400">×</span>
+                        </button>
+                    )}
                 </div>
             </div>
+
+            {/* 絞り込みモーダル */}
+            {isFilterModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end">
+                    <div className="bg-white w-full rounded-t-2xl max-h-[80vh] overflow-y-auto">
+                        {/* モーダルヘッダー */}
+                        <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+                            <h2 className="text-lg font-bold text-gray-800">絞り込み</h2>
+                            <button
+                                onClick={() => setIsFilterModalOpen(false)}
+                                className="p-1 hover:bg-gray-100 rounded-full"
+                            >
+                                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* フィルターコンテンツ */}
+                        <div className="p-4 space-y-4">
+                            {/* 場所 */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">場所</label>
+                                <select
+                                    value={filters.location}
+                                    onChange={(e) => setFilters({ ...filters, location: e.target.value })}
+                                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                                >
+                                    <option value="">すべて</option>
+                                    {availableLocations.map(loc => (
+                                        <option key={loc} value={loc}>{loc}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* 開講時限 */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">開講時限</label>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full border-collapse">
+                                        <thead>
+                                            <tr>
+                                                <th className="border border-gray-300 bg-gray-50 p-2 text-xs font-medium text-gray-600"></th>
+                                                {daysOfWeek.map(day => (
+                                                    <th key={day.id} className="border border-gray-300 bg-gray-50 p-2 text-xs font-medium text-gray-700">
+                                                        {day.label}
+                                                    </th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {periods.map(period => (
+                                                <tr key={period.id}>
+                                                    <td className="border border-gray-300 bg-gray-50 p-2 text-xs font-medium text-gray-600 whitespace-nowrap">
+                                                        {period.label}
+                                                        <div className="text-[10px] text-gray-500">{period.time}</div>
+                                                    </td>
+                                                    {daysOfWeek.map(day => {
+                                                        const slotId = `${day.id}-${period.id}`;
+                                                        const isSelected = filters.timeSlots.includes(slotId);
+                                                        return (
+                                                            <td key={day.id} className="border border-gray-300 p-0">
+                                                                <button
+                                                                    onClick={() => toggleTimeSlot(day.id, period.id)}
+                                                                    className={`w-full h-12 transition-colors ${isSelected
+                                                                        ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                                                                        : 'bg-white hover:bg-gray-50 text-gray-700'
+                                                                        }`}
+                                                                >
+                                                                    {isSelected && (
+                                                                        <svg className="w-5 h-5 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                                                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                                        </svg>
+                                                                    )}
+                                                                </button>
+                                                            </td>
+                                                        );
+                                                    })}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {/* 時間の長さ */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">時間の長さ</label>
+                                <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">
+                                    1コマ(90分)
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">すべてのイベントは1コマ分です</p>
+                            </div>
+
+                            {/* 人数 */}
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-700 mb-1">最小人数</label>
+                                    <input
+                                        type="number"
+                                        value={filters.minParticipants || ''}
+                                        onChange={(e) => setFilters({ ...filters, minParticipants: e.target.value ? Number(e.target.value) : null })}
+                                        placeholder="指定なし"
+                                        className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-700 mb-1">最大人数</label>
+                                    <input
+                                        type="number"
+                                        value={filters.maxParticipants || ''}
+                                        onChange={(e) => setFilters({ ...filters, maxParticipants: e.target.value ? Number(e.target.value) : null })}
+                                        placeholder="指定なし"
+                                        className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* 言語 */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">会話言語</label>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {availableLanguages.map(lang => (
+                                        <button
+                                            key={lang}
+                                            onClick={() => {
+                                                const newLangs = filters.languages.includes(lang)
+                                                    ? filters.languages.filter(l => l !== lang)
+                                                    : [...filters.languages, lang];
+                                                setFilters({ ...filters, languages: newLangs });
+                                            }}
+                                            className={`px-2 py-1 rounded-full text-xs font-medium transition-all ${filters.languages.includes(lang)
+                                                ? 'bg-purple-500 text-white'
+                                                : 'bg-gray-100 text-gray-700'
+                                                }`}
+                                        >
+                                            {lang}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* 趣味タグ */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">趣味タグ</label>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {availableTags.map(tag => (
+                                        <button
+                                            key={tag}
+                                            onClick={() => {
+                                                const newTags = filters.tags.includes(tag)
+                                                    ? filters.tags.filter(t => t !== tag)
+                                                    : [...filters.tags, tag];
+                                                setFilters({ ...filters, tags: newTags });
+                                            }}
+                                            className={`px-2 py-1 rounded-full text-xs font-medium transition-all ${filters.tags.includes(tag)
+                                                ? 'bg-pink-500 text-white'
+                                                : 'bg-gray-100 text-gray-700'
+                                                }`}
+                                        >
+                                            {tag}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* 予算 */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">予算(最大)</label>
+                                <select
+                                    value={filters.maxFee || ''}
+                                    onChange={(e) => setFilters({ ...filters, maxFee: e.target.value ? Number(e.target.value) : null })}
+                                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                                >
+                                    <option value="">指定なし</option>
+                                    <option value="0">無料</option>
+                                    <option value="1000">¥1,000以下</option>
+                                    <option value="3000">¥3,000以下</option>
+                                    <option value="5000">¥5,000以下</option>
+                                    <option value="10000">¥10,000以下</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* モーダルフッター */}
+                        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 flex gap-3">
+                            <button
+                                onClick={clearAllFilters}
+                                className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                            >
+                                クリア
+                            </button>
+                            <button
+                                onClick={() => setIsFilterModalOpen(false)}
+                                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                            >
+                                適用
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* イベント件数 */}
             <div className="mx-2">
@@ -279,138 +480,54 @@ export default function FindEventsPage() {
             </div>
 
             {/* イベント一覧 */}
-            <div className="space-y-2 mx-2 pb-4">
+            <div className="space-y-0 mx-0 pb-20">
                 {filteredEvents.map((event) => (
-<<<<<<< Updated upstream
-                    <div
-                        key={event.id}
-                        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-3"
-                    >
-                        <Link href={`/find/${event.id}`} className="block">
-=======
                     <Link key={event.id} href={`/find/${event.id}`}>
-                        <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-3">
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+                        <div className="bg-white border-b border-gray-200 hover:bg-gray-50 transition-colors p-4">
                             {/* タイトルとカテゴリー */}
-                            <div className="flex items-start justify-between mb-2">
-                                <h3 className="text-sm font-bold text-gray-800 line-clamp-2 flex-1">
+                            <div className="flex items-start justify-between mb-3">
+                                <h3 className="text-base font-semibold text-gray-900 line-clamp-2 flex-1">
                                     {event.title}
                                 </h3>
-                                <span className="ml-2 px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-medium whitespace-nowrap">
+                                <span className="ml-3 px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium whitespace-nowrap">
                                     {event.category}
                                 </span>
                             </div>
 
                             {/* 日時・場所 */}
-                            <div className="space-y-1 text-xs text-gray-600 mb-2">
-                                <div className="flex items-center gap-1.5">
-                                    <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                    <span>{event.date} {event.time}</span>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                    <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                    </svg>
-                                    <span className="line-clamp-1">{event.location}</span>
-                                </div>
-                            </div>
-                        </Link>
-
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-                        {/* 下部情報 + 操作ボタン */}
-                        <div className="flex items-center justify-between pt-2 border-t border-gray-100 mt-2">
-                            <div className="flex items-center gap-2">
-                                {event.organizer ? (
-                                    <>
-                                        <img
-                                            src={event.organizer.avatar}
-                                            alt={event.organizer.name}
-                                            className="w-5 h-5 rounded-full"
-                                        />
-                                        <span className="text-xs text-gray-600 truncate max-w-[100px]">
-                                            {event.organizer.name}
-                                        </span>
-                                    </>
-                                ) : (
-                                    <span className="text-xs text-gray-400">
-                                        主催者: N/A
+                            <div className="space-y-1.5 text-sm text-gray-600 mb-3">
+                                <div className="flex items-center gap-2">
+                                    <span className="font-medium text-gray-700">📅</span>
+                                    <span>
+                                        {event.date} · {daysOfWeek.find(d => d.id === event.dayOfWeek)?.label}曜{periods.find(p => p.id === event.period)?.label} ({periods.find(p => p.id === event.period)?.time})
                                     </span>
-                                )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="font-medium text-gray-700">📍</span>
+                                    <span>{event.location}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="font-medium text-gray-700">👥</span>
+                                    <span>{event.currentParticipants}/{event.maxParticipants}人</span>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <div className="flex gap-0.5">
+
+                            {/* 下部情報 */}
+                            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                                <div className="flex items-center gap-2">
+                                    <img src={event.organizer.avatar} alt={event.organizer.name} className="w-6 h-6 rounded-full" />
+                                    <span className="text-sm text-gray-600">{event.organizer.name}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
                                     {event.languages.slice(0, 2).map((lang) => (
-                                        <span
-                                            key={lang}
-                                            className="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-xs"
-                                        >
+                                        <span key={lang} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
                                             {lang}
                                         </span>
                                     ))}
-=======
-=======
->>>>>>> Stashed changes
-                            {/* 下部情報 */}
-                            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                                <div className="flex items-center gap-2">
-                                    <img src={event.organizer.avatar} alt={event.organizer.name} className="w-5 h-5 rounded-full" />
-                                    <span className="text-xs text-gray-600 truncate max-w-[100px]">{event.organizer.name}</span>
-<<<<<<< Updated upstream
-=======
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="flex gap-0.5">
-                                        {event.languages.slice(0, 2).map((lang) => (
-                                            <span key={lang} className="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-xs">
-                                                {lang}
-                                            </span>
-                                        ))}
-                                    </div>
-                                    <span className="text-xs font-bold text-purple-600">
-                                        {event.fee ? `¥${event.fee.toLocaleString()}` : '無料'}
-                                    </span>
->>>>>>> Stashed changes
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="flex gap-0.5">
-                                        {event.languages.slice(0, 2).map((lang) => (
-                                            <span key={lang} className="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-xs">
-                                                {lang}
-                                            </span>
-                                        ))}
-                                    </div>
-                                    <span className="text-xs font-bold text-purple-600">
-                                        {event.fee ? `¥${event.fee.toLocaleString()}` : '無料'}
-                                    </span>
->>>>>>> Stashed changes
-                                </div>
-                                <span className="text-xs font-bold text-purple-600 mr-1">
-                                    {event.fee ? `¥${event.fee.toLocaleString()}` : '無料'}
-                                </span>
-                                {/* 編集・削除ボタン（デモ用） */}
-                                <button
-                                    type="button"
-                                    onClick={() => handleEdit(event.id)}
-                                    className="px-2 py-1 text-[10px] border border-gray-300 rounded text-gray-600 hover:bg-gray-50"
-                                >
-                                    編集
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => handleDelete(event.id)}
-                                    className="px-2 py-1 text-[10px] border border-red-300 text-red-500 rounded hover:bg-red-50"
-                                >
-                                    削除
-                                </button>
                             </div>
                         </div>
-                    </div>
+                    </Link>
                 ))}
             </div>
 
