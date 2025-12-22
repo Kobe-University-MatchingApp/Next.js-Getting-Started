@@ -118,9 +118,6 @@ export default function CreateEventPage() {
             time,
         };
 
-        console.log('イベント作成:', submitData);
-
-        // If env vars are not set, keep it as a demo / no-op.
         if (!supabase) {
             alert(
                 'Supabaseの設定が見つかりません（.env.local の NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY を確認してください）'
@@ -128,20 +125,37 @@ export default function CreateEventPage() {
             return;
         }
 
+        // shared schema: date is text
+        const dateTimeText = submitData.date
+            ? `${submitData.date}${submitData.time ? ` ${submitData.time}` : ''}`
+            : '';
+
+        // schema allows null, but keep defaults for now
+        const dayOfWeek = 'mon';
+        const period = 1;
+
+        // shared schema: id is text PK with no default
+        const id = String(Date.now());
+
         const { error } = await supabase
-            .schema('create_event')
-            .from('created_data')
+            .schema('public')
+            .from('events')
             .insert({
+                id,
                 title: submitData.title,
-                category: submitData.category,
-                event_date: submitData.date,
-                event_time: submitData.time,
-                location: submitData.location,
                 description: submitData.description,
-                max_participants: submitData.maxParticipants,
+                category: submitData.category,
+                date: dateTimeText,
+                dayofweek: dayOfWeek,
+                period,
+                location: submitData.location,
+                maxparticipants: submitData.maxParticipants,
+                currentparticipants: 0,
                 fee: submitData.fee ?? 0,
-                current_participants: 0,
                 languages: submitData.languages,
+                organizer_id: null,
+                organizer_name: '未設定',
+                organizer_avatar: '',
                 tags: submitData.tags,
                 images: submitData.images,
             });
@@ -152,7 +166,7 @@ export default function CreateEventPage() {
             return;
         }
 
-        alert('イベントが作成されました！（Supabaseに保存しました）');
+        alert(`イベントが作成されました！（id=${id}）`);
     };
 
     return (
