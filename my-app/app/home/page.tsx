@@ -1,3 +1,7 @@
+'use client';
+
+import EventCard from '@/app/components/EventCard';
+
 export default function HomePage() {
     return (
         <div className="py-3 space-y-3">
@@ -10,11 +14,14 @@ export default function HomePage() {
             {/* マッチング結果 */}
             <div className="bg-white rounded-lg shadow-sm p-4 mx-2">
                 <h2 className="text-lg font-semibold text-gray-800 mb-2">マッチングしたおすすめなイベント</h2>
+                {/* イベントカードコンポーネントを利用して表示 */}
             </div>
 
             {/* 予約済みイベント */}
             <div className="bg-white rounded-lg shadow-sm p-4 mx-2">
                 <h2 className="text-lg font-semibold text-gray-800 mb-2">予約済みイベント</h2>
+                {/* イベントカードコンポーネントを利用して表示 */}
+
             </div>
         </div>
     );
