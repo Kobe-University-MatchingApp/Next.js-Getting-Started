@@ -1,13 +1,10 @@
 -- Supabase (PostgreSQL) schema for the "events" feature
 -- Run this in Supabase Dashboard -> SQL Editor
-<<<<<<< Updated upstream
-=======
 --
 -- Notes:
 -- - Supabase uses Postgres; prefer `public` schema.
 -- - Arrays are used for languages/tags/images for simplicity.
 -- - Rating + I/E stats are stored as summary fields (can be derived later).
->>>>>>> Stashed changes
 
 -- Enable pgcrypto for gen_random_uuid() (often enabled by default in Supabase)
 create extension if not exists "pgcrypto";
