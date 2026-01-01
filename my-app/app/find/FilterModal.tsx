@@ -14,6 +14,7 @@ interface FilterModalProps {
     };
     setFilters: (filters: any) => void;
     clearAllFilters: () => void;
+    resultCount: number;
 }
 
 export default function FilterModal({
@@ -22,6 +23,7 @@ export default function FilterModal({
     filters,
     setFilters,
     clearAllFilters,
+    resultCount,
 }: FilterModalProps) {
     // 利用可能な選択肢
     const availableLocations = ['食堂', 'スターバックス', 'ラーニングコモンズ', '学生会館', '教室'];
@@ -61,7 +63,9 @@ export default function FilterModal({
             <div className="bg-white w-full rounded-t-2xl max-h-[95vh] overflow-y-auto mb-0">
                 {/* モーダルヘッダー */}
                 <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
-                    <h2 className="text-lg font-bold text-gray-800">絞り込み</h2>
+                    <div>
+                        <h2 className="text-lg font-bold text-gray-800">絞り込み</h2>
+                    </div>
                     <button
                         onClick={onClose}
                         className="p-1 hover:bg-gray-100 rounded-full"
@@ -239,18 +243,18 @@ export default function FilterModal({
                 </div>
 
                 {/* モーダルフッター */}
-                <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 flex gap-3">
+                <div className="sticky bottom-0 bg-white border-t border-gray-200 flex gap-3 h-16 items-center px-4">
                     <button
                         onClick={clearAllFilters}
-                        className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                        className="flex-1 h-10 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
                     >
                         クリア
                     </button>
                     <button
                         onClick={onClose}
-                        className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                        className="flex-1 h-10 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                     >
-                        適用
+                        {resultCount}件を表示
                     </button>
                 </div>
             </div>

@@ -14,6 +14,8 @@ export default function FindEventsClient({ initialEvents }: FindEventsClientProp
     const [searchQuery, setSearchQuery] = useState('');
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const { setIsModalOpen } = useModal();
+    const [showFloatingButton, setShowFloatingButton] = useState(true);
+    const [lastScrollY, setLastScrollY] = useState(0);
     const [filters, setFilters] = useState({
         location: '',
         timeSlots: [] as string[], // 'mon-1', 'tue-2'などの形式
@@ -83,6 +85,29 @@ export default function FindEventsClient({ initialEvents }: FindEventsClientProp
         setIsModalOpen(isFilterModalOpen);
     }, [isFilterModalOpen, setIsModalOpen]);
 
+    // スクロール方向を検知してフローティングボタンの表示を制御
+    useEffect(() => {
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY;
+
+            if (currentScrollY < 10) {
+                // 最上部付近では常に表示
+                setShowFloatingButton(true);
+            } else if (currentScrollY > lastScrollY) {
+                // 下スクロール時は非表示
+                setShowFloatingButton(false);
+            } else {
+                // 上スクロール時は表示
+                setShowFloatingButton(true);
+            }
+
+            setLastScrollY(currentScrollY);
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [lastScrollY]);
+
     // 予算のラベル
     const getFeeLabel = (fee: number) => {
         if (fee === 0) return '無料';
@@ -146,127 +171,123 @@ export default function FindEventsClient({ initialEvents }: FindEventsClientProp
                 </div>
             </div>
 
-            {/* 選択中のフィルターと絞り込みボタン */}
-            <div className="mx-2">
-                <div className="flex items-center gap-2 overflow-x-auto pb-2">
-                    {/* 絞り込みボタン */}
-                    <button
-                        onClick={() => setIsFilterModalOpen(true)}
-                        className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                        </svg>
-                        絞り込み
-                        {activeFilterCount > 0 && (
-                            <span className="bg-white text-blue-600 px-1.5 py-0.5 rounded-md text-xs font-bold">
-                                {activeFilterCount}
-                            </span>
-                        )}
-                    </button>
-
-                    {/* すべてクリアボタン */}
-                    {activeFilterCount > 0 && (
+            {/* 選択中のフィルター */}
+            {activeFilterCount > 0 && (
+                <div className="mx-2">
+                    <div className="flex items-center gap-2 overflow-x-auto pb-2">
+                        {/* すべてクリアボタン */}
                         <button
                             onClick={clearAllFilters}
                             className="flex-shrink-0 px-3 py-2 bg-gray-200 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-300 transition-colors"
                         >
                             クリア
                         </button>
-                    )}
 
-                    {/* 場所フィルター */}
-                    {filters.location && (
-                        <button
-                            onClick={() => clearFilter('location')}
-                            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
-                        >
-                            {filters.location}
-                            <span className="text-gray-400">×</span>
-                        </button>
-                    )}
-
-                    {/* 開始時間フィルター */}
-                    {filters.timeSlots.length > 0 && filters.timeSlots.map(slot => {
-                        const [dayId, periodId] = slot.split('-');
-                        const day = daysOfWeek.find(d => d.id === dayId);
-                        const period = periods.find(p => p.id === Number(periodId));
-                        return (
+                        {/* 場所フィルター */}
+                        {filters.location && (
                             <button
-                                key={slot}
-                                onClick={() => toggleTimeSlot(dayId, Number(periodId))}
+                                onClick={() => clearFilter('location')}
                                 className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
                             >
-                                {day?.label}{period?.label}
+                                {filters.location}
                                 <span className="text-gray-400">×</span>
                             </button>
-                        );
-                    })}
+                        )}
 
-                    {/* 最小人数フィルター */}
-                    {filters.minParticipants && (
-                        <button
-                            onClick={() => clearFilter('minParticipants')}
-                            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
-                        >
-                            {filters.minParticipants}人以上
-                            <span className="text-gray-400">×</span>
-                        </button>
-                    )}
+                        {/* 開始時間フィルター */}
+                        {filters.timeSlots.length > 0 && filters.timeSlots.map(slot => {
+                            const [dayId, periodId] = slot.split('-');
+                            const day = daysOfWeek.find(d => d.id === dayId);
+                            const period = periods.find(p => p.id === Number(periodId));
+                            return (
+                                <button
+                                    key={slot}
+                                    onClick={() => toggleTimeSlot(dayId, Number(periodId))}
+                                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
+                                >
+                                    {day?.label}{period?.label}
+                                    <span className="text-gray-400">×</span>
+                                </button>
+                            );
+                        })}
 
-                    {/* 最大人数フィルター */}
-                    {filters.maxParticipants && (
-                        <button
-                            onClick={() => clearFilter('maxParticipants')}
-                            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
-                        >
-                            {filters.maxParticipants}人以下
-                            <span className="text-gray-400">×</span>
-                        </button>
-                    )}
+                        {/* 最小人数フィルター */}
+                        {filters.minParticipants && (
+                            <button
+                                onClick={() => clearFilter('minParticipants')}
+                                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
+                            >
+                                {filters.minParticipants}人以上
+                                <span className="text-gray-400">×</span>
+                            </button>
+                        )}
 
-                    {/* 言語フィルター */}
-                    {filters.languages.map(lang => (
-                        <button
-                            key={lang}
-                            onClick={() => {
-                                const newLangs = filters.languages.filter(l => l !== lang);
-                                setFilters({ ...filters, languages: newLangs });
-                            }}
-                            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
-                        >
-                            {lang}
-                            <span className="text-gray-400">×</span>
-                        </button>
-                    ))}
+                        {/* 最大人数フィルター */}
+                        {filters.maxParticipants && (
+                            <button
+                                onClick={() => clearFilter('maxParticipants')}
+                                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
+                            >
+                                {filters.maxParticipants}人以下
+                                <span className="text-gray-400">×</span>
+                            </button>
+                        )}
 
-                    {/* タグフィルター */}
-                    {filters.tags.map(tag => (
-                        <button
-                            key={tag}
-                            onClick={() => {
-                                const newTags = filters.tags.filter(t => t !== tag);
-                                setFilters({ ...filters, tags: newTags });
-                            }}
-                            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
-                        >
-                            {tag}
-                            <span className="text-gray-400">×</span>
-                        </button>
-                    ))}
+                        {/* 言語フィルター */}
+                        {filters.languages.map(lang => (
+                            <button
+                                key={lang}
+                                onClick={() => {
+                                    const newLangs = filters.languages.filter(l => l !== lang);
+                                    setFilters({ ...filters, languages: newLangs });
+                                }}
+                                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
+                            >
+                                {lang}
+                                <span className="text-gray-400">×</span>
+                            </button>
+                        ))}
 
-                    {/* 予算フィルター */}
-                    {filters.maxFee !== null && (
-                        <button
-                            onClick={() => clearFilter('maxFee')}
-                            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
-                        >
-                            {getFeeLabel(filters.maxFee)}
-                            <span className="text-gray-400">×</span>
-                        </button>
-                    )}
+                        {/* タグフィルター */}
+                        {filters.tags.map(tag => (
+                            <button
+                                key={tag}
+                                onClick={() => {
+                                    const newTags = filters.tags.filter(t => t !== tag);
+                                    setFilters({ ...filters, tags: newTags });
+                                }}
+                                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
+                            >
+                                {tag}
+                                <span className="text-gray-400">×</span>
+                            </button>
+                        ))}
+
+                        {/* 予算フィルター */}
+                        {filters.maxFee !== null && (
+                            <button
+                                onClick={() => clearFilter('maxFee')}
+                                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
+                            >
+                                {getFeeLabel(filters.maxFee)}
+                                <span className="text-gray-400">×</span>
+                            </button>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
+
+            {/* フローティング絞り込みボタン */}
+            <button
+                onClick={() => setIsFilterModalOpen(true)}
+                className={`fixed bottom-20 right-4 z-40 flex items-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-full shadow-lg text-sm font-medium hover:bg-blue-700 transition-all duration-300 ${showFloatingButton ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16 pointer-events-none'
+                    }`}
+            >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                絞り込み
+            </button>
 
             {/* 絞り込みモーダル */}
             <FilterModal
@@ -275,14 +296,19 @@ export default function FindEventsClient({ initialEvents }: FindEventsClientProp
                 filters={filters}
                 setFilters={setFilters}
                 clearAllFilters={clearAllFilters}
+                resultCount={filteredEvents.length}
             />
 
             {/* イベント件数 */}
-            <div className="mx-2">
-                <p className="text-xs text-gray-600">
-                    {filteredEvents.length}件
-                </p>
-            </div>
+            {(filteredEvents.length !== initialEvents.length || activeFilterCount > 0) && (
+                <div className="mx-2 mb-2">
+                    <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold text-gray-900">
+                            {filteredEvents.length}件のイベント
+                        </p>
+                    </div>
+                </div>
+            )}
 
             {/* イベント一覧 */}
             <div className="space-y-0 mx-0 pb-20">
