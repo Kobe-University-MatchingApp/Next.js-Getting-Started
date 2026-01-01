@@ -1,18 +1,12 @@
 'use client';
 
+import { EventFilters } from './hooks/useEventFilters';
+
 interface FilterModalProps {
     isOpen: boolean;
     onClose: () => void;
-    filters: {
-        location: string;
-        timeSlots: string[];
-        minParticipants: number | null;
-        maxParticipants: number | null;
-        languages: string[];
-        tags: string[];
-        maxFee: number | null;
-    };
-    setFilters: (filters: any) => void;
+    filters: EventFilters;
+    setFilters: (filters: EventFilters) => void;
     clearAllFilters: () => void;
     resultCount: number;
 }
