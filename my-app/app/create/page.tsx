@@ -42,6 +42,8 @@ export default function CreateEventPage() {
         description: '',
         category: '言語交換',
         date: '',
+        dayOfWeek: '',
+        period: 1,
         location: '',
         maxParticipants: 10,
         fee: 0,
