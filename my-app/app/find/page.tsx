@@ -12,12 +12,8 @@ export default async function FindEventsPage() {
         // エラー時は空の配列を返す
         events = [];
     } else {
-        console.log('Supabaseから取得したデータ:', data);
         const rows = Array.isArray(data) ? data : [];
-        console.log('rows配列:', rows);
         events = rows.map((row: any) => {
-            console.log('マッピング中のrow:', row);
-
             // languagesとtagsがJSON文字列の場合はパースする
             let parsedLanguages: string[] = [];
             if (typeof row.languages === 'string') {
@@ -81,7 +77,6 @@ export default async function FindEventsPage() {
                 tags: parsedTags,
             }
         });
-        console.log('マッピング後のevents:', events);
     }
 
     return <FindEventsClient initialEvents={events} />;
