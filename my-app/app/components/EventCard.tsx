@@ -43,13 +43,15 @@ export default function EventCard({ event }: EventCardProps) {
                             {event.date} · {daysOfWeek.find(d => d.id === event.dayOfWeek)?.label}曜{periods.find(p => p.id === event.period)?.label} ({periods.find(p => p.id === event.period)?.time})
                         </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <span className="font-medium text-gray-700">📍</span>
-                        <span>{event.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className="font-medium text-gray-700">👥</span>
-                        <span>{event.currentParticipants}/{event.maxParticipants}人</span>
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <span className="font-medium text-gray-700">📍</span>
+                            <span>{event.location}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="font-medium text-gray-700">👥</span>
+                            <span>{event.currentParticipants}/{event.maxParticipants}人</span>
+                        </div>
                     </div>
                 </div>
 
