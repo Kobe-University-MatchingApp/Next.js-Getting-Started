@@ -16,9 +16,14 @@ export default async function ProfilePage() {
     };
 
     return (
-        <div className="space-y-3 py-3">
+        <div className="py-3 space-y-3 min-h-screen pb-20">
+            {/* ヘッダー */}
+            <div className="bg-white border-b border-gray-200 p-4 mx-0">
+                <h1 className="text-xl font-bold text-gray-900">プロフィール</h1>
+            </div>
+
             {/* プロフィール画像 */}
-            <div className="relative bg-white rounded-lg shadow-sm overflow-hidden mx-2">
+            <div className="relative bg-white border-b border-gray-200 overflow-hidden mx-0">
                 <div className="relative h-56">
                     <img
                         src={profile.images[0] || 'https://placehold.co/400x600?text=No+Image'}
@@ -40,12 +45,12 @@ export default async function ProfilePage() {
             </div>
 
             {/* 自己紹介 */}
-            <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+            <div className="bg-white border-b border-gray-200 p-4 mx-0">
                 <p className="text-sm text-gray-700 leading-relaxed line-clamp-3 whitespace-pre-wrap">{profile.bio}</p>
             </div>
 
             {/* 言語スキル */}
-            <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+            <div className="bg-white border-b border-gray-200 p-4 mx-0">
                 <h3 className="text-sm font-bold text-gray-800 mb-2">🌐 言語</h3>
                 <div className="flex flex-wrap gap-1.5">
                     <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">
@@ -63,7 +68,7 @@ export default async function ProfilePage() {
             </div>
 
             {/* 趣味・興味 */}
-            <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+            <div className="bg-white border-b border-gray-200 p-4 mx-0">
                 <h3 className="text-sm font-bold text-gray-800 mb-2">💫 趣味</h3>
                 <div className="flex flex-wrap gap-1.5">
                     {profile.interests?.map((interest, index) => (
@@ -75,7 +80,7 @@ export default async function ProfilePage() {
             </div>
 
             {/* 交流の目的 */}
-            <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+            <div className="bg-white border-b border-gray-200 p-4 mx-0">
                 <h3 className="text-sm font-bold text-gray-800 mb-2">🎯 交流の目的</h3>
                 <div className="flex flex-wrap gap-1.5">
                     {profile.exchangeGoals?.map((goal, index) => (
@@ -88,7 +93,7 @@ export default async function ProfilePage() {
 
             {/* 学習スタイル */}
             {profile.studyStyle && profile.studyStyle.length > 0 && (
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+                <div className="bg-white border-b border-gray-200 p-4 mx-0">
                     <h3 className="text-sm font-bold text-gray-800 mb-2">📖 学習スタイル</h3>
                     <div className="flex flex-wrap gap-1.5">
                         {profile.studyStyle.map((style, index) => (
@@ -102,7 +107,7 @@ export default async function ProfilePage() {
 
             {/* 参加可能な時間帯 */}
             {profile.availability && profile.availability.length > 0 && (
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+                <div className="bg-white border-b border-gray-200 p-4 mx-0">
                     <h3 className="text-sm font-bold text-gray-800 mb-2">🕐 参加可能時間</h3>
                     <div className="flex flex-wrap gap-1.5">
                         {profile.availability.map((time, index) => (
@@ -115,7 +120,7 @@ export default async function ProfilePage() {
             )}
 
             {/* アクションボタン */}
-            <div className="flex gap-2 mx-2 pb-4">
+            <div className="flex gap-2 mx-0 px-4 pb-4">
                 <button className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-lg font-bold text-sm">
                     💬 メッセージ
                 </button>

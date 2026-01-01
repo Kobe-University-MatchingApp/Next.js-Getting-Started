@@ -139,7 +139,7 @@ export default function FindEventsClient({ initialEvents }: FindEventsClientProp
     });
 
     return (
-        <div className="py-3 space-y-3 bg-gray-50 min-h-screen">
+        <div className="py-3 space-y-3 min-h-screen">
             {/* ヘッダー */}
             <div className="bg-white border-b border-gray-200 p-4 mx-0">
                 <h1 className="text-xl font-bold text-gray-900">イベント検索</h1>

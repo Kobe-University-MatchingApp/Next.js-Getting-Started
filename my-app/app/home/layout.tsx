@@ -1,4 +1,4 @@
-export default function ProfileLayout({
+export default function HomeLayout({
     children,
 }: {
     children: React.ReactNode;

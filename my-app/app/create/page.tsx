@@ -156,13 +156,14 @@ export default function CreateEventPage() {
     };
 
     return (
-        <div className="py-3 space-y-3">
-            <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
-                <h1 className="text-lg font-bold text-gray-800">イベント作成</h1>
+        <div className="py-3 space-y-3 min-h-screen pb-20">
+            {/* ヘッダー */}
+            <div className="bg-white border-b border-gray-200 p-4 mx-0">
+                <h1 className="text-xl font-bold text-gray-900">イベント作成</h1>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-3">
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+                <div className="bg-white border-b border-gray-200 p-4 mx-0">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         タイトル <span className="text-red-500">*</span>
                     </label>
@@ -177,7 +178,7 @@ export default function CreateEventPage() {
                     />
                 </div>
 
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+                <div className="bg-white border-b border-gray-200 p-4 mx-0">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         カテゴリー <span className="text-red-500">*</span>
                     </label>
@@ -187,11 +188,10 @@ export default function CreateEventPage() {
                                 key={category}
                                 type="button"
                                 onClick={() => setFormData((prev) => ({ ...prev, category }))}
-                                className={`py-2 px-2 rounded-lg text-xs font-medium transition-all ${
-                                    formData.category === category
-                                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                                        : 'bg-gray-100 text-gray-700'
-                                }`}
+                                className={`py-2 px-2 rounded-lg text-xs font-medium transition-all ${formData.category === category
+                                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                                    : 'bg-gray-100 text-gray-700'
+                                    }`}
                             >
                                 {category}
                             </button>
@@ -199,7 +199,7 @@ export default function CreateEventPage() {
                     </div>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+                <div className="bg-white border-b border-gray-200 p-4 mx-0">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         開催日時 <span className="text-red-500">*</span>
                     </label>
@@ -235,7 +235,7 @@ export default function CreateEventPage() {
                     />
                 </div>
 
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+                <div className="bg-white border-b border-gray-200 p-4 mx-0">
                     <div className="grid grid-cols-2 gap-2">
                         <div>
                             <label className="block text-xs font-bold text-gray-700 mb-1.5">
@@ -269,7 +269,7 @@ export default function CreateEventPage() {
                     </div>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+                <div className="bg-white border-b border-gray-200 p-4 mx-0">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         対応言語 <span className="text-red-500">*</span>
                     </label>
@@ -279,11 +279,10 @@ export default function CreateEventPage() {
                                 key={language}
                                 type="button"
                                 onClick={() => toggleLanguage(language)}
-                                className={`px-2 py-1 rounded text-xs font-medium transition-all ${
-                                    selectedLanguages.includes(language)
-                                        ? 'bg-blue-500 text-white'
-                                        : 'bg-gray-100 text-gray-700'
-                                }`}
+                                className={`px-2 py-1 rounded text-xs font-medium transition-all ${selectedLanguages.includes(language)
+                                    ? 'bg-blue-500 text-white'
+                                    : 'bg-gray-100 text-gray-700'
+                                    }`}
                             >
                                 {language}
                             </button>
@@ -291,7 +290,7 @@ export default function CreateEventPage() {
                     </div>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+                <div className="bg-white border-b border-gray-200 p-4 mx-0">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         詳細 <span className="text-red-500">*</span>
                     </label>
@@ -306,7 +305,7 @@ export default function CreateEventPage() {
                     />
                 </div>
 
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+                <div className="bg-white border-b border-gray-200 p-4 mx-0">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         画像URL（任意・複数可）
                     </label>
@@ -348,7 +347,7 @@ export default function CreateEventPage() {
                     </div>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+                <div className="bg-white border-b border-gray-200 p-4 mx-0">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         タグ
                     </label>
@@ -390,7 +389,7 @@ export default function CreateEventPage() {
                     </div>
                 </div>
 
-                <div className="mx-2 pb-4">
+                <div className="mx-0 px-4 pb-4">
                     <button
                         type="submit"
                         disabled={selectedLanguages.length === 0}
