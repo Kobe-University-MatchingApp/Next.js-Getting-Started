@@ -5,17 +5,20 @@ import { sampleEvents } from '@/data/events';
 import Link from 'next/link';
 
 export default function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
-  const event = sampleEvents.find((e) => e.id === id);
 
+  // URLパラメーターからIDを取得
+  const { id } = use(params);
+
+  // IDに基づいてイベントを検索
+  const event = sampleEvents.find((e) => e.id === id);
   if (!event) return <div className="p-8 text-center">イベントが見つかりません</div>;
 
+  // 参加者が定員に達しているかどうかを判定
   const isFull = event.currentParticipants >= (event.maxParticipants || 0);
 
   return (
-    // ★修正1: BottomNavと参加ボタンの分だけ余白を確保するため pb-48 に変更
     <div className="max-w-2xl mx-auto bg-white min-h-screen pb-48 shadow-xl">
-      
+
       {/* --- ヘッダー画像エリア --- */}
       <div className="relative h-64 w-full">
         <img
@@ -28,8 +31,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
         </Link>
       </div>
 
+      {/* --- メインコンテンツエリア --- */}
       <div className="p-6 space-y-8">
-        {/* --- 詳細情報（変更なし） --- */}
         <section className="space-y-4">
           <div className="flex justify-between items-start gap-4">
             <h1 className="text-2xl font-bold text-gray-900 leading-tight">{event.title}</h1>
@@ -45,7 +48,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
             </div>
             <div className="flex items-center gap-3">
               <span className="text-xl">🕒</span>
-              <span className="font-medium">{event.date} {event.time}</span>
+              <span className="font-medium">{event.date}</span>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-xl">👤</span>
@@ -99,22 +102,20 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
       </div>
 
       {/* --- 固定フッター：遷移ボタン --- */}
-      {/* ★修正2: bottom-0 を bottom-16 に変更して、BottomNavの上に配置 */}
       <div className="fixed bottom-16 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-40">
         <div className="max-w-2xl mx-auto flex gap-4 items-center">
           <div className="flex flex-col pl-2">
             <span className="text-xs text-gray-500">参加費</span>
             <span className="text-2xl font-bold text-gray-900">¥{(event.fee ?? 0).toLocaleString()}</span>
           </div>
-          
+
           <Link href={`/find/${event.id}/join`} className="flex-1">
             <button
               disabled={isFull}
-              className={`w-full font-bold py-4 px-6 rounded-full shadow-lg transition-all transform active:scale-[0.98] ${
-                isFull 
-                  ? 'bg-gray-300 text-white cursor-not-allowed' 
-                  : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-xl hover:brightness-110'
-              }`}
+              className={`w-full font-bold py-4 px-6 rounded-full shadow-lg transition-all transform active:scale-[0.98] ${isFull
+                ? 'bg-gray-300 text-white cursor-not-allowed'
+                : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-xl hover:brightness-110'
+                }`}
             >
               {isFull ? 'キャンセル待ち' : '参加に進む →'}
             </button>

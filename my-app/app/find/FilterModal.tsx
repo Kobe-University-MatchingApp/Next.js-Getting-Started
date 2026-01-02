@@ -20,12 +20,18 @@ export default function FilterModal({
     clearAllFilters,
     resultCount,
 }: FilterModalProps) {
-    // 時限選択のトグル
+
+    // 時限の選択・解除をトグルする関数
     const toggleTimeSlot = (dayId: string, periodId: number) => {
+        // スロットIDを生成（例: "mon-1" = 月曜1限）
         const slotId = `${dayId}-${periodId}`;
+
+        // 既に選択されていれば削除、未選択なら追加
+        // （三項演算子: 条件 ? 真の場合 : 偽の場合 ※if文の簡略版）
         const newSlots = filters.timeSlots.includes(slotId)
             ? filters.timeSlots.filter(s => s !== slotId)
             : [...filters.timeSlots, slotId];
+
         setFilters({ ...filters, timeSlots: newSlots });
     };
 

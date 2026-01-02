@@ -51,6 +51,7 @@ export default function CreateEventPage() {
         }));
     };
 
+    // 言語の選択・解除をトグルする関数
     const toggleLanguage = (language: string) => {
         setSelectedLanguages((prev) =>
             prev.includes(language)
@@ -59,6 +60,7 @@ export default function CreateEventPage() {
         );
     };
 
+    // 趣味タグの追加・削除関数
     const addTag = () => {
         const next = tagInput.trim();
         if (next && !formData.tags?.includes(next)) {
@@ -70,6 +72,7 @@ export default function CreateEventPage() {
         }
     };
 
+    // 趣味タグ削除
     const removeTag = (tag: string) => {
         setFormData((prev) => ({
             ...prev,
@@ -77,6 +80,7 @@ export default function CreateEventPage() {
         }));
     };
 
+    // 画像URLの追加・削除関数
     const addImage = () => {
         const next = imageInput.trim();
         if (next && !images.includes(next)) {
@@ -85,12 +89,16 @@ export default function CreateEventPage() {
         }
     };
 
+    // 画像URL削除
     const removeImage = (url: string) => {
         setImages((prev) => prev.filter((img) => img !== url));
     };
 
+    // フォーム送信時に実行される関数
+    // async: この関数内でawaitを使うため非同期関数として定義
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+
+        e.preventDefault(); // フォームのデフォルトの送信動作=再読み込みを防止
 
         const submitData = {
             ...formData,
@@ -296,7 +304,9 @@ export default function CreateEventPage() {
                             type="url"
                             value={imageInput}
                             onChange={(e) => setImageInput(e.target.value)}
-                            onKeyPress={(e) =>
+                            // Enterキー押下時の処理
+                            // inputタグ内でEnterを押すと通常はフォーム全体が送信されてしまうが、addImageだけを実行する
+                            onKeyDown={(e) =>
                                 e.key === 'Enter' && (e.preventDefault(), addImage())
                             }
                             placeholder="https://example.com/image.jpg"
@@ -338,7 +348,9 @@ export default function CreateEventPage() {
                             type="text"
                             value={tagInput}
                             onChange={(e) => setTagInput(e.target.value)}
-                            onKeyPress={(e) =>
+                            // Enterキー押下時の処理
+                            // inputタグ内でEnterを押すと通常はフォーム全体が送信されてしまうが、addTagだけを実行する
+                            onKeyDown={(e) =>
                                 e.key === 'Enter' && (e.preventDefault(), addTag())
                             }
                             placeholder="タグを入力"

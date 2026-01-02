@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Event } from '@/types/event';
 
+// フィルターの状態を定義
 export interface EventFilters {
     location: string;
     timeSlots: string[];
@@ -11,6 +12,7 @@ export interface EventFilters {
     maxFee: number | null;
 }
 
+// フィルターの初期状態
 const initialFilters: EventFilters = {
     location: '',
     timeSlots: [],
@@ -25,6 +27,7 @@ export function useEventFilters(events: Event[], searchQuery: string) {
     const [filters, setFilters] = useState<EventFilters>(initialFilters);
 
     // アクティブなフィルター数を計算
+    // (useMemoだと、filtersの変更時にのみ再計算されるので効率的)
     const activeFilterCount = useMemo(() => {
         return [
             filters.location,

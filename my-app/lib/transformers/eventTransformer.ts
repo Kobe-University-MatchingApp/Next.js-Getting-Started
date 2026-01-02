@@ -1,12 +1,18 @@
 import { Event } from '@/types/event';
 
 /**
- * JSON文字列をパースするヘルパー関数
- * @param value パース対象の値
- * @param defaultValue パース失敗時のデフォルト値
+ * JSON文字列を型安全にパースするヘルパー関数
+ * @template T - パース後の期待される型（例: string[]）
+ * @param value - パース対象の値（JSON文字列 or 配列 or その他）
+ * @param defaultValue - パース失敗時のデフォルト値
  * @returns パースされた値またはデフォルト値
+ * 
+ * 使用例:
+ * parseJsonField<string[]>('["日本語","英語"]', []) // => ["日本語","英語"]
+ * parseJsonField<string[]>('invalid', []) // => []
  */
 function parseJsonField<T>(value: any, defaultValue?: T): T | undefined {
+
     // すでに配列の場合はそのまま返す
     if (Array.isArray(value)) {
         return (value.length > 0 ? value : defaultValue) as T | undefined;
@@ -66,6 +72,8 @@ export function transformSupabaseEventRow(row: any): Event {
         date: String(row.date ?? ''),
 
         // Supabaseのフィールド名は小文字、snake_case、camelCaseのいずれかの可能性
+        // getFieldValueは順番に試し、最初に見つかった値を返します
+        // ??（null合体演算子）: 左がnull/undefinedの場合のみ右の値を使用
         dayOfWeek: String(
             getFieldValue(row, 'dayofweek', 'day_of_week', 'dayOfWeek') ?? 'mon'
         ),

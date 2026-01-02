@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 
 const SCROLL_THRESHOLD = 10;
 
+// スクロール位置に基づいてフローティングボタンの表示/非表示を制御するカスタムフック
 export function useScrollVisibility() {
     const [showFloatingButton, setShowFloatingButton] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
