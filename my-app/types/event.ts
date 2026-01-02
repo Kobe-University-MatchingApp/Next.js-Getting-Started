@@ -1,3 +1,4 @@
+// イベントに関する型定義
 export interface Event {
     id: string;
     title: string;
@@ -20,6 +21,7 @@ export interface Event {
     tags?: string[];
 }
 
+// イベントカテゴリーの定義
 export type EventCategory =
     | '言語交換'
     | '料理体験'
@@ -28,6 +30,7 @@ export type EventCategory =
     | '観光'
     | 'その他';
 
+// イベント作成フォームのデータ型
 export interface EventFormData {
     title: string;
     description: string;

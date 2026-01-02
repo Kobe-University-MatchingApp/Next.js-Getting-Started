@@ -1,3 +1,4 @@
+// ユーザープロフィールに関する型定義
 export interface Profile {
     id: string;
     name: string;
