@@ -7,7 +7,7 @@ import FilterModal from './FilterModal';
 import ActiveFilters from './components/ActiveFilters';
 import { useModal } from '@/app/contexts/ModalContext';
 import { useEventFilters } from './hooks/useEventFilters';
-import { useScrollVisibility } from './hooks/useScrollVisibility';
+import { useScrollVisibility } from '@/lib/hooks/useScrollVisibility';
 
 interface FindEventsClientProps {
     initialEvents: Event[];
