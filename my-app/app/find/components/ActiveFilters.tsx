@@ -1,6 +1,7 @@
 'use client';
 
 import { EventFilters } from '../hooks/useEventFilters';
+import { DAYS_OF_WEEK, PERIODS } from '@/lib/constants';
 
 interface ActiveFiltersProps {
     filters: EventFilters;
@@ -9,23 +10,6 @@ interface ActiveFiltersProps {
     clearFilter: (key: keyof EventFilters) => void;
     clearAllFilters: () => void;
 }
-
-// 時間割の定義
-const daysOfWeek = [
-    { id: 'mon', label: '月' },
-    { id: 'tue', label: '火' },
-    { id: 'wed', label: '水' },
-    { id: 'thu', label: '木' },
-    { id: 'fri', label: '金' },
-];
-
-const periods = [
-    { id: 1, label: '1限', time: '09:00-10:30' },
-    { id: 2, label: '2限', time: '10:40-12:10' },
-    { id: 3, label: '3限', time: '13:10-14:40' },
-    { id: 4, label: '4限', time: '14:50-16:20' },
-    { id: 5, label: '5限', time: '16:30-18:00' },
-];
 
 // 予算のラベル
 const getFeeLabel = (fee: number) => {
@@ -88,8 +72,8 @@ export default function ActiveFilters({
                 {/* 開始時間フィルター */}
                 {filters.timeSlots.length > 0 && filters.timeSlots.map(slot => {
                     const [dayId, periodId] = slot.split('-');
-                    const day = daysOfWeek.find(d => d.id === dayId);
-                    const period = periods.find(p => p.id === Number(periodId));
+                    const day = DAYS_OF_WEEK.find(d => d.id === dayId);
+                    const period = PERIODS.find(p => p.id === Number(periodId));
                     return (
                         <button
                             key={slot}

@@ -1,25 +1,10 @@
 import Link from 'next/link';
 import { Event } from '@/types/event';
+import { DAYS_OF_WEEK, PERIODS } from '@/lib/constants';
 
 interface EventCardProps {
     event: Event;
 }
-
-const daysOfWeek = [
-    { id: 'mon', label: '月' },
-    { id: 'tue', label: '火' },
-    { id: 'wed', label: '水' },
-    { id: 'thu', label: '木' },
-    { id: 'fri', label: '金' },
-];
-
-const periods = [
-    { id: 1, label: '1限', time: '09:00-10:30' },
-    { id: 2, label: '2限', time: '10:40-12:10' },
-    { id: 3, label: '3限', time: '13:10-14:40' },
-    { id: 4, label: '4限', time: '14:50-16:20' },
-    { id: 5, label: '5限', time: '16:30-18:00' },
-];
 
 export default function EventCard({ event }: EventCardProps) {
     return (
@@ -40,7 +25,7 @@ export default function EventCard({ event }: EventCardProps) {
                     <div className="flex items-center gap-2">
                         <span className="font-medium text-gray-700">📅</span>
                         <span>
-                            {event.date} · {daysOfWeek.find(d => d.id === event.dayOfWeek)?.label}曜{periods.find(p => p.id === event.period)?.label} ({periods.find(p => p.id === event.period)?.time})
+                            {event.date} · {DAYS_OF_WEEK.find(d => d.id === event.dayOfWeek)?.label}曜{PERIODS.find(p => p.id === event.period)?.label} ({PERIODS.find(p => p.id === event.period)?.time})
                         </span>
                     </div>
                     <div className="flex items-center gap-4">

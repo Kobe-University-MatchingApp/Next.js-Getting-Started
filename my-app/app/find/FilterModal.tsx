@@ -1,6 +1,7 @@
 'use client';
 
 import { EventFilters } from './hooks/useEventFilters';
+import { DAYS_OF_WEEK, PERIODS, AVAILABLE_LANGUAGES, AVAILABLE_LOCATIONS, AVAILABLE_TAGS } from '@/lib/constants';
 
 interface FilterModalProps {
     isOpen: boolean;
@@ -19,28 +20,6 @@ export default function FilterModal({
     clearAllFilters,
     resultCount,
 }: FilterModalProps) {
-    // 利用可能な選択肢
-    const availableLocations = ['食堂', 'スターバックス', 'ラーニングコモンズ', '学生会館', '教室'];
-    const availableLanguages = ['日本語', '英語', '中国語', '韓国語', 'スペイン語'];
-    const availableTags = ['カフェ', '料理', '音楽', '映画', '読書', '写真', 'スポーツ', 'アウトドア', '旅行', 'アート', 'ファッション'];
-
-    // 時間割の定義
-    const daysOfWeek = [
-        { id: 'mon', label: '月' },
-        { id: 'tue', label: '火' },
-        { id: 'wed', label: '水' },
-        { id: 'thu', label: '木' },
-        { id: 'fri', label: '金' },
-    ];
-
-    const periods = [
-        { id: 1, label: '1限', time: '09:00-10:30' },
-        { id: 2, label: '2限', time: '10:40-12:10' },
-        { id: 3, label: '3限', time: '13:10-14:40' },
-        { id: 4, label: '4限', time: '14:50-16:20' },
-        { id: 5, label: '5限', time: '16:30-18:00' },
-    ];
-
     // 時限選択のトグル
     const toggleTimeSlot = (dayId: string, periodId: number) => {
         const slotId = `${dayId}-${periodId}`;
@@ -81,7 +60,7 @@ export default function FilterModal({
                             className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
                         >
                             <option value="">すべて</option>
-                            {availableLocations.map(loc => (
+                            {AVAILABLE_LOCATIONS.map(loc => (
                                 <option key={loc} value={loc}>{loc}</option>
                             ))}
                         </select>
@@ -95,7 +74,7 @@ export default function FilterModal({
                                 <thead>
                                     <tr>
                                         <th className="border border-gray-300 bg-gray-50 p-2 text-xs font-medium text-gray-600"></th>
-                                        {daysOfWeek.map(day => (
+                                        {DAYS_OF_WEEK.map(day => (
                                             <th key={day.id} className="border border-gray-300 bg-gray-50 p-2 text-xs font-medium text-gray-700">
                                                 {day.label}
                                             </th>
@@ -103,13 +82,13 @@ export default function FilterModal({
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {periods.map(period => (
+                                    {PERIODS.map(period => (
                                         <tr key={period.id}>
                                             <td className="border border-gray-300 bg-gray-50 p-2 text-xs font-medium text-gray-600 whitespace-nowrap">
                                                 {period.label}
                                                 <div className="text-[10px] text-gray-500">{period.time}</div>
                                             </td>
-                                            {daysOfWeek.map(day => {
+                                            {DAYS_OF_WEEK.map(day => {
                                                 const slotId = `${day.id}-${period.id}`;
                                                 const isSelected = filters.timeSlots.includes(slotId);
                                                 return (
@@ -174,7 +153,7 @@ export default function FilterModal({
                     <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">会話言語</label>
                         <div className="flex flex-wrap gap-1.5">
-                            {availableLanguages.map(lang => (
+                            {AVAILABLE_LANGUAGES.map(lang => (
                                 <button
                                     key={lang}
                                     onClick={() => {
@@ -198,7 +177,7 @@ export default function FilterModal({
                     <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">趣味タグ</label>
                         <div className="flex flex-wrap gap-1.5">
-                            {availableTags.map(tag => (
+                            {AVAILABLE_TAGS.map(tag => (
                                 <button
                                     key={tag}
                                     onClick={() => {

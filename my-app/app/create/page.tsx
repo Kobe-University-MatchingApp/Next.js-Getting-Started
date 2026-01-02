@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { EventCategory, EventFormData } from '@/types/event';
+import { EventFormData } from '@/types/event';
 import { createClient } from '@supabase/supabase-js';
+import { EVENT_CATEGORIES, AVAILABLE_LANGUAGES } from '@/lib/constants';
 
 // Supabase client (client-side)
 // IMPORTANT:
@@ -14,27 +15,6 @@ const supabase =
     supabaseUrl && supabaseAnonKey
         ? createClient(supabaseUrl, supabaseAnonKey)
         : null;
-
-const categories: EventCategory[] = [
-    '言語交換',
-    '料理体験',
-    '文化体験',
-    'スポーツ',
-    '観光',
-    'その他',
-];
-
-const availableLanguages = [
-    '日本語',
-    '英語',
-    '中国語',
-    '韓国語',
-    'スペイン語',
-    'フランス語',
-    'ドイツ語',
-    'ポルトガル語',
-    'その他',
-];
 
 export default function CreateEventPage() {
     const [formData, setFormData] = useState<EventFormData>({
@@ -185,7 +165,7 @@ export default function CreateEventPage() {
                         カテゴリー <span className="text-red-500">*</span>
                     </label>
                     <div className="grid grid-cols-3 gap-2">
-                        {categories.map((category) => (
+                        {EVENT_CATEGORIES.map((category) => (
                             <button
                                 key={category}
                                 type="button"
@@ -276,7 +256,7 @@ export default function CreateEventPage() {
                         対応言語 <span className="text-red-500">*</span>
                     </label>
                     <div className="flex flex-wrap gap-1.5">
-                        {availableLanguages.map((language) => (
+                        {AVAILABLE_LANGUAGES.map((language) => (
                             <button
                                 key={language}
                                 type="button"
