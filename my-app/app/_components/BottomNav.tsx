@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useModal } from '@/app/contexts/ModalContext';
+import { useModal } from '@/app/_contexts/ModalContext';
 import NavItem from './NavItem';
 import { PlusIcon, HomeIcon, SearchIcon, UserIcon } from './icons/NavIcons';
 

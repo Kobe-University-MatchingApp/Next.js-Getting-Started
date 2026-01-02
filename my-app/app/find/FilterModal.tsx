@@ -1,6 +1,6 @@
 'use client';
 
-import { EventFilters } from './hooks/useEventFilters';
+import { EventFilters } from './_hooks/useEventFilters';
 import { DAYS_OF_WEEK, PERIODS, AVAILABLE_LANGUAGES, AVAILABLE_LOCATIONS, AVAILABLE_TAGS } from '@/lib/constants';
 
 interface FilterModalProps {

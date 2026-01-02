@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { Event } from '@/types/event';
-import EventCard from '@/app/components/EventCard';
+import EventCard from '@/app/_components/EventCard';
 import FilterModal from './FilterModal';
-import ActiveFilters from './components/ActiveFilters';
-import { useModal } from '@/app/contexts/ModalContext';
-import { useEventFilters } from './hooks/useEventFilters';
+import ActiveFilters from './_components/ActiveFilters';
+import { useModal } from '@/app/_contexts/ModalContext';
+import { useEventFilters } from './_hooks/useEventFilters';
 import { useScrollVisibility } from '@/lib/hooks/useScrollVisibility';
 
 interface FindEventsClientProps {

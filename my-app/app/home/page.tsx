@@ -1,6 +1,6 @@
 'use client';
 
-import EventCard from '@/app/components/EventCard';
+import EventCard from '@/app/_components/EventCard';
 import { sampleEvents } from '@/data/events';
 import { useState, useEffect } from 'react';
 
