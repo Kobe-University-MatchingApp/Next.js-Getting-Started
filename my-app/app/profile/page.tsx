@@ -128,15 +128,6 @@ export default async function ProfilePage() {
                 </div>
             )}
 
-            {/* アクションボタン */}
-            <div className="flex gap-2 mx-0 px-4 pb-4">
-                <button className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-lg font-bold text-sm">
-                    💬 メッセージ
-                </button>
-                <button className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 rounded-lg font-bold text-sm">
-                    👥 友達申請
-                </button>
-            </div>
         </div>
 
     );

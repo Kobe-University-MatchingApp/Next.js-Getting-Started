@@ -8,11 +8,16 @@ export async function getProfile(name: String): Promise<Profile | null> {
         .from('profiles')
         .select('*')
         .eq('name', name) // ★ここを追加！名前で検索します
-        .single(); // .limit(1) の代わりに .single() だけでOK（1件に絞っているため）
+        .maybeSingle(); // .single()の代わりに.maybeSingle()を使用（レコードが見つからない場合nullを返す）
 
-    // エラーハンドリング
+    // エラーハンドリング（レコードが見つからない場合はエラーではない）
     if (error) {
         console.error('Error fetching profile:', error);
+        return null;
+    }
+
+    // データが見つからない場合
+    if (!data) {
         return null;
     }
 
