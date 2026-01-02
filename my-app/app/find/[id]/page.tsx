@@ -1,19 +1,25 @@
 // イベント一覧 → [[イベント詳細]] → 参加確認
 
-'use client';
-
-import { use } from 'react';
-import { sampleEvents } from '@/data/events';
+import { supabase } from '@/lib/supabaseClient';
+import { transformSupabaseEventRow } from '@/lib/transformers/eventTransformer';
 import Link from 'next/link';
 
-export default function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
 
   // URLパラメーターからIDを取得
-  const { id } = use(params);
+  const { id } = await params;
 
-  // IDに基づいてイベントを検索
-  const event = sampleEvents.find((e) => e.id === id);
-  if (!event) return <div className="p-8 text-center">イベントが見つかりません</div>;
+  // Supabaseから特定のイベントを取得
+  const { data, error } = await supabase.from('events').select('*').eq('id', id).single();
+
+  // エラーハンドリング
+  if (error || !data) {
+    console.error('Supabaseからのデータ取得エラー:', error);
+    return <div className="p-8 text-center">イベントが見つかりません</div>;
+  }
+
+  // データを変換
+  const event = transformSupabaseEventRow(data);
 
   // 参加者が定員に達しているかどうかを判定
   const isFull = event.currentParticipants >= (event.maxParticipants || 0);

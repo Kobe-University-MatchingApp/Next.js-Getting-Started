@@ -3,7 +3,9 @@
 'use client';
 
 import { use, useState } from 'react';
-import { sampleEvents } from '@/data/events';
+import { supabase } from '@/lib/supabaseClient';
+import { transformSupabaseEventRow } from '@/lib/transformers/eventTransformer';
+import { Event } from '@/types/event';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -12,20 +14,61 @@ export default function JoinConfirmPage({ params }: { params: Promise<{ id: stri
 
   // URLパラメーターからIDを取得
   const { id } = use(params);
+  const router = useRouter();
 
-  // IDに基づいてイベントを検索
-  const event = sampleEvents.find((e) => e.id === id);
-  if (!event) {
-    return (
-      <div className="p-8 text-center">イベントが見つかりません</div>
-    );
-  }
+  // イベント情報とローディング状態の管理
+  const [event, setEvent] = useState<Event | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // 同意チェックボックスと送信状態の管理
   const [isAgreed, setIsAgreed] = useState(false);
-
-  // 送信状態の管理
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // イベントデータの取得
+  useState(() => {
+    const fetchEvent = async () => {
+      try {
+        const { data, error } = await supabase.from('events').select('*').eq('id', id).single();
+
+        if (error || !data) {
+          setError('イベントが見つかりません');
+          setLoading(false);
+          return;
+        }
+
+        setEvent(transformSupabaseEventRow(data));
+      } catch (err) {
+        setError('エラーが発生しました');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvent();
+  });
+
+  // ローディング中
+  if (loading) {
+    return (
+      <div className="p-8 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600">読み込み中...</p>
+      </div>
+    );
+  }
+
+  // エラーまたはイベントが見つからない
+  if (error || !event) {
+    return (
+      <div className="p-8 text-center">
+        <p className="text-red-600">{error || 'イベントが見つかりません'}</p>
+        <Link href="/find" className="mt-4 inline-block text-purple-600 hover:underline">
+          イベント一覧に戻る
+        </Link>
+      </div>
+    );
+  }
 
   // 参加確定ボタンのクリックハンドラー
   const handleConfirm = async () => {
@@ -39,7 +82,6 @@ export default function JoinConfirmPage({ params }: { params: Promise<{ id: stri
     alert(`「${event.title}」への参加が確定しました！`);
 
     // 完了後の遷移先（マイページやホームなど）
-    const router = useRouter();
     router.push('/home');
   };
 
