@@ -1,3 +1,5 @@
+// 画面下部のナビゲーションバーのコンポーネント
+
 'use client';
 
 import { usePathname } from 'next/navigation';

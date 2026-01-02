@@ -1,8 +1,11 @@
+// 絞り込み検索で選択しているフィルターを表示・管理するコンポーネント
+
 'use client';
 
-import { EventFilters } from '../hooks/useEventFilters';
+import { EventFilters } from '../_hooks/useEventFilters';
 import { DAYS_OF_WEEK, PERIODS } from '@/lib/constants';
 
+// コンポーネントのプロパティ型定義
 interface ActiveFiltersProps {
     filters: EventFilters;
     activeFilterCount: number;
@@ -17,6 +20,7 @@ const getFeeLabel = (fee: number) => {
     return `¥${fee.toLocaleString()}以下`;
 };
 
+// アクティブなフィルターを表示するコンポーネント
 export default function ActiveFilters({
     filters,
     activeFilterCount,
@@ -48,101 +52,101 @@ export default function ActiveFilters({
     };
 
     return (
-        <div className="mx-2">
-            <div className="flex items-center gap-2 overflow-x-auto pb-2">
-                {/* すべてクリアボタン */}
+        <div className="mx-2 flex items-center gap-2 overflow-x-auto pb-2">
+
+            {/* すべてクリアボタン */}
+            <button
+                onClick={clearAllFilters}
+                className="flex-shrink-0 px-3 py-2 bg-gray-200 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-300 transition-colors"
+            >
+                クリア
+            </button>
+
+            {/* 場所フィルター */}
+            {filters.location && (
                 <button
-                    onClick={clearAllFilters}
-                    className="flex-shrink-0 px-3 py-2 bg-gray-200 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-300 transition-colors"
+                    onClick={() => clearFilter('location')}
+                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
                 >
-                    クリア
+                    {filters.location}
+                    <span className="text-gray-400">×</span>
                 </button>
+            )}
 
-                {/* 場所フィルター */}
-                {filters.location && (
+            {/* 開始時間フィルター */}
+            {filters.timeSlots.length > 0 && filters.timeSlots.map(slot => {
+                const [dayId, periodId] = slot.split('-');
+                const day = DAYS_OF_WEEK.find(d => d.id === dayId);
+                const period = PERIODS.find(p => p.id === Number(periodId));
+                return (
                     <button
-                        onClick={() => clearFilter('location')}
+                        key={slot}
+                        onClick={() => toggleTimeSlot(dayId, Number(periodId))}
                         className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
                     >
-                        {filters.location}
+                        {day?.label}{period?.label}
                         <span className="text-gray-400">×</span>
                     </button>
-                )}
+                );
+            })}
 
-                {/* 開始時間フィルター */}
-                {filters.timeSlots.length > 0 && filters.timeSlots.map(slot => {
-                    const [dayId, periodId] = slot.split('-');
-                    const day = DAYS_OF_WEEK.find(d => d.id === dayId);
-                    const period = PERIODS.find(p => p.id === Number(periodId));
-                    return (
-                        <button
-                            key={slot}
-                            onClick={() => toggleTimeSlot(dayId, Number(periodId))}
-                            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
-                        >
-                            {day?.label}{period?.label}
-                            <span className="text-gray-400">×</span>
-                        </button>
-                    );
-                })}
+            {/* 最小人数フィルター */}
+            {filters.minParticipants && (
+                <button
+                    onClick={() => clearFilter('minParticipants')}
+                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
+                >
+                    {filters.minParticipants}人以上
+                    <span className="text-gray-400">×</span>
+                </button>
+            )}
 
-                {/* 最小人数フィルター */}
-                {filters.minParticipants && (
-                    <button
-                        onClick={() => clearFilter('minParticipants')}
-                        className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
-                    >
-                        {filters.minParticipants}人以上
-                        <span className="text-gray-400">×</span>
-                    </button>
-                )}
+            {/* 最大人数フィルター */}
+            {filters.maxParticipants && (
+                <button
+                    onClick={() => clearFilter('maxParticipants')}
+                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
+                >
+                    {filters.maxParticipants}人以下
+                    <span className="text-gray-400">×</span>
+                </button>
+            )}
 
-                {/* 最大人数フィルター */}
-                {filters.maxParticipants && (
-                    <button
-                        onClick={() => clearFilter('maxParticipants')}
-                        className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
-                    >
-                        {filters.maxParticipants}人以下
-                        <span className="text-gray-400">×</span>
-                    </button>
-                )}
+            {/* 言語フィルター */}
+            {filters.languages.map(lang => (
+                <button
+                    key={lang}
+                    onClick={() => removeLanguage(lang)}
+                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
+                >
+                    {lang}
+                    <span className="text-gray-400">×</span>
+                </button>
+            ))}
 
-                {/* 言語フィルター */}
-                {filters.languages.map(lang => (
-                    <button
-                        key={lang}
-                        onClick={() => removeLanguage(lang)}
-                        className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
-                    >
-                        {lang}
-                        <span className="text-gray-400">×</span>
-                    </button>
-                ))}
+            {/* タグフィルター */}
+            {filters.tags.map(tag => (
+                <button
+                    key={tag}
+                    onClick={() => removeTag(tag)}
+                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
+                >
+                    {tag}
+                    <span className="text-gray-400">×</span>
+                </button>
+            ))}
 
-                {/* タグフィルター */}
-                {filters.tags.map(tag => (
-                    <button
-                        key={tag}
-                        onClick={() => removeTag(tag)}
-                        className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
-                    >
-                        {tag}
-                        <span className="text-gray-400">×</span>
-                    </button>
-                ))}
+            {/* 予算フィルター */}
+            {filters.maxFee !== null && (
+                <button
+                    onClick={() => clearFilter('maxFee')}
+                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
+                >
+                    {getFeeLabel(filters.maxFee)}
+                    <span className="text-gray-400">×</span>
+                </button>
+            )}
 
-                {/* 予算フィルター */}
-                {filters.maxFee !== null && (
-                    <button
-                        onClick={() => clearFilter('maxFee')}
-                        className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
-                    >
-                        {getFeeLabel(filters.maxFee)}
-                        <span className="text-gray-400">×</span>
-                    </button>
-                )}
-            </div>
         </div>
     );
 }

@@ -1,3 +1,5 @@
+// イベントを絞り込み検索＝フィルターするためのカスタムフック
+
 import { useState, useMemo } from 'react';
 import { Event } from '@/types/event';
 
@@ -23,6 +25,7 @@ const initialFilters: EventFilters = {
     maxFee: null,
 };
 
+// カスタムフックの定義
 export function useEventFilters(events: Event[], searchQuery: string) {
     const [filters, setFilters] = useState<EventFilters>(initialFilters);
 

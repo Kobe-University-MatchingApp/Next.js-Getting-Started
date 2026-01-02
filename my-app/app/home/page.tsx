@@ -1,3 +1,5 @@
+// ホームのページコンポーネント
+
 'use client';
 
 import EventCard from '@/app/_components/EventCard';
@@ -5,14 +7,15 @@ import { sampleEvents } from '@/data/events';
 import { useState, useEffect } from 'react';
 
 export default function HomePage() {
+
     // ランダムに2個のイベントを選択（マッチング結果用）
     const [recommendedEvents, setRecommendedEvents] = useState(sampleEvents.slice(0, 2));
 
     // 予約済みイベント（サンプルとして1個）
     const [bookedEvents] = useState([sampleEvents[0]]);
 
+    // コンポーネントマウント時にランダムに2個のイベントを選択
     useEffect(() => {
-        // クライアントサイドでのみランダム選択
         const shuffled = [...sampleEvents].sort(() => Math.random() - 0.5);
         setRecommendedEvents(shuffled.slice(0, 2));
     }, []);

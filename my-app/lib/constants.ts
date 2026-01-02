@@ -15,11 +15,11 @@ export const DAYS_OF_WEEK = [
  * 時限の定義（神戸大学の時間割）
  */
 export const PERIODS = [
-    { id: 1, label: '1限', time: '09:00-10:30' },
+    { id: 1, label: '1限', time: '08:50-10:20' },
     { id: 2, label: '2限', time: '10:40-12:10' },
-    { id: 3, label: '3限', time: '13:10-14:40' },
-    { id: 4, label: '4限', time: '14:50-16:20' },
-    { id: 5, label: '5限', time: '16:30-18:00' },
+    { id: 3, label: '3限', time: '13:20-14:50' },
+    { id: 4, label: '4限', time: '15:10-16:40' },
+    { id: 5, label: '5限', time: '17:00-18:30' },
 ] as const;
 
 /**

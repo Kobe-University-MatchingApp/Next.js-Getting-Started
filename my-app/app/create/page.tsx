@@ -1,3 +1,5 @@
+// イベント作成ページ
+
 'use client';
 
 import { useState } from 'react';
@@ -17,6 +19,8 @@ const supabase =
         : null;
 
 export default function CreateEventPage() {
+
+    // フォームデータの状態管理
     const [formData, setFormData] = useState<EventFormData>({
         title: '',
         description: '',
@@ -31,6 +35,7 @@ export default function CreateEventPage() {
         tags: [],
     });
 
+    // 対応言語の状態管理
     const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState('');
 
@@ -41,6 +46,7 @@ export default function CreateEventPage() {
     // time is not present in EventFormData (main branch). Keep it local.
     const [time, setTime] = useState('');
 
+    // フォーム入力変更時に実行される関数
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => {
@@ -118,6 +124,7 @@ export default function CreateEventPage() {
             return;
         }
 
+        // Supabaseにデータを挿入
         const { error } = await supabase
             .schema('create_event')
             .from('created_data')
@@ -136,12 +143,14 @@ export default function CreateEventPage() {
                 images: submitData.images,
             });
 
+        // エラーハンドリング
         if (error) {
             console.error('Supabase insert error:', error);
             alert(`保存に失敗しました: ${error.message}`);
             return;
         }
 
+        // 成功時の処理（ゆくゆくはプレビューを挟んで→作成保存→成功画面）
         alert('イベントが作成されました！（Supabaseに保存しました）');
     };
 
@@ -152,7 +161,10 @@ export default function CreateEventPage() {
                 <h1 className="text-xl font-bold text-gray-900">イベント作成</h1>
             </div>
 
+            {/* フォーム */}
             <form onSubmit={handleSubmit} className="space-y-3">
+
+                {/* タイトル入力 */}
                 <div className="bg-white border-b border-gray-200 p-4 mx-0">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         タイトル <span className="text-red-500">*</span>
@@ -168,6 +180,7 @@ export default function CreateEventPage() {
                     />
                 </div>
 
+                {/* カテゴリー選択 */}
                 <div className="bg-white border-b border-gray-200 p-4 mx-0">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         カテゴリー <span className="text-red-500">*</span>
@@ -189,6 +202,7 @@ export default function CreateEventPage() {
                     </div>
                 </div>
 
+                {/* 開催日時・場所入力 */}
                 <div className="bg-white border-b border-gray-200 p-4 mx-0">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         開催日時 <span className="text-red-500">*</span>
@@ -225,6 +239,7 @@ export default function CreateEventPage() {
                     />
                 </div>
 
+                {/* 最大参加人数・参加費入力 */}
                 <div className="bg-white border-b border-gray-200 p-4 mx-0">
                     <div className="grid grid-cols-2 gap-2">
                         <div>
@@ -259,6 +274,7 @@ export default function CreateEventPage() {
                     </div>
                 </div>
 
+                {/* 対応言語選択 */}
                 <div className="bg-white border-b border-gray-200 p-4 mx-0">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         対応言語 <span className="text-red-500">*</span>
@@ -280,6 +296,7 @@ export default function CreateEventPage() {
                     </div>
                 </div>
 
+                {/* 詳細入力 */}
                 <div className="bg-white border-b border-gray-200 p-4 mx-0">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         詳細 <span className="text-red-500">*</span>
@@ -295,6 +312,7 @@ export default function CreateEventPage() {
                     />
                 </div>
 
+                {/* 画像URL入力 */}
                 <div className="bg-white border-b border-gray-200 p-4 mx-0">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         画像URL（任意・複数可）
@@ -339,6 +357,7 @@ export default function CreateEventPage() {
                     </div>
                 </div>
 
+                {/* 趣味タグ入力 */}
                 <div className="bg-white border-b border-gray-200 p-4 mx-0">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         タグ
@@ -383,6 +402,7 @@ export default function CreateEventPage() {
                     </div>
                 </div>
 
+                {/* 送信ボタン */}
                 <div className="mx-0 px-4 pb-4">
                     <button
                         type="submit"
@@ -392,6 +412,7 @@ export default function CreateEventPage() {
                         イベントを作成
                     </button>
                 </div>
+
             </form>
         </div>
     );

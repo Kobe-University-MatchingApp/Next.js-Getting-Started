@@ -7,8 +7,8 @@ export default function Page() {
       </div>
 
       <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg shadow-md p-6 mx-2 text-white">
-        <h2 className="text-lg font-bold mb-2">はじめよう</h2>
-        <p className="text-sm opacity-90">プロフィール、イベント作成、イベント検索から始めましょう</p>
+        <h2 className="text-lg font-bold mb-2">ログイン</h2>
+        {/* ログインフォームなどをここに追加？ */}
       </div>
     </div>
   );

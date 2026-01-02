@@ -1,3 +1,5 @@
+// イベントカードのコンポーネント
+
 import Link from 'next/link';
 import { Event } from '@/types/event';
 import { DAYS_OF_WEEK, PERIODS } from '@/lib/constants';

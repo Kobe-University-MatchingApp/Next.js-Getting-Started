@@ -1,3 +1,5 @@
+// モーダルの開閉状態を管理するコンテキスト
+
 'use client';
 
 import { createContext, useContext, useState, ReactNode } from 'react';

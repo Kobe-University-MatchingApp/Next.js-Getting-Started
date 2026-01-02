@@ -1,3 +1,5 @@
+// ナビゲーションバーに含まれる 各ナビゲーションアイテム のコンポーネント
+
 import Link from 'next/link';
 import { ReactNode } from 'react';
 
@@ -13,8 +15,8 @@ export default function NavItem({ href, icon, label, isActive }: NavItemProps) {
         <Link
             href={href}
             className={`flex flex-col items-center justify-center flex-1 py-2 transition-colors ${isActive
-                    ? 'text-purple-600'
-                    : 'text-gray-500 hover:text-gray-700'
+                ? 'text-purple-600'
+                : 'text-gray-500 hover:text-gray-700'
                 }`}
         >
             {icon}

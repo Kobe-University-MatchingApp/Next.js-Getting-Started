@@ -17,6 +17,8 @@ const SCROLL_THRESHOLD = 10;
  * ```
  */
 export function useScrollVisibility() {
+
+    // スクロール位置に基づいてフローティングボタンの表示/非表示を制御
     const [showFloatingButton, setShowFloatingButton] = useState(true);
     const [lastScrollY, setLastScrollY] = useState(0);
 

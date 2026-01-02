@@ -1,8 +1,11 @@
+// 絞り込み検索モーダルのコンポーネント
+
 'use client';
 
 import { EventFilters } from './_hooks/useEventFilters';
 import { DAYS_OF_WEEK, PERIODS, AVAILABLE_LANGUAGES, AVAILABLE_LOCATIONS, AVAILABLE_TAGS } from '@/lib/constants';
 
+// コンポーネントのプロパティ型定義
 interface FilterModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -35,8 +38,10 @@ export default function FilterModal({
         setFilters({ ...filters, timeSlots: newSlots });
     };
 
+    // モーダルが閉じている場合は何もレンダリングしない
     if (!isOpen) return null;
 
+    // モーダルのレンダリング
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end mb-0">
             <div className="bg-white w-full rounded-t-2xl max-h-[95vh] overflow-y-auto mb-0">

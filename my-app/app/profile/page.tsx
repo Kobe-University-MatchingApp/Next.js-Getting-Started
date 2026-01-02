@@ -1,10 +1,19 @@
+// プロフィールページのコンポーネント
+
 import { getProfile } from '@/lib/profile';
 
 export default async function ProfilePage() {
+
+    // プロフィールデータを取得
     const profile = await getProfile('John Smith'); // 例として 'John Smith' のプロフィールを取得
 
+    // プロフィールが存在しない場合の処理
     if (!profile) {
-        return <div className="p-10 text-center text-gray-500">プロフィールが見つかりませんでした。</div>;
+        return (
+            <div className="p-10 text-center text-gray-500">
+                プロフィールが見つかりませんでした。
+            </div>
+        );
     }
 
     // レベル表示用のテキストマッピング

@@ -1,3 +1,5 @@
+// イベント検索画面のコンポーネント
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,11 +11,15 @@ import { useModal } from '@/app/_contexts/ModalContext';
 import { useEventFilters } from './_hooks/useEventFilters';
 import { useScrollVisibility } from '@/lib/hooks/useScrollVisibility';
 
+// コンポーネントのプロパティ型定義
 interface FindEventsClientProps {
     initialEvents: Event[];
 }
 
+// イベント検索コンポーネント
 export default function FindEventsClient({ initialEvents }: FindEventsClientProps) {
+
+    // 状態管理（検索クエリ、フィルターモーダルの開閉状態）
     const [searchQuery, setSearchQuery] = useState('');
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const { setIsModalOpen } = useModal();
@@ -28,6 +34,7 @@ export default function FindEventsClient({ initialEvents }: FindEventsClientProp
         filteredEvents,
     } = useEventFilters(initialEvents, searchQuery);
 
+    // スクロールに応じてフローティングボタンの表示制御
     const showFloatingButton = useScrollVisibility();
 
     // モーダル開閉時にグローバル状態を更新

@@ -1,3 +1,5 @@
+// イベント一覧 → [[イベント詳細]] → 参加確認
+
 'use client';
 
 import { use } from 'react';
@@ -34,6 +36,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
       {/* --- メインコンテンツエリア --- */}
       <div className="p-6 space-y-8">
         <section className="space-y-4">
+
+          {/* タイトル・カテゴリ */}
           <div className="flex justify-between items-start gap-4">
             <h1 className="text-2xl font-bold text-gray-900 leading-tight">{event.title}</h1>
             <span className="shrink-0 bg-purple-100 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">
@@ -41,6 +45,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
             </span>
           </div>
 
+          {/* 場所・時間・主催者 */}
           <div className="space-y-3 text-sm text-gray-600 bg-gray-50 p-4 rounded-xl">
             <div className="flex items-center gap-3">
               <span className="text-xl">📍</span>
@@ -59,6 +64,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
 
         <hr className="border-gray-100" />
 
+        {/* イベント詳細 */}
         <section>
           <h2 className="text-sm font-bold text-gray-400 mb-3">イベント詳細</h2>
           <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
@@ -68,6 +74,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
 
         <hr className="border-gray-100" />
 
+        {/* 参加予定のメンバー */}
         <section>
           <h2 className="text-sm font-bold text-gray-400 mb-3">参加予定のメンバー</h2>
           <div className="flex items-center justify-between bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
@@ -90,6 +97,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
           </div>
         </section>
 
+        {/* 趣味タグ */}
         <section>
           <div className="flex flex-wrap gap-2">
             {event.tags?.map((tag) => (
@@ -101,7 +109,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
         </section>
       </div>
 
-      {/* --- 固定フッター：遷移ボタン --- */}
+      {/* 参加に進むボタン */}
       <div className="fixed bottom-16 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-40">
         <div className="max-w-2xl mx-auto flex gap-4 items-center">
           <div className="flex flex-col pl-2">

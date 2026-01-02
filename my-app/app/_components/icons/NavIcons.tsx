@@ -1,3 +1,5 @@
+// アイコンコンポーネントを定義するファイル
+
 interface IconProps {
     className?: string;
 }
