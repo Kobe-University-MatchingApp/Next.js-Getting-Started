@@ -1,44 +1,27 @@
 'use client';
 
-import { useState } from 'react';
-import AuthModal from './_components/AuthModal';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/app/contexts/AuthContext';
 
 export default function Page() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const { user, loading } = useAuth();
+  const router = useRouter();
 
-  const openModal = (mode: 'login' | 'signup') => {
-    setAuthMode(mode);
-    setIsModalOpen(true);
-  };
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        router.push('/login');
+      } else {
+        router.push('/home');
+      }
+    }
+  }, [user, loading, router]);
 
+  // ローディング中は何も表示しないか、ローディング画面を表示
   return (
-    <div className="py-3 space-y-3">
-      <div className="bg-white rounded-lg shadow-sm p-4 mx-2">
-        <h1 className="text-xl font-bold text-gray-800 mb-2">ようこそ！</h1>
-        <p className="text-sm text-gray-600">異文化交流イベント管理アプリ</p>
-      </div>
-
-      <div className="flex gap-2 mx-2">
-        <button
-          onClick={() => openModal('login')}
-          className="flex-1 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg shadow-md p-6 text-white hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
-        >
-          <h2 className="text-lg font-bold">ログイン</h2>
-        </button>
-        <button
-          onClick={() => openModal('signup')}
-          className="flex-1 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg shadow-md p-6 text-white hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
-        >
-          <h2 className="text-lg font-bold">サインアップ</h2>
-        </button>
-      </div>
-
-      <AuthModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        initialMode={authMode}
-      />
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="w-8 h-8 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
     </div>
   );
 }

@@ -11,6 +11,11 @@ export default function BottomNav() {
     const pathname = usePathname();
     const { isModalOpen } = useModal();
 
+    // ログインページではナビゲーションバーを表示しない
+    if (pathname === '/login' || pathname === '/') {
+        return null;
+    }
+
     const isActive = (path: string) => {
         if (path === '/') {
             return pathname === '/';
