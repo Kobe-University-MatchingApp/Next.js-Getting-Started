@@ -366,7 +366,7 @@ export default function CreateEventPage() {
                             type="url"
                             value={imageInput}
                             onChange={(e) => setImageInput(e.target.value)}
-                            onKeyPress={(e) =>
+                            onKeyDown={(e) =>
                                 e.key === 'Enter' && (e.preventDefault(), addImage())
                             }
                             placeholder="https://example.com/image.jpg"
