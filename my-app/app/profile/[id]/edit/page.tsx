@@ -1,0 +1,135 @@
+import { createClient } from '@/utils/supabase/server';
+import { getProfileById } from '@/lib/profile';
+import { notFound, redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
+import ProfileForm from '../../_components/ProfileForm';
+
+export default async function EditProfilePage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    const supabase = await createClient();
+    
+    // 認証チェック
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        redirect('/login');
+    }
+    
+    // 本人確認（自分のプロフィール以外は編集できない）
+    if (user.id !== id) {
+        redirect(`/profile/${id}`);
+    }
+
+    const profile = await getProfileById(id);
+
+    if (!profile) {
+        return notFound();
+    }
+
+    async function updateProfile(formData: FormData) {
+        'use server';
+        const supabase = await createClient(); // サーバーアクション内でもクライアントを作成
+
+        const name = formData.get('name') as string;
+        const ageStr = formData.get('age') as string;
+        const location = formData.get('location') as string;
+        const bio = formData.get('bio') as string;
+        const occupation = formData.get('occupation') as string;
+        const nativeLanguage = formData.get('nativeLanguage') as string;
+        const imageFile = formData.get('image') as File;
+
+        // JSONデータのパース
+        const interestsJson = formData.get('interestsJson') as string;
+        const learningLanguagesJson = formData.get('learningLanguagesJson') as string;
+        
+        const interests = interestsJson ? JSON.parse(interestsJson) : [];
+        const learningLanguagesRaw = learningLanguagesJson ? JSON.parse(learningLanguagesJson) : [];
+
+        // DB形式への変換
+        const learningLanguages = learningLanguagesRaw.map((item: any) => item.language);
+        const languageLevel = learningLanguagesRaw.reduce((acc: any, item: any) => {
+            acc[item.language] = item.level;
+            return acc;
+        }, {});
+
+        // --- デバッグ用ログ ---
+        console.log('--- Profile Update Debug ---');
+        console.log('ID:', id);
+        console.log('Interests (Raw):', interestsJson);
+        console.log('Interests (Parsed):', interests);
+        console.log('Learning Languages:', learningLanguages);
+        console.log('Language Level:', languageLevel);
+        // ----------------------
+
+        if (!name || !ageStr || !location || !nativeLanguage) {
+            console.error('必須項目が不足しています');
+            return;
+        }
+        const age = parseInt(ageStr);
+
+        let imageUrls = profile?.images || [];
+        
+        // 新しい画像がアップロードされた場合
+        if (imageFile && imageFile.size > 0) {
+            const fileName = `${user?.id}-${Date.now()}-${imageFile.name}`;
+            const { error: uploadError } = await supabase.storage
+                .from('profile-images')
+                .upload(fileName, imageFile);
+
+            if (!uploadError) {
+                const { data: publicUrlData } = supabase.storage
+                    .from('profile-images')
+                    .getPublicUrl(fileName);
+                // 既存の画像を置き換えるか、追加するか。今回は先頭に追加してメイン画像とする
+                imageUrls = [publicUrlData.publicUrl, ...imageUrls];
+            } else {
+                console.error('Image upload error:', uploadError);
+            }
+        }
+
+        const { data: updateData, error } = await supabase
+            .from('profiles')
+            .update({
+                name,
+                age,
+                location,
+                bio,
+                occupation,
+                native_language: nativeLanguage,
+                images: imageUrls,
+                interests: interests,
+                learning_languages: learningLanguages,
+                language_level: languageLevel,
+            })
+            .eq('id', id)
+            .select(); // 更新されたデータを取得して確認
+
+        if (error) {
+            console.error('Error updating profile (Supabase):', error);
+            return;
+        }
+        
+        // 更新件数チェック
+        if (!updateData || updateData.length === 0) {
+            console.error('!!! Update Warning: No rows were updated. !!!');
+            console.error('Possible causes:');
+            console.error('1. ID mismatch (Profile not found)');
+            console.error('2. RLS (Row Level Security) policies are blocking the update');
+        } else {
+            console.log('Update Success:', updateData);
+        }
+
+        revalidatePath(`/profile/${id}`);
+        redirect(`/profile/${id}`);
+    }
+
+    return (
+        <div className="max-w-2xl mx-auto p-6 bg-white rounded-xl shadow-lg mt-10 mb-20">
+            <div className="text-center mb-8">
+                <h1 className="text-3xl font-bold text-gray-800">プロフィール編集</h1>
+                <p className="text-gray-500 mt-2">情報を更新して、より良いマッチングを目指しましょう</p>
+            </div>
+            
+            <ProfileForm initialData={profile} action={updateProfile} />
+        </div>
+    );
+}
