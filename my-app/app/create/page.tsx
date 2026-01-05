@@ -3,27 +3,11 @@
 import { useState } from 'react';
 import { EventCategory, EventFormData } from '@/types/event';
 import { supabase } from '@/lib/supabaseClient';
+import { EVENT_CATEGORIES, AVAILABLE_LANGUAGES } from '@/lib/constants';
 
-const categories: EventCategory[] = [
-    '言語交換',
-    '料理体験',
-    '文化体験',
-    'スポーツ',
-    '観光',
-    'その他',
-];
+const categories: EventCategory[] = EVENT_CATEGORIES;
 
-const availableLanguages = [
-    '日本語',
-    '英語',
-    '中国語',
-    '韓国語',
-    'スペイン語',
-    'フランス語',
-    'ドイツ語',
-    'ポルトガル語',
-    'その他',
-];
+const availableLanguages = AVAILABLE_LANGUAGES;
 
 export default function CreateEventPage() {
     const [formData, setFormData] = useState<EventFormData>({
