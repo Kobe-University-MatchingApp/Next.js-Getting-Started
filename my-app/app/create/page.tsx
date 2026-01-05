@@ -1,52 +1,53 @@
-// イベント作成ページ
-
 'use client';
 
 import { useState } from 'react';
-import { EventFormData } from '@/types/event';
-import { createClient } from '@supabase/supabase-js';
-import { EVENT_CATEGORIES, AVAILABLE_LANGUAGES } from '@/lib/constants';
+import { EventCategory, EventFormData } from '@/types/event';
+import { supabase } from '@/lib/supabaseClient';
 
-// Supabase client (client-side)
-// IMPORTANT:
-// - In Next.js client components, only NEXT_PUBLIC_* env vars are available.
-// - Use the anon key for client-side inserts (RLS must allow it) or move writes to an API route.
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase =
-    supabaseUrl && supabaseAnonKey
-        ? createClient(supabaseUrl, supabaseAnonKey)
-        : null;
+const categories: EventCategory[] = [
+    '言語交換',
+    '料理体験',
+    '文化体験',
+    'スポーツ',
+    '観光',
+    'その他',
+];
+
+const availableLanguages = [
+    '日本語',
+    '英語',
+    '中国語',
+    '韓国語',
+    'スペイン語',
+    'フランス語',
+    'ドイツ語',
+    'ポルトガル語',
+    'その他',
+];
 
 export default function CreateEventPage() {
-
-    // フォームデータの状態管理
     const [formData, setFormData] = useState<EventFormData>({
         title: '',
         description: '',
         category: '言語交換',
         date: '',
-        dayOfWeek: '',
-        period: 1,
         location: '',
         maxParticipants: 10,
         fee: 0,
         languages: [],
         tags: [],
+        // NOTE: inoutdoor is stored in DB as 'in' | 'out'. Keep local typing here so we don't need to change shared types.
+        inoutdoor: 'in',
     });
 
-    // 対応言語の状態管理
     const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState('');
 
-    // Images are not part of EventFormData in the main branch snapshot.
     const [images, setImages] = useState<string[]>([]);
     const [imageInput, setImageInput] = useState('');
 
-    // time is not present in EventFormData (main branch). Keep it local.
     const [time, setTime] = useState('');
 
-    // フォーム入力変更時に実行される関数
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => {
@@ -57,7 +58,13 @@ export default function CreateEventPage() {
         }));
     };
 
-    // 言語の選択・解除をトグルする関数
+    const setInOutDoor = (value: 'in' | 'out') => {
+        setFormData((prev) => ({
+            ...prev,
+            inoutdoor: value,
+        }));
+    };
+
     const toggleLanguage = (language: string) => {
         setSelectedLanguages((prev) =>
             prev.includes(language)
@@ -66,7 +73,6 @@ export default function CreateEventPage() {
         );
     };
 
-    // 趣味タグの追加・削除関数
     const addTag = () => {
         const next = tagInput.trim();
         if (next && !formData.tags?.includes(next)) {
@@ -78,7 +84,6 @@ export default function CreateEventPage() {
         }
     };
 
-    // 趣味タグ削除
     const removeTag = (tag: string) => {
         setFormData((prev) => ({
             ...prev,
@@ -86,7 +91,6 @@ export default function CreateEventPage() {
         }));
     };
 
-    // 画像URLの追加・削除関数
     const addImage = () => {
         const next = imageInput.trim();
         if (next && !images.includes(next)) {
@@ -95,16 +99,12 @@ export default function CreateEventPage() {
         }
     };
 
-    // 画像URL削除
     const removeImage = (url: string) => {
         setImages((prev) => prev.filter((img) => img !== url));
     };
 
-    // フォーム送信時に実行される関数
-    // async: この関数内でawaitを使うため非同期関数として定義
     const handleSubmit = async (e: React.FormEvent) => {
-
-        e.preventDefault(); // フォームのデフォルトの送信動作=再読み込みを防止
+        e.preventDefault();
 
         const submitData = {
             ...formData,
@@ -114,9 +114,6 @@ export default function CreateEventPage() {
             time,
         };
 
-        console.log('イベント作成:', submitData);
-
-        // If env vars are not set, keep it as a demo / no-op.
         if (!supabase) {
             alert(
                 'Supabaseの設定が見つかりません（.env.local の NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY を確認してください）'
@@ -124,48 +121,59 @@ export default function CreateEventPage() {
             return;
         }
 
-        // Supabaseにデータを挿入
+        // shared schema: date is text
+        const dateTimeText = submitData.date
+            ? `${submitData.date}${submitData.time ? ` ${submitData.time}` : ''}`
+            : '';
+
+        // schema allows null, but keep defaults for now
+        const dayOfWeek = 'mon';
+        const period = 1;
+
+        // shared schema: id is text PK with no default
+        const id = String(Date.now());
+
         const { error } = await supabase
-            .schema('create_event')
-            .from('created_data')
+            .schema('public')
+            .from('events')
             .insert({
+                id,
                 title: submitData.title,
-                category: submitData.category,
-                event_date: submitData.date,
-                event_time: submitData.time,
-                location: submitData.location,
                 description: submitData.description,
-                max_participants: submitData.maxParticipants,
+                category: submitData.category,
+                date: dateTimeText,
+                dayofweek: dayOfWeek,
+                period,
+                location: submitData.location,
+                maxparticipants: submitData.maxParticipants,
+                currentparticipants: 0,
                 fee: submitData.fee ?? 0,
-                current_participants: 0,
                 languages: submitData.languages,
+                organizer_id: null,
+                organizer_name: '未設定',
+                organizer_avatar: '',
                 tags: submitData.tags,
                 images: submitData.images,
+                inoutdoor: submitData.inoutdoor ?? 'in',
             });
 
-        // エラーハンドリング
         if (error) {
             console.error('Supabase insert error:', error);
             alert(`保存に失敗しました: ${error.message}`);
             return;
         }
 
-        // 成功時の処理（ゆくゆくはプレビューを挟んで→作成保存→成功画面）
-        alert('イベントが作成されました！（Supabaseに保存しました）');
+        alert(`イベントが作成されました！（id=${id}）`);
     };
 
     return (
-        <div className="py-3 space-y-3 min-h-screen pb-20">
-            {/* ヘッダー */}
-            <div className="bg-white border-b border-gray-200 p-4 mx-0">
-                <h1 className="text-xl font-bold text-gray-900">イベント作成</h1>
+        <div className="py-3 space-y-3">
+            <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+                <h1 className="text-lg font-bold text-gray-800">イベント作成</h1>
             </div>
 
-            {/* フォーム */}
             <form onSubmit={handleSubmit} className="space-y-3">
-
-                {/* タイトル入力 */}
-                <div className="bg-white border-b border-gray-200 p-4 mx-0">
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         タイトル <span className="text-red-500">*</span>
                     </label>
@@ -180,21 +188,21 @@ export default function CreateEventPage() {
                     />
                 </div>
 
-                {/* カテゴリー選択 */}
-                <div className="bg-white border-b border-gray-200 p-4 mx-0">
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         カテゴリー <span className="text-red-500">*</span>
                     </label>
                     <div className="grid grid-cols-3 gap-2">
-                        {EVENT_CATEGORIES.map((category) => (
+                        {categories.map((category) => (
                             <button
                                 key={category}
                                 type="button"
                                 onClick={() => setFormData((prev) => ({ ...prev, category }))}
-                                className={`py-2 px-2 rounded-lg text-xs font-medium transition-all ${formData.category === category
-                                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                                    : 'bg-gray-100 text-gray-700'
-                                    }`}
+                                className={`py-2 px-2 rounded-lg text-xs font-medium transition-all ${
+                                    formData.category === category
+                                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                                        : 'bg-gray-100 text-gray-700'
+                                }`}
                             >
                                 {category}
                             </button>
@@ -202,8 +210,7 @@ export default function CreateEventPage() {
                     </div>
                 </div>
 
-                {/* 開催日時・場所入力 */}
-                <div className="bg-white border-b border-gray-200 p-4 mx-0">
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         開催日時 <span className="text-red-500">*</span>
                     </label>
@@ -239,8 +246,7 @@ export default function CreateEventPage() {
                     />
                 </div>
 
-                {/* 最大参加人数・参加費入力 */}
-                <div className="bg-white border-b border-gray-200 p-4 mx-0">
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
                     <div className="grid grid-cols-2 gap-2">
                         <div>
                             <label className="block text-xs font-bold text-gray-700 mb-1.5">
@@ -274,21 +280,51 @@ export default function CreateEventPage() {
                     </div>
                 </div>
 
-                {/* 対応言語選択 */}
-                <div className="bg-white border-b border-gray-200 p-4 mx-0">
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                        屋内 / 屋外 <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setInOutDoor('in')}
+                            className={`py-2 px-2 rounded-lg text-xs font-medium transition-all ${
+                                (formData.inoutdoor ?? 'in') === 'in'
+                                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                                    : 'bg-gray-100 text-gray-700'
+                            }`}
+                        >
+                            Indoor
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setInOutDoor('out')}
+                            className={`py-2 px-2 rounded-lg text-xs font-medium transition-all ${
+                                formData.inoutdoor === 'out'
+                                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                                    : 'bg-gray-100 text-gray-700'
+                            }`}
+                        >
+                            Outdoor
+                        </button>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         対応言語 <span className="text-red-500">*</span>
                     </label>
                     <div className="flex flex-wrap gap-1.5">
-                        {AVAILABLE_LANGUAGES.map((language) => (
+                        {availableLanguages.map((language) => (
                             <button
                                 key={language}
                                 type="button"
                                 onClick={() => toggleLanguage(language)}
-                                className={`px-2 py-1 rounded text-xs font-medium transition-all ${selectedLanguages.includes(language)
-                                    ? 'bg-blue-500 text-white'
-                                    : 'bg-gray-100 text-gray-700'
-                                    }`}
+                                className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                                    selectedLanguages.includes(language)
+                                        ? 'bg-blue-500 text-white'
+                                        : 'bg-gray-100 text-gray-700'
+                                }`}
                             >
                                 {language}
                             </button>
@@ -296,8 +332,7 @@ export default function CreateEventPage() {
                     </div>
                 </div>
 
-                {/* 詳細入力 */}
-                <div className="bg-white border-b border-gray-200 p-4 mx-0">
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         詳細 <span className="text-red-500">*</span>
                     </label>
@@ -312,8 +347,7 @@ export default function CreateEventPage() {
                     />
                 </div>
 
-                {/* 画像URL入力 */}
-                <div className="bg-white border-b border-gray-200 p-4 mx-0">
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         画像URL（任意・複数可）
                     </label>
@@ -322,9 +356,7 @@ export default function CreateEventPage() {
                             type="url"
                             value={imageInput}
                             onChange={(e) => setImageInput(e.target.value)}
-                            // Enterキー押下時の処理
-                            // inputタグ内でEnterを押すと通常はフォーム全体が送信されてしまうが、addImageだけを実行する
-                            onKeyDown={(e) =>
+                            onKeyPress={(e) =>
                                 e.key === 'Enter' && (e.preventDefault(), addImage())
                             }
                             placeholder="https://example.com/image.jpg"
@@ -357,8 +389,7 @@ export default function CreateEventPage() {
                     </div>
                 </div>
 
-                {/* 趣味タグ入力 */}
-                <div className="bg-white border-b border-gray-200 p-4 mx-0">
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         タグ
                     </label>
@@ -367,9 +398,7 @@ export default function CreateEventPage() {
                             type="text"
                             value={tagInput}
                             onChange={(e) => setTagInput(e.target.value)}
-                            // Enterキー押下時の処理
-                            // inputタグ内でEnterを押すと通常はフォーム全体が送信されてしまうが、addTagだけを実行する
-                            onKeyDown={(e) =>
+                            onKeyPress={(e) =>
                                 e.key === 'Enter' && (e.preventDefault(), addTag())
                             }
                             placeholder="タグを入力"
@@ -402,8 +431,7 @@ export default function CreateEventPage() {
                     </div>
                 </div>
 
-                {/* 送信ボタン */}
-                <div className="mx-0 px-4 pb-4">
+                <div className="mx-2 pb-4">
                     <button
                         type="submit"
                         disabled={selectedLanguages.length === 0}
@@ -412,7 +440,6 @@ export default function CreateEventPage() {
                         イベントを作成
                     </button>
                 </div>
-
             </form>
         </div>
     );
