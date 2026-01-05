@@ -408,7 +408,7 @@ export default function CreateEventPage() {
                             type="text"
                             value={tagInput}
                             onChange={(e) => setTagInput(e.target.value)}
-                            onKeyPress={(e) =>
+                            onKeyDown={(e) =>
                                 e.key === 'Enter' && (e.preventDefault(), addTag())
                             }
                             placeholder="タグを入力"
