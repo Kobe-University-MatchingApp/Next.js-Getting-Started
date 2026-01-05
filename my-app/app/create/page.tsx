@@ -106,13 +106,23 @@ export default function CreateEventPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        const normalizedImages = images
+            .map((u) => u.trim())
+            .filter((u) => u.length > 0);
+
         const submitData = {
             ...formData,
             languages: selectedLanguages,
-            tags: formData.tags || [],
-            images,
+            tags: (formData.tags || []).map((t) => t.trim()).filter((t) => t.length > 0),
+            images: normalizedImages,
             time,
         };
+
+        // Debug: verify images are present before insert
+        console.log('Insert payload (events):', {
+            images: submitData.images,
+            imagesCount: submitData.images.length,
+        });
 
         if (!supabase) {
             alert(
