@@ -19,6 +19,7 @@ export interface Event {
     };
     images?: string[];
     tags?: string[];
+    inoutdoor?: 'in' | 'out';
 }
 
 // イベントカテゴリーの定義
@@ -43,4 +44,5 @@ export interface EventFormData {
     fee?: number;
     languages: string[];
     tags?: string[];
+    inoutdoor?: 'in' | 'out';
 }

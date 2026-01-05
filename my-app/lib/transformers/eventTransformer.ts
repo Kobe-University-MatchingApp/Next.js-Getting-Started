@@ -64,6 +64,9 @@ export function transformSupabaseEventRow(row: any): Event {
     // 画像配列のパース（オプショナル）
     const images = parseJsonField<string[]>(row.images);
 
+    const inoutdoorRaw = getFieldValue(row, 'inoutdoor', 'in_outdoor', 'inOutdoor');
+    const inoutdoor = inoutdoorRaw === 'out' ? 'out' : inoutdoorRaw === 'in' ? 'in' : undefined;
+
     return {
         id: String(row.id ?? ''),
         title: String(row.title ?? ''),
@@ -104,6 +107,7 @@ export function transformSupabaseEventRow(row: any): Event {
         // オプショナルフィールド
         images,
         tags,
+        inoutdoor,
     };
 }
 
