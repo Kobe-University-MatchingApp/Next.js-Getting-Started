@@ -77,6 +77,29 @@ export const AVAILABLE_TAGS = [
     'ファッション',
 ] as const;
 
+// ProfileFormで使用するためのエイリアスと追加定数
+export const INTERESTS = AVAILABLE_TAGS;
+export const LANGUAGES = AVAILABLE_LANGUAGES;
+
+export const OCCUPATIONS = [
+    '学部生（1年）',
+    '学部生（2年）',
+    '学部生（3年）',
+    '学部生（4年）',
+    '大学院生（修士）',
+    '大学院生（博士）',
+    '留学生',
+    '教職員',
+    'その他',
+] as const;
+
+export const LANGUAGE_LEVELS = [
+    { value: 'beginner', label: '初級' },
+    { value: 'intermediate', label: '中級' },
+    { value: 'advanced', label: '上級' },
+    { value: 'native', label: 'ネイティブ' },
+] as const;
+
 /**
  * ユーティリティ関数：曜日IDからラベルを取得
  */

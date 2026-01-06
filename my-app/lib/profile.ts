@@ -44,3 +44,37 @@ export async function getProfile(name: String): Promise<Profile | null> {
 
     return profile;
 }
+
+export async function getProfileById(id: string): Promise<Profile | null> {
+    const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (error) {
+        console.error('Error fetching profile by id:', error);
+        return null;
+    }
+
+    const profile: Profile = {
+        id: data.id,
+        name: data.name,
+        age: data.age,
+        location: data.location,
+        occupation: data.occupation,
+        bio: data.bio,
+        interests: data.interests || [],
+        images: data.images || [],
+        nativeLanguage: data.native_language,
+        learningLanguages: data.learning_languages || [],
+        languageLevel: data.language_level as Profile['languageLevel'],
+        exchangeGoals: data.exchange_goals || [],
+        studyStyle: data.study_style || [],
+        availability: data.availability || [],
+        nationality: data.nationality || undefined,
+        education: data.education || undefined,
+    };
+
+    return profile;
+}
