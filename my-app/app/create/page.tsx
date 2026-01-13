@@ -130,95 +130,43 @@ export default function CreateEventPage() {
         setTime('');
     };
 
-    type LocalHistoryEvent = {
-        id: string;
-        title: string;
-        category: string;
-        date: string;
-        location: string;
-        maxparticipants: number;
-        fee: number;
-        languages: string[];
-        tags: string[];
-        images: string[];
-        description: string;
-        inoutdoor?: 'in' | 'out';
-    };
-
-    const LOCAL_HISTORY_KEY = 'create_local_event_history_v1';
-
-    const loadLocalHistory = (): LocalHistoryEvent[] => {
-        try {
-            const raw = localStorage.getItem(LOCAL_HISTORY_KEY);
-            const parsed = raw ? JSON.parse(raw) : [];
-            return Array.isArray(parsed) ? parsed : [];
-        } catch {
-            return [];
-        }
-    };
-
-    const saveLocalHistory = (items: LocalHistoryEvent[]) => {
-        try {
-            localStorage.setItem(LOCAL_HISTORY_KEY, JSON.stringify(items.slice(0, 20)));
-        } catch {
-            // ignore
-        }
-    };
-
-    const pushLocalHistory = (item: LocalHistoryEvent) => {
-        const prev = loadLocalHistory();
-        const next = [item, ...prev.filter((x) => x.id !== item.id)];
-        saveLocalHistory(next);
-    };
-
     const fetchHistory = async () => {
         setHistoryLoading(true);
         setHistoryError(null);
 
-        try {
-            const { data, error } = await supabase
-                .schema('public')
-                .from('events')
-                .select('id,title,category,date,location,maxparticipants,currentparticipants,fee,languages,tags,images,description,inoutdoor')
-                .order('created_at', { ascending: false })
-                .limit(20);
+        const { data, error } = await supabase
+            .schema('public')
+            .from('events')
+            .select('id,title,category,date,location,maxparticipants,currentparticipants,fee,languages,tags,images,description,inoutdoor')
+            .order('created_at', { ascending: false })
+            .limit(20);
 
-            const debugPayload = {
-                at: new Date().toISOString(),
-                error: error
-                    ? { message: error.message, code: (error as any).code, details: (error as any).details, hint: (error as any).hint }
-                    : null,
-                dataType: Array.isArray(data) ? 'array' : typeof data,
-                length: Array.isArray(data) ? data.length : null,
-                sample: Array.isArray(data) ? data.slice(0, 2) : data,
-            };
-            setLastDebug(debugPayload);
-            console.log('[create/history] fetchHistory', debugPayload);
+        const debugPayload = {
+            at: new Date().toISOString(),
+            error: error
+                ? {
+                    message: error.message,
+                    code: (error as any).code,
+                    details: (error as any).details,
+                    hint: (error as any).hint,
+                }
+                : null,
+            dataType: Array.isArray(data) ? 'array' : typeof data,
+            length: Array.isArray(data) ? data.length : null,
+            sample: Array.isArray(data) ? data.slice(0, 2) : data,
+        };
+        setLastDebug(debugPayload);
+        console.log('[create/history] fetchHistory', debugPayload);
 
-            if (error) {
-                throw error;
-            }
-
-            setHistoryEvents(data || []);
+        if (error) {
+            setHistoryError(error.message);
+            setHistoryEvents([]);
             setHistoryLoading(false);
-        } catch (e: any) {
-            const msg = e?.message ? String(e.message) : String(e);
-            // When Supabase project is paused, fetch often fails with generic "TypeError: Load failed".
-            // Fall back to local history so the UX still works.
-            setHistoryError(`${msg} (Supabase unavailable — showing local history)`);
-
-            const localItems = loadLocalHistory();
-            setHistoryEvents(localItems);
-
-            setLastDebug({
-                at: new Date().toISOString(),
-                where: 'fetchHistory',
-                message: msg,
-                localFallbackCount: localItems.length,
-            });
-
-            setHistoryLoading(false);
+            return;
         }
+
+        setHistoryEvents(data || []);
+        setHistoryLoading(false);
     };
 
     useEffect(() => {
@@ -358,70 +306,11 @@ export default function CreateEventPage() {
         const dayOfWeek = 'mon';
         const period = 1;
 
-        // Always write to local history so templates/edit can work even if Supabase is paused.
-        const localSnapshotBase: Omit<LocalHistoryEvent, 'id'> = {
-            title: submitData.title,
-            category: submitData.category,
-            date: dateTimeText,
-            location: submitData.location,
-            maxparticipants: submitData.maxParticipants,
-            fee: submitData.fee ?? 0,
-            languages: submitData.languages,
-            tags: submitData.tags,
-            images: submitData.images,
-            description: submitData.description,
-            inoutdoor: submitData.inoutdoor ?? 'in',
-        };
-
         if (isEditMode) {
-            // local history update
-            pushLocalHistory({ id: editingId as string, ...localSnapshotBase });
-
-            try {
-                const { error } = await supabase
-                    .schema('public')
-                    .from('events')
-                    .update({
-                        title: submitData.title,
-                        description: submitData.description,
-                        category: submitData.category,
-                        date: dateTimeText,
-                        dayofweek: dayOfWeek,
-                        period,
-                        location: submitData.location,
-                        maxparticipants: submitData.maxParticipants,
-                        fee: submitData.fee ?? 0,
-                        languages: submitData.languages,
-                        tags: submitData.tags,
-                        images: submitData.images,
-                        inoutdoor: submitData.inoutdoor ?? 'in',
-                    })
-                    .eq('id', editingId as string);
-
-                if (error) {
-                    throw error;
-                }
-
-                alert(`イベントを更新しました！（id=${editingId}）`);
-            } catch (err: any) {
-                alert(`Supabaseが利用できないため、ローカル履歴にのみ保存しました。（id=${editingId}）`);
-            }
-
-            resetToCreateMode();
-            return;
-        }
-
-        const id = String(Date.now());
-
-        // local history insert
-        pushLocalHistory({ id, ...localSnapshotBase });
-
-        try {
             const { error } = await supabase
                 .schema('public')
                 .from('events')
-                .insert({
-                    id,
+                .update({
                     title: submitData.title,
                     description: submitData.description,
                     category: submitData.category,
@@ -430,25 +319,58 @@ export default function CreateEventPage() {
                     period,
                     location: submitData.location,
                     maxparticipants: submitData.maxParticipants,
-                    currentparticipants: 0,
                     fee: submitData.fee ?? 0,
                     languages: submitData.languages,
-                    organizer_id: null,
-                    organizer_name: '未設定',
-                    organizer_avatar: '',
                     tags: submitData.tags,
                     images: submitData.images,
                     inoutdoor: submitData.inoutdoor ?? 'in',
-                });
+                })
+                .eq('id', editingId as string);
 
             if (error) {
-                throw error;
+                console.error('Supabase update error:', error);
+                alert(`更新に失敗しました: ${error.message}`);
+                return;
             }
 
-            alert(`イベントが作成されました！（id=${id}）`);
-        } catch (err: any) {
-            alert(`Supabaseが利用できないため、ローカル履歴にのみ保存しました。（id=${id}）`);
+            alert(`イベントを更新しました！（id=${editingId}）`);
+            resetToCreateMode();
+            return;
         }
+
+        const id = String(Date.now());
+
+        const { error } = await supabase
+            .schema('public')
+            .from('events')
+            .insert({
+                id,
+                title: submitData.title,
+                description: submitData.description,
+                category: submitData.category,
+                date: dateTimeText,
+                dayofweek: dayOfWeek,
+                period,
+                location: submitData.location,
+                maxparticipants: submitData.maxParticipants,
+                currentparticipants: 0,
+                fee: submitData.fee ?? 0,
+                languages: submitData.languages,
+                organizer_id: null,
+                organizer_name: '未設定',
+                organizer_avatar: '',
+                tags: submitData.tags,
+                images: submitData.images,
+                inoutdoor: submitData.inoutdoor ?? 'in',
+            });
+
+        if (error) {
+            console.error('Supabase insert error:', error);
+            alert(`保存に失敗しました: ${error.message}`);
+            return;
+        }
+
+        alert(`イベントが作成されました！（id=${id}）`);
     };
 
     return (
