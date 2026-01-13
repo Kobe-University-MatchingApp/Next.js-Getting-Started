@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { EventCategory, EventFormData } from '@/types/event';
 import { supabase } from '@/lib/supabaseClient';
 import { EVENT_CATEGORIES, AVAILABLE_LANGUAGES } from '@/lib/constants';
@@ -15,13 +15,12 @@ export default function CreateEventPage() {
         description: '',
         category: '言語交換',
         date: '',
-        dayOfWeek: 'mon',
-        period: 1,
         location: '',
         maxParticipants: 10,
         fee: 0,
         languages: [],
         tags: [],
+        // NOTE: inoutdoor is stored in DB as 'in' | 'out'. Keep local typing here so we don't need to change shared types.
         inoutdoor: 'in',
     });
 
@@ -33,6 +32,7 @@ export default function CreateEventPage() {
 
     const [time, setTime] = useState('');
 
+<<<<<<< HEAD
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [historyLoading, setHistoryLoading] = useState(false);
     const [historyError, setHistoryError] = useState<string | null>(null);
@@ -212,6 +212,8 @@ export default function CreateEventPage() {
         }
     };
 
+=======
+>>>>>>> parent of 1d12fda (Event History, Create From Templated Added)
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => {
@@ -270,12 +272,7 @@ export default function CreateEventPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const pendingImage = imageInput.trim();
-        const mergedImages = pendingImage && !images.includes(pendingImage)
-            ? [...images, pendingImage]
-            : images;
-
-        const normalizedImages = mergedImages
+        const normalizedImages = images
             .map((u) => u.trim())
             .filter((u) => u.length > 0);
 
@@ -287,6 +284,7 @@ export default function CreateEventPage() {
             time,
         };
 
+        // Debug: verify images are present before insert
         console.log('Insert payload (events):', {
             images: submitData.images,
             imagesCount: submitData.images.length,
@@ -299,13 +297,16 @@ export default function CreateEventPage() {
             return;
         }
 
+        // shared schema: date is text
         const dateTimeText = submitData.date
             ? `${submitData.date}${submitData.time ? ` ${submitData.time}` : ''}`
             : '';
 
+        // schema allows null, but keep defaults for now
         const dayOfWeek = 'mon';
         const period = 1;
 
+<<<<<<< HEAD
         if (isEditMode) {
             const { error } = await supabase
                 .schema('public')
@@ -338,6 +339,9 @@ export default function CreateEventPage() {
             return;
         }
 
+=======
+        // shared schema: id is text PK with no default
+>>>>>>> parent of 1d12fda (Event History, Create From Templated Added)
         const id = String(Date.now());
 
         const { error } = await supabase
@@ -375,151 +379,9 @@ export default function CreateEventPage() {
 
     return (
         <div className="py-3 space-y-3">
-            <div className="bg-white rounded-lg shadow-sm p-3 mx-2 flex items-center justify-between">
-                <h1 className="text-lg font-bold text-gray-800">
-                    {isEditMode ? 'イベント編集' : 'イベント作成'}
-                </h1>
-                <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={() => setDebugOpen((v) => !v)}
-                        className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-xs font-medium"
-                    >
-                        Debug
-                    </button>
-                    <button
-                        type="button"
-                        onClick={openHistoryForTemplate}
-                        className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-medium"
-                    >
-                        履歴から作成
-                    </button>
-                    {isEditMode && (
-                        <button
-                            type="button"
-                            onClick={resetToCreateMode}
-                            className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium"
-                        >
-                            新規作成へ
-                        </button>
-                    )}
-                    <button
-                        type="button"
-                        onClick={openHistoryForEdit}
-                        className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium"
-                    >
-                        履歴
-                    </button>
-                </div>
+            <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+                <h1 className="text-lg font-bold text-gray-800">イベント作成</h1>
             </div>
-
-            {debugOpen && (
-                <div className="bg-black text-green-200 rounded-lg shadow-sm p-3 mx-2 text-[10px] overflow-x-auto">
-                    <div className="flex items-center justify-between mb-2">
-                        <p className="font-bold">Debug Panel</p>
-                        <button
-                            type="button"
-                            className="px-2 py-1 bg-green-700 text-white rounded"
-                            onClick={fetchHistory}
-                        >
-                            fetchHistory()
-                        </button>
-                    </div>
-                    <pre className="whitespace-pre-wrap break-words">{JSON.stringify({
-                        isHistoryOpen,
-                        historyLoading,
-                        historyError,
-                        historyCount: historyEvents.length,
-                        isEditMode,
-                        editingId,
-                        lastDebug,
-                    }, null, 2)}</pre>
-                </div>
-            )}
-
-            {isHistoryOpen && (
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2 space-y-2">
-                    <div className="flex items-center justify-between">
-                        <p className="text-xs font-bold text-gray-700">イベント履歴（最新20件）</p>
-                        <button
-                            type="button"
-                            onClick={fetchHistory}
-                            className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-[10px]"
-                            disabled={historyLoading}
-                        >
-                            更新
-                        </button>
-                    </div>
-
-                    {historyLoading && (
-                        <p className="text-xs text-gray-500">読み込み中...</p>
-                    )}
-
-                    {historyError && (
-                        <p className="text-xs text-red-600">{historyError}</p>
-                    )}
-
-                    {!historyLoading && !historyError && historyEvents.length === 0 && (
-                        <p className="text-xs text-gray-500">履歴がありません</p>
-                    )}
-
-                    <div className="space-y-2">
-                        {historyEvents.map((row) => {
-                            const status = computeStatus(row?.date);
-                            const editable = canEditEvent(row);
-                            return (
-                                <div
-                                    key={row.id}
-                                    className="border border-gray-200 rounded-lg p-2 flex items-center justify-between gap-2"
-                                >
-                                    <div className="min-w-0">
-                                        <p className="text-xs font-semibold text-gray-900 truncate">
-                                            {row.title}
-                                        </p>
-                                        <p className="text-[10px] text-gray-500 truncate">
-                                            id={row.id} · {row.date || '日時未設定'} · {row.location || '場所未設定'}
-                                        </p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span
-                                            className={`text-[10px] px-2 py-0.5 rounded-full ${
-                                                status === 'completed'
-                                                    ? 'bg-gray-200 text-gray-700'
-                                                    : 'bg-green-100 text-green-700'
-                                            }`}
-                                        >
-                                            {status}
-                                        </span>
-
-                                        {historyMode === 'template' ? (
-                                            <button
-                                                type="button"
-                                                onClick={() => loadEventAsTemplate(row)}
-                                                className="px-2 py-1 rounded text-[10px] font-medium bg-indigo-600 text-white"
-                                            >
-                                                これで作成
-                                            </button>
-                                        ) : (
-                                            <button
-                                                type="button"
-                                                disabled={!editable}
-                                                onClick={() => loadEventIntoForm(row)}
-                                                className={`px-2 py-1 rounded text-[10px] font-medium ${
-                                                    editable
-                                                        ? 'bg-purple-500 text-white'
-                                                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                }`}
-                                            >
-                                                編集
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
 
             <form onSubmit={handleSubmit} className="space-y-3">
                 <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
@@ -786,7 +648,7 @@ export default function CreateEventPage() {
                         disabled={selectedLanguages.length === 0}
                         className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-lg font-bold text-sm disabled:opacity-50"
                     >
-                        {isEditMode ? 'イベントを更新' : 'イベントを作成'}
+                        イベントを作成
                     </button>
                 </div>
             </form>
