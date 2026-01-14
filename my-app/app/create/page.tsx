@@ -4,12 +4,17 @@ import { useEffect, useState } from 'react';
 import { EventCategory, EventFormData } from '@/types/event';
 import { supabase } from '@/lib/supabaseClient';
 import { EVENT_CATEGORIES, AVAILABLE_LANGUAGES } from '@/lib/constants';
+import HistoryModal from './_components/HistoryModal';
 
 const categories: EventCategory[] = EVENT_CATEGORIES;
 
 const availableLanguages = AVAILABLE_LANGUAGES;
 
 export default function CreateEventPage() {
+    const [pageMode, setPageMode] = useState<'top' | 'form'>('top');
+    const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
     const [formData, setFormData] = useState<EventFormData>({
         title: '',
         description: '',
@@ -34,7 +39,6 @@ export default function CreateEventPage() {
 
     const [time, setTime] = useState('');
 
-    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [historyLoading, setHistoryLoading] = useState(false);
     const [historyError, setHistoryError] = useState<string | null>(null);
     const [historyEvents, setHistoryEvents] = useState<any[]>([]);
@@ -43,28 +47,6 @@ export default function CreateEventPage() {
 
     const [debugOpen, setDebugOpen] = useState(false);
     const [lastDebug, setLastDebug] = useState<any>(null);
-
-    const [historyMode, setHistoryMode] = useState<'edit' | 'template'>('edit');
-
-    const openHistoryForEdit = () => {
-        // Toggle like the Debug button
-        if (isHistoryOpen && historyMode === 'edit') {
-            setIsHistoryOpen(false);
-            return;
-        }
-        setHistoryMode('edit');
-        setIsHistoryOpen(true);
-    };
-
-    const openHistoryForTemplate = () => {
-        // Toggle like the Debug button
-        if (isHistoryOpen && historyMode === 'template') {
-            setIsHistoryOpen(false);
-            return;
-        }
-        setHistoryMode('template');
-        setIsHistoryOpen(true);
-    };
 
     const loadEventAsTemplate = (row: any) => {
         try {
@@ -93,7 +75,8 @@ export default function CreateEventPage() {
             setImages(Array.isArray(row?.images) ? row.images : []);
             setImageInput('');
             setTagInput('');
-            setIsHistoryOpen(false);
+            setIsTemplateModalOpen(false);
+            setPageMode('form');
         } catch (e: any) {
             const errInfo = {
                 at: new Date().toISOString(),
@@ -141,6 +124,7 @@ export default function CreateEventPage() {
         setImageInput('');
         setTagInput('');
         setTime('');
+        setPageMode('top');
     };
 
     const fetchHistory = async () => {
@@ -183,10 +167,10 @@ export default function CreateEventPage() {
     };
 
     useEffect(() => {
-        if (isHistoryOpen) {
+        if (isTemplateModalOpen || isEditModalOpen) {
             fetchHistory();
         }
-    }, [isHistoryOpen]);
+    }, [isTemplateModalOpen, isEditModalOpen]);
 
     const loadEventIntoForm = (row: any) => {
         try {
@@ -212,7 +196,8 @@ export default function CreateEventPage() {
             setTime(tPart || '');
             setSelectedLanguages(Array.isArray(row?.languages) ? row.languages : []);
             setImages(Array.isArray(row?.images) ? row.images : []);
-            setIsHistoryOpen(false);
+            setIsEditModalOpen(false);
+            setPageMode('form');
         } catch (e: any) {
             const errInfo = {
                 at: new Date().toISOString(),
@@ -384,12 +369,89 @@ export default function CreateEventPage() {
         alert(`イベントが作成されました！（id=${id}）`);
     };
 
+    // トップページレンダリング
+    if (pageMode === 'top') {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center p-4">
+                <div className="w-full max-w-md space-y-4">
+                    <div className="text-center mb-8">
+                        <h1 className="text-3xl font-bold text-gray-800 mb-2">Createのトップページ</h1>
+                        <p className="text-sm text-gray-600">イベント作成</p>
+                    </div>
+
+                    <button
+                        onClick={() => setPageMode('form')}
+                        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                    >
+                        イベント作成
+                    </button>
+
+                    <button
+                        onClick={() => setIsTemplateModalOpen(true)}
+                        className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                    >
+                        履歴から作成
+                    </button>
+
+                    <button
+                        onClick={() => setIsEditModalOpen(true)}
+                        className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                    >
+                        作成済みイベントを編集
+                    </button>
+                </div>
+
+                {/* 履歴から作成モーダル */}
+                <HistoryModal
+                    isOpen={isTemplateModalOpen}
+                    onClose={() => setIsTemplateModalOpen(false)}
+                    title="イベント履歴（最新20件）"
+                    historyLoading={historyLoading}
+                    historyError={historyError}
+                    historyEvents={historyEvents}
+                    onRefresh={fetchHistory}
+                    onSelectEvent={loadEventAsTemplate}
+                    mode="template"
+                    canEditEvent={canEditEvent}
+                    computeStatus={computeStatus}
+                />
+
+                {/* 作成済みイベントを編集モーダル */}
+                <HistoryModal
+                    isOpen={isEditModalOpen}
+                    onClose={() => setIsEditModalOpen(false)}
+                    title="作成済みイベントを編集"
+                    historyLoading={historyLoading}
+                    historyError={historyError}
+                    historyEvents={historyEvents}
+                    onRefresh={fetchHistory}
+                    onSelectEvent={loadEventIntoForm}
+                    mode="edit"
+                    canEditEvent={canEditEvent}
+                    computeStatus={computeStatus}
+                />
+            </div>
+        );
+    }
+
+    // フォームページレンダリング
     return (
         <div className="py-3 space-y-3">
             <div className="bg-white rounded-lg shadow-sm p-3 mx-2 flex items-center justify-between">
-                <h1 className="text-lg font-bold text-gray-800">
-                    {isEditMode ? 'イベント編集' : 'イベント作成'}
-                </h1>
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setPageMode('top')}
+                        className="p-1.5 hover:bg-gray-100 rounded-lg"
+                    >
+                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <h1 className="text-lg font-bold text-gray-800">
+                        {isEditMode ? 'イベント編集' : 'イベント作成'}
+                    </h1>
+                </div>
                 <div className="flex items-center gap-2">
                     <button
                         type="button"
@@ -398,29 +460,15 @@ export default function CreateEventPage() {
                     >
                         Debug
                     </button>
-                    <button
-                        type="button"
-                        onClick={openHistoryForTemplate}
-                        className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-medium"
-                    >
-                        履歴から作成
-                    </button>
                     {isEditMode && (
                         <button
                             type="button"
                             onClick={resetToCreateMode}
-                            className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium"
+                            className="px-3 py-1.5 bg-gray-600 text-white rounded-lg text-xs font-medium"
                         >
-                            新規作成へ
+                            編集キャンセル
                         </button>
                     )}
-                    <button
-                        type="button"
-                        onClick={openHistoryForEdit}
-                        className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium"
-                    >
-                        履歴
-                    </button>
                 </div>
             </div>
 
@@ -437,7 +485,9 @@ export default function CreateEventPage() {
                         </button>
                     </div>
                     <pre className="whitespace-pre-wrap break-words">{JSON.stringify({
-                        isHistoryOpen,
+                        pageMode,
+                        isTemplateModalOpen,
+                        isEditModalOpen,
                         historyLoading,
                         historyError,
                         historyCount: historyEvents.length,
@@ -445,88 +495,6 @@ export default function CreateEventPage() {
                         editingId,
                         lastDebug,
                     }, null, 2)}</pre>
-                </div>
-            )}
-
-            {isHistoryOpen && (
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2 space-y-2">
-                    <div className="flex items-center justify-between">
-                        <p className="text-xs font-bold text-gray-700">イベント履歴（最新20件）</p>
-                        <button
-                            type="button"
-                            onClick={fetchHistory}
-                            className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-[10px]"
-                            disabled={historyLoading}
-                        >
-                            更新
-                        </button>
-                    </div>
-
-                    {historyLoading && (
-                        <p className="text-xs text-gray-500">読み込み中...</p>
-                    )}
-
-                    {historyError && (
-                        <p className="text-xs text-red-600">{historyError}</p>
-                    )}
-
-                    {!historyLoading && !historyError && historyEvents.length === 0 && (
-                        <p className="text-xs text-gray-500">履歴がありません</p>
-                    )}
-
-                    <div className="space-y-2">
-                        {historyEvents.map((row) => {
-                            const status = computeStatus(row?.date);
-                            const editable = canEditEvent(row);
-                            return (
-                                <div
-                                    key={row.id}
-                                    className="border border-gray-200 rounded-lg p-2 flex items-center justify-between gap-2"
-                                >
-                                    <div className="min-w-0">
-                                        <p className="text-xs font-semibold text-gray-900 truncate">
-                                            {row.title}
-                                        </p>
-                                        <p className="text-[10px] text-gray-500 truncate">
-                                            {row.date || '日時未設定'} · {row.location || '場所未設定'}
-                                        </p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span
-                                            className={`text-[10px] px-2 py-0.5 rounded-full ${status === 'completed'
-                                                ? 'bg-gray-200 text-gray-700'
-                                                : 'bg-green-100 text-green-700'
-                                                }`}
-                                        >
-                                            {status}
-                                        </span>
-
-                                        {historyMode === 'template' ? (
-                                            <button
-                                                type="button"
-                                                onClick={() => loadEventAsTemplate(row)}
-                                                className="px-2 py-1 rounded text-[10px] font-medium bg-indigo-600 text-white"
-                                            >
-                                                これで作成
-                                            </button>
-                                        ) : (
-                                            <button
-                                                type="button"
-                                                disabled={!editable}
-                                                onClick={() => loadEventIntoForm(row)}
-                                                className={`px-2 py-1 rounded text-[10px] font-medium ${editable
-                                                    ? 'bg-purple-500 text-white'
-                                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                    }`}
-                                            >
-                                                編集
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
                 </div>
             )}
 
