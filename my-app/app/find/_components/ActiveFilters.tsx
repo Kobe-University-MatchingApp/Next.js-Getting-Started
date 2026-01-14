@@ -3,7 +3,6 @@
 'use client';
 
 import { EventFilters } from '../_hooks/useEventFilters';
-import { DAYS_OF_WEEK, PERIODS } from '@/lib/constants';
 
 // コンポーネントのプロパティ型定義
 interface ActiveFiltersProps {
@@ -30,25 +29,16 @@ export default function ActiveFilters({
 }: ActiveFiltersProps) {
     if (activeFilterCount === 0) return null;
 
-    // 時限トグル用のヘルパー
-    const toggleTimeSlot = (dayId: string, periodId: number) => {
-        const slotId = `${dayId}-${periodId}`;
-        const newSlots = filters.timeSlots.includes(slotId)
-            ? filters.timeSlots.filter(s => s !== slotId)
-            : [...filters.timeSlots, slotId];
-        setFilters({ ...filters, timeSlots: newSlots });
+    // 個別カテゴリ削除
+    const removeCategory = (cat: string) => {
+        const newCategories = filters.categories.filter(c => c !== cat);
+        setFilters({ ...filters, categories: newCategories });
     };
 
     // 個別言語削除
     const removeLanguage = (lang: string) => {
         const newLangs = filters.languages.filter(l => l !== lang);
         setFilters({ ...filters, languages: newLangs });
-    };
-
-    // 個別タグ削除
-    const removeTag = (tag: string) => {
-        const newTags = filters.tags.filter(t => t !== tag);
-        setFilters({ ...filters, tags: newTags });
     };
 
     return (
@@ -62,6 +52,18 @@ export default function ActiveFilters({
                 クリア
             </button>
 
+            {/* カテゴリーフィルター */}
+            {filters.categories.map(cat => (
+                <button
+                    key={cat}
+                    onClick={() => removeCategory(cat)}
+                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
+                >
+                    {cat}
+                    <span className="text-gray-400">×</span>
+                </button>
+            ))}
+
             {/* 場所フィルター */}
             {filters.location && (
                 <button
@@ -73,22 +75,27 @@ export default function ActiveFilters({
                 </button>
             )}
 
-            {/* 開始時間フィルター */}
-            {filters.timeSlots.length > 0 && filters.timeSlots.map(slot => {
-                const [dayId, periodId] = slot.split('-');
-                const day = DAYS_OF_WEEK.find(d => d.id === dayId);
-                const period = PERIODS.find(p => p.id === Number(periodId));
-                return (
-                    <button
-                        key={slot}
-                        onClick={() => toggleTimeSlot(dayId, Number(periodId))}
-                        className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
-                    >
-                        {day?.label}{period?.label}
-                        <span className="text-gray-400">×</span>
-                    </button>
-                );
-            })}
+            {/* 日付フィルター */}
+            {filters.date && (
+                <button
+                    onClick={() => clearFilter('date')}
+                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
+                >
+                    {filters.date}
+                    <span className="text-gray-400">×</span>
+                </button>
+            )}
+
+            {/* 時間フィルター */}
+            {filters.time && (
+                <button
+                    onClick={() => clearFilter('time')}
+                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
+                >
+                    {filters.time}
+                    <span className="text-gray-400">×</span>
+                </button>
+            )}
 
             {/* 最小人数フィルター */}
             {filters.minParticipants && (
@@ -124,18 +131,6 @@ export default function ActiveFilters({
                 </button>
             ))}
 
-            {/* タグフィルター */}
-            {filters.tags.map(tag => (
-                <button
-                    key={tag}
-                    onClick={() => removeTag(tag)}
-                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
-                >
-                    {tag}
-                    <span className="text-gray-400">×</span>
-                </button>
-            ))}
-
             {/* 予算フィルター */}
             {filters.maxFee !== null && (
                 <button
@@ -143,6 +138,17 @@ export default function ActiveFilters({
                     className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
                 >
                     {getFeeLabel(filters.maxFee)}
+                    <span className="text-gray-400">×</span>
+                </button>
+            )}
+
+            {/* 屋内/屋外フィルター */}
+            {filters.inoutdoor && (
+                <button
+                    onClick={() => clearFilter('inoutdoor')}
+                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
+                >
+                    {filters.inoutdoor === 'in' ? 'Indoor' : 'Outdoor'}
                     <span className="text-gray-400">×</span>
                 </button>
             )}
