@@ -14,12 +14,16 @@ export async function GET(request: Request) {
     if (!error) {
       // ユーザー情報の取得
       const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+      }
       
       // ドメインチェック (神戸大学のドメインか確認)
       // ※ 本番環境ではSupabaseのAuth設定で制限することも可能ですが、
       //    コードベースで明示的にチェックすることでより確実になります。
       //    テスト用に gmail.com も許可したい場合はここを調整してください。
-      const email = user?.email || ''
+      const email = user.email || ''
       const isKobeU = email.endsWith('kobe-u.ac.jp') || email.endsWith('stu.kobe-u.ac.jp')
       
       // ★開発中はテストしやすくするため、一旦すべてのGoogleアカウントを許可する場合はここをコメントアウト
@@ -32,7 +36,7 @@ export async function GET(request: Request) {
       const { data: profile } = await supabase
         .from('profiles')
         .select('id')
-        .eq('id', user?.id) // user.id と profile.id を一致させる設計に変更
+        .eq('id', user.id) // user.id と profile.id を一致させる設計に変更
         .single()
 
       if (profile) {
