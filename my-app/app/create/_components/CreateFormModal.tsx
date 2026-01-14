@@ -5,6 +5,7 @@ import { EVENT_CATEGORIES, AVAILABLE_LANGUAGES } from '@/lib/constants';
 const categories: EventCategory[] = EVENT_CATEGORIES;
 const availableLanguages = AVAILABLE_LANGUAGES;
 
+// 多くはデバッグ用のpropsなので，必要に応じて整理してください
 interface CreateFormModalProps {
     isOpen: boolean;
     onClose: () => void;
