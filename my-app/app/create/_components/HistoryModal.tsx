@@ -32,7 +32,7 @@ export default function HistoryModal({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end mb-0">
-            <div className="bg-white w-full rounded-t-2xl max-h-[85vh] overflow-y-auto mb-0">
+            <div className="bg-white w-full rounded-t-2xl max-h-[95vh] overflow-y-auto mb-0">
                 {/* モーダルヘッダー */}
                 <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
                     <div>
