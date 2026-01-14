@@ -4,12 +4,20 @@ import { useEffect, useState } from 'react';
 import { EventCategory, EventFormData } from '@/types/event';
 import { supabase } from '@/lib/supabaseClient';
 import { EVENT_CATEGORIES, AVAILABLE_LANGUAGES } from '@/lib/constants';
+import { useModal } from '@/app/_contexts/ModalContext';
+import HistoryModal from './_components/HistoryModal';
+import CreateFormModal from './_components/CreateFormModal';
 
 const categories: EventCategory[] = EVENT_CATEGORIES;
 
 const availableLanguages = AVAILABLE_LANGUAGES;
 
 export default function CreateEventPage() {
+    const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isCreateFormModalOpen, setIsCreateFormModalOpen] = useState(false);
+    const { setIsModalOpen } = useModal();
+
     const [formData, setFormData] = useState<EventFormData>({
         title: '',
         description: '',
@@ -34,7 +42,6 @@ export default function CreateEventPage() {
 
     const [time, setTime] = useState('');
 
-    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [historyLoading, setHistoryLoading] = useState(false);
     const [historyError, setHistoryError] = useState<string | null>(null);
     const [historyEvents, setHistoryEvents] = useState<any[]>([]);
@@ -43,28 +50,6 @@ export default function CreateEventPage() {
 
     const [debugOpen, setDebugOpen] = useState(false);
     const [lastDebug, setLastDebug] = useState<any>(null);
-
-    const [historyMode, setHistoryMode] = useState<'edit' | 'template'>('edit');
-
-    const openHistoryForEdit = () => {
-        // Toggle like the Debug button
-        if (isHistoryOpen && historyMode === 'edit') {
-            setIsHistoryOpen(false);
-            return;
-        }
-        setHistoryMode('edit');
-        setIsHistoryOpen(true);
-    };
-
-    const openHistoryForTemplate = () => {
-        // Toggle like the Debug button
-        if (isHistoryOpen && historyMode === 'template') {
-            setIsHistoryOpen(false);
-            return;
-        }
-        setHistoryMode('template');
-        setIsHistoryOpen(true);
-    };
 
     const loadEventAsTemplate = (row: any) => {
         try {
@@ -93,7 +78,8 @@ export default function CreateEventPage() {
             setImages(Array.isArray(row?.images) ? row.images : []);
             setImageInput('');
             setTagInput('');
-            setIsHistoryOpen(false);
+            setIsTemplateModalOpen(false);
+            setIsCreateFormModalOpen(true);
         } catch (e: any) {
             const errInfo = {
                 at: new Date().toISOString(),
@@ -183,10 +169,16 @@ export default function CreateEventPage() {
     };
 
     useEffect(() => {
-        if (isHistoryOpen) {
+        if (isTemplateModalOpen || isEditModalOpen) {
             fetchHistory();
         }
-    }, [isHistoryOpen]);
+    }, [isTemplateModalOpen, isEditModalOpen]);
+
+    // モーダル開閉時にグローバル状態を更新（BottomNavの表示制御）
+    useEffect(() => {
+        const isAnyModalOpen = isTemplateModalOpen || isEditModalOpen || isCreateFormModalOpen;
+        setIsModalOpen(isAnyModalOpen);
+    }, [isTemplateModalOpen, isEditModalOpen, isCreateFormModalOpen, setIsModalOpen]);
 
     const loadEventIntoForm = (row: any) => {
         try {
@@ -212,7 +204,8 @@ export default function CreateEventPage() {
             setTime(tPart || '');
             setSelectedLanguages(Array.isArray(row?.languages) ? row.languages : []);
             setImages(Array.isArray(row?.images) ? row.images : []);
-            setIsHistoryOpen(false);
+            setIsEditModalOpen(false);
+            setIsCreateFormModalOpen(true);
         } catch (e: any) {
             const errInfo = {
                 at: new Date().toISOString(),
@@ -344,6 +337,7 @@ export default function CreateEventPage() {
             }
 
             alert(`イベントを更新しました！（id=${editingId}）`);
+            setIsCreateFormModalOpen(false);
             resetToCreateMode();
             return;
         }
@@ -382,439 +376,109 @@ export default function CreateEventPage() {
         }
 
         alert(`イベントが作成されました！（id=${id}）`);
+        setIsCreateFormModalOpen(false);
+        resetToCreateMode();
     };
 
+    // トップページレンダリング
     return (
-        <div className="py-3 space-y-3">
-            <div className="bg-white rounded-lg shadow-sm p-3 mx-2 flex items-center justify-between">
-                <h1 className="text-lg font-bold text-gray-800">
-                    {isEditMode ? 'イベント編集' : 'イベント作成'}
-                </h1>
-                <div className="flex items-center gap-2">
+        <div className="py-3 space-y-3 min-h-screen bg-gray-50">
+            {/* ヘッダー */}
+            <div className="bg-white border-b border-gray-200 p-4 mx-0">
+                <h1 className="text-xl font-bold text-gray-900">イベント作成</h1>
+            </div>
+
+            {/* メインコンテンツ */}
+            <div className="flex items-center justify-center p-8 pt-20">
+                <div className="w-full max-w-md space-y-4">
                     <button
-                        type="button"
-                        onClick={() => setDebugOpen((v) => !v)}
-                        className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-xs font-medium"
+                        onClick={() => setIsCreateFormModalOpen(true)}
+                        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
                     >
-                        Debug
+                        イベント作成
                     </button>
+
                     <button
-                        type="button"
-                        onClick={openHistoryForTemplate}
-                        className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-medium"
+                        onClick={() => setIsTemplateModalOpen(true)}
+                        className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
                     >
                         履歴から作成
                     </button>
-                    {isEditMode && (
-                        <button
-                            type="button"
-                            onClick={resetToCreateMode}
-                            className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium"
-                        >
-                            新規作成へ
-                        </button>
-                    )}
+
                     <button
-                        type="button"
-                        onClick={openHistoryForEdit}
-                        className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium"
+                        onClick={() => setIsEditModalOpen(true)}
+                        className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
                     >
-                        履歴
+                        作成済みイベントを編集
                     </button>
                 </div>
             </div>
 
-            {debugOpen && (
-                <div className="bg-black text-green-200 rounded-lg shadow-sm p-3 mx-2 text-[10px] overflow-x-auto">
-                    <div className="flex items-center justify-between mb-2">
-                        <p className="font-bold">Debug Panel</p>
-                        <button
-                            type="button"
-                            className="px-2 py-1 bg-green-700 text-white rounded"
-                            onClick={fetchHistory}
-                        >
-                            fetchHistory()
-                        </button>
-                    </div>
-                    <pre className="whitespace-pre-wrap break-words">{JSON.stringify({
-                        isHistoryOpen,
-                        historyLoading,
-                        historyError,
-                        historyCount: historyEvents.length,
-                        isEditMode,
-                        editingId,
-                        lastDebug,
-                    }, null, 2)}</pre>
-                </div>
-            )}
+            {/* 履歴から作成モーダル */}
+            <HistoryModal
+                isOpen={isTemplateModalOpen}
+                onClose={() => setIsTemplateModalOpen(false)}
+                title="イベント履歴（最新20件）"
+                historyLoading={historyLoading}
+                historyError={historyError}
+                historyEvents={historyEvents}
+                onRefresh={fetchHistory}
+                onSelectEvent={loadEventAsTemplate}
+                mode="template"
+                canEditEvent={canEditEvent}
+                computeStatus={computeStatus}
+            />
 
-            {isHistoryOpen && (
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2 space-y-2">
-                    <div className="flex items-center justify-between">
-                        <p className="text-xs font-bold text-gray-700">イベント履歴（最新20件）</p>
-                        <button
-                            type="button"
-                            onClick={fetchHistory}
-                            className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-[10px]"
-                            disabled={historyLoading}
-                        >
-                            更新
-                        </button>
-                    </div>
+            {/* 作成済みイベントを編集モーダル */}
+            <HistoryModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                title="作成済みイベントを編集"
+                historyLoading={historyLoading}
+                historyError={historyError}
+                historyEvents={historyEvents}
+                onRefresh={fetchHistory}
+                onSelectEvent={loadEventIntoForm}
+                mode="edit"
+                canEditEvent={canEditEvent}
+                computeStatus={computeStatus}
+            />
 
-                    {historyLoading && (
-                        <p className="text-xs text-gray-500">読み込み中...</p>
-                    )}
-
-                    {historyError && (
-                        <p className="text-xs text-red-600">{historyError}</p>
-                    )}
-
-                    {!historyLoading && !historyError && historyEvents.length === 0 && (
-                        <p className="text-xs text-gray-500">履歴がありません</p>
-                    )}
-
-                    <div className="space-y-2">
-                        {historyEvents.map((row) => {
-                            const status = computeStatus(row?.date);
-                            const editable = canEditEvent(row);
-                            return (
-                                <div
-                                    key={row.id}
-                                    className="border border-gray-200 rounded-lg p-2 flex items-center justify-between gap-2"
-                                >
-                                    <div className="min-w-0">
-                                        <p className="text-xs font-semibold text-gray-900 truncate">
-                                            {row.title}
-                                        </p>
-                                        <p className="text-[10px] text-gray-500 truncate">
-                                            {row.date || '日時未設定'} · {row.location || '場所未設定'}
-                                        </p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span
-                                            className={`text-[10px] px-2 py-0.5 rounded-full ${status === 'completed'
-                                                ? 'bg-gray-200 text-gray-700'
-                                                : 'bg-green-100 text-green-700'
-                                                }`}
-                                        >
-                                            {status}
-                                        </span>
-
-                                        {historyMode === 'template' ? (
-                                            <button
-                                                type="button"
-                                                onClick={() => loadEventAsTemplate(row)}
-                                                className="px-2 py-1 rounded text-[10px] font-medium bg-indigo-600 text-white"
-                                            >
-                                                これで作成
-                                            </button>
-                                        ) : (
-                                            <button
-                                                type="button"
-                                                disabled={!editable}
-                                                onClick={() => loadEventIntoForm(row)}
-                                                className={`px-2 py-1 rounded text-[10px] font-medium ${editable
-                                                    ? 'bg-purple-500 text-white'
-                                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                    }`}
-                                            >
-                                                編集
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-3">
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                        タイトル <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        name="title"
-                        value={formData.title}
-                        onChange={handleInputChange}
-                        placeholder="例: 日本語&英語で話そう！"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
-                        required
-                    />
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                        カテゴリー <span className="text-red-500">*</span>
-                    </label>
-                    <div className="grid grid-cols-3 gap-2">
-                        {categories.map((category) => (
-                            <button
-                                key={category}
-                                type="button"
-                                onClick={() => setFormData((prev) => ({ ...prev, category }))}
-                                className={`py-2 px-2 rounded-lg text-xs font-medium transition-all ${formData.category === category
-                                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                                    : 'bg-gray-100 text-gray-700'
-                                    }`}
-                            >
-                                {category}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                        開催日時 <span className="text-red-500">*</span>
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                        <input
-                            type="date"
-                            name="date"
-                            value={formData.date}
-                            onChange={handleInputChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
-                            required
-                        />
-                        <input
-                            type="time"
-                            value={time}
-                            onChange={(e) => setTime(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
-                            required
-                        />
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                        場所 <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        name="location"
-                        value={formData.location}
-                        onChange={handleInputChange}
-                        placeholder="例: 渋谷カフェ"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
-                        required
-                    />
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                        屋内 / 屋外 <span className="text-red-500">*</span>
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setInOutDoor('in')}
-                            className={`py-2 px-2 rounded-lg text-xs font-medium transition-all ${(formData.inoutdoor ?? 'in') === 'in'
-                                ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
-                                : 'bg-gray-100 text-gray-700'
-                                }`}
-                        >
-                            Indoor
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setInOutDoor('out')}
-                            className={`py-2 px-2 rounded-lg text-xs font-medium transition-all ${formData.inoutdoor === 'out'
-                                ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
-                                : 'bg-gray-100 text-gray-700'
-                                }`}
-                        >
-                            Outdoor
-                        </button>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                        参加人数 <span className="text-red-500">*</span>
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                        <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">
-                                最小
-                            </label>
-                            <input
-                                type="number"
-                                name="minParticipants"
-                                value={formData.minParticipants}
-                                onChange={handleInputChange}
-                                min={2}
-                                max={100}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">
-                                最大
-                            </label>
-                            <input
-                                type="number"
-                                name="maxParticipants"
-                                value={formData.maxParticipants}
-                                onChange={handleInputChange}
-                                min={2}
-                                max={100}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
-                                required
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                        参加費（円）
-                    </label>
-                    <input
-                        type="number"
-                        name="fee"
-                        value={formData.fee}
-                        onChange={handleInputChange}
-                        min={0}
-                        placeholder="0"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
-                    />
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                        対応言語 <span className="text-red-500">*</span>
-                    </label>
-                    <div className="flex flex-wrap gap-1.5">
-                        {availableLanguages.map((language) => (
-                            <button
-                                key={language}
-                                type="button"
-                                onClick={() => toggleLanguage(language)}
-                                className={`px-2 py-1 rounded text-xs font-medium transition-all ${selectedLanguages.includes(language)
-                                    ? 'bg-blue-500 text-white'
-                                    : 'bg-gray-100 text-gray-700'
-                                    }`}
-                            >
-                                {language}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                        詳細 <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                        name="description"
-                        value={formData.description}
-                        onChange={handleInputChange}
-                        placeholder="イベントの内容を記入"
-                        rows={4}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-none text-sm"
-                        required
-                    />
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                        画像URL（任意・複数可）
-                    </label>
-                    <div className="flex gap-1.5 mb-2">
-                        <input
-                            type="url"
-                            value={imageInput}
-                            onChange={(e) => setImageInput(e.target.value)}
-                            onKeyDown={(e) =>
-                                e.key === 'Enter' && (e.preventDefault(), addImage())
-                            }
-                            placeholder="https://example.com/image.jpg"
-                            className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
-                        />
-                        <button
-                            type="button"
-                            onClick={addImage}
-                            className="px-4 py-1.5 bg-purple-500 text-white rounded-lg text-xs font-medium"
-                        >
-                            追加
-                        </button>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                        {images.map((url) => (
-                            <span
-                                key={url}
-                                className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-[10px] flex items-center gap-1 max-w-full"
-                            >
-                                <span className="truncate max-w-[140px]">{url}</span>
-                                <button
-                                    type="button"
-                                    onClick={() => removeImage(url)}
-                                    className="text-gray-500 hover:text-gray-700"
-                                >
-                                    ×
-                                </button>
-                            </span>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                        タグ
-                    </label>
-                    <div className="flex gap-1.5 mb-2">
-                        <input
-                            type="text"
-                            value={tagInput}
-                            onChange={(e) => setTagInput(e.target.value)}
-                            onKeyDown={(e) =>
-                                e.key === 'Enter' && (e.preventDefault(), addTag())
-                            }
-                            placeholder="タグを入力"
-                            className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
-                        />
-                        <button
-                            type="button"
-                            onClick={addTag}
-                            className="px-4 py-1.5 bg-purple-500 text-white rounded-lg text-xs font-medium"
-                        >
-                            追加
-                        </button>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                        {formData.tags?.map((tag) => (
-                            <span
-                                key={tag}
-                                className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-medium flex items-center gap-1"
-                            >
-                                {tag}
-                                <button
-                                    type="button"
-                                    onClick={() => removeTag(tag)}
-                                    className="text-purple-500 hover:text-purple-700"
-                                >
-                                    ×
-                                </button>
-                            </span>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="mx-2 pb-4">
-                    <button
-                        type="submit"
-                        disabled={selectedLanguages.length === 0}
-                        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-lg font-bold text-sm disabled:opacity-50"
-                    >
-                        {isEditMode ? 'イベントを更新' : 'イベントを作成'}
-                    </button>
-                </div>
-            </form>
+            {/* イベント作成フォームモーダル */}
+            <CreateFormModal
+                isOpen={isCreateFormModalOpen}
+                onClose={() => setIsCreateFormModalOpen(false)}
+                formData={formData}
+                onInputChange={handleInputChange}
+                setInOutDoor={setInOutDoor}
+                setFormData={setFormData}
+                selectedLanguages={selectedLanguages}
+                toggleLanguage={toggleLanguage}
+                tagInput={tagInput}
+                setTagInput={setTagInput}
+                addTag={addTag}
+                removeTag={removeTag}
+                images={images}
+                imageInput={imageInput}
+                setImageInput={setImageInput}
+                addImage={addImage}
+                removeImage={removeImage}
+                time={time}
+                setTime={setTime}
+                onSubmit={handleSubmit}
+                isEditMode={isEditMode}
+                resetToCreateMode={resetToCreateMode}
+                debugOpen={debugOpen}
+                setDebugOpen={setDebugOpen}
+                lastDebug={lastDebug}
+                isTemplateModalOpen={isTemplateModalOpen}
+                isEditModalOpen={isEditModalOpen}
+                historyLoading={historyLoading}
+                historyError={historyError}
+                historyEvents={historyEvents}
+                editingId={editingId}
+                fetchHistory={fetchHistory}
+            />
         </div>
     );
 }
