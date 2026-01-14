@@ -1,19 +1,17 @@
 // プロフィールページのコンポーネント
 
-import { getProfile } from '@/lib/profile';
+import { getProfile, getProfileById } from '@/lib/profile';
+import { notFound } from 'next/navigation';
 
-export default async function ProfilePage() {
+export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
 
     // プロフィールデータを取得
-    const profile = await getProfile('John Smith'); // 例として 'John Smith' のプロフィールを取得
+    const profile = await getProfileById(id);
 
     // プロフィールが存在しない場合の処理
     if (!profile) {
-        return (
-            <div className="p-10 text-center text-gray-500">
-                プロフィールが見つかりませんでした。
-            </div>
-        );
+        return notFound();
     }
 
     // レベル表示用のテキストマッピング
@@ -129,5 +127,6 @@ export default async function ProfilePage() {
             )}
 
         </div>
+
     );
 }

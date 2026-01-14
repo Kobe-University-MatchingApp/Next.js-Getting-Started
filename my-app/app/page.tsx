@@ -1,17 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import AuthModal from './_components/AuthModal';
+import Link from 'next/link';
 
 export default function Page() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-
-  const openModal = (mode: 'login' | 'signup') => {
-    setAuthMode(mode);
-    setIsModalOpen(true);
-  };
-
   return (
     <div className="py-3 space-y-3">
       <div className="bg-white rounded-lg shadow-sm p-4 mx-2">
@@ -19,26 +10,15 @@ export default function Page() {
         <p className="text-sm text-gray-600">異文化交流イベント管理アプリ</p>
       </div>
 
-      <div className="flex gap-2 mx-2">
-        <button
-          onClick={() => openModal('login')}
-          className="flex-1 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg shadow-md p-6 text-white hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+      <div className="flex flex-col gap-3 mx-2 mt-10">
+        <Link
+          href="/login"
+          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-md p-4 text-center hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5"
         >
-          <h2 className="text-lg font-bold">ログイン</h2>
-        </button>
-        <button
-          onClick={() => openModal('signup')}
-          className="flex-1 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg shadow-md p-6 text-white hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
-        >
-          <h2 className="text-lg font-bold">サインアップ</h2>
-        </button>
+          <h2 className="text-lg font-bold">ログイン / 新規登録</h2>
+          <p className="text-xs mt-1 opacity-90">Googleアカウントで始める</p>
+        </Link>
       </div>
-
-      <AuthModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        initialMode={authMode}
-      />
     </div>
   );
 }
