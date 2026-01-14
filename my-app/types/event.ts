@@ -8,6 +8,7 @@ export interface Event {
     dayOfWeek: string; // 'mon', 'tue', 'wed', 'thu', 'fri'
     period: number; // 1-5 (1コマ90分固定)
     location: string;
+    minParticipants?: number;
     maxParticipants: number;
     currentParticipants: number;
     fee?: number;
