@@ -372,33 +372,36 @@ export default function CreateEventPage() {
     // トップページレンダリング
     if (pageMode === 'top') {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center p-4">
-                <div className="w-full max-w-md space-y-4">
-                    <div className="text-center mb-8">
-                        <h1 className="text-3xl font-bold text-gray-800 mb-2">Createのトップページ</h1>
-                        <p className="text-sm text-gray-600">イベント作成</p>
+            <div className="py-3 space-y-3 min-h-screen bg-gray-50">
+                {/* ヘッダー */}
+                <div className="bg-white border-b border-gray-200 p-4 mx-0">
+                    <h1 className="text-xl font-bold text-gray-900">イベント作成</h1>
+                </div>
+
+                {/* メインコンテンツ */}
+                <div className="flex items-center justify-center p-8 pt-20">
+                    <div className="w-full max-w-md space-y-4">
+                        <button
+                            onClick={() => setPageMode('form')}
+                            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                        >
+                            イベント作成
+                        </button>
+
+                        <button
+                            onClick={() => setIsTemplateModalOpen(true)}
+                            className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                        >
+                            履歴から作成
+                        </button>
+
+                        <button
+                            onClick={() => setIsEditModalOpen(true)}
+                            className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                        >
+                            作成済みイベントを編集
+                        </button>
                     </div>
-
-                    <button
-                        onClick={() => setPageMode('form')}
-                        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
-                    >
-                        イベント作成
-                    </button>
-
-                    <button
-                        onClick={() => setIsTemplateModalOpen(true)}
-                        className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
-                    >
-                        履歴から作成
-                    </button>
-
-                    <button
-                        onClick={() => setIsEditModalOpen(true)}
-                        className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
-                    >
-                        作成済みイベントを編集
-                    </button>
                 </div>
 
                 {/* 履歴から作成モーダル */}
