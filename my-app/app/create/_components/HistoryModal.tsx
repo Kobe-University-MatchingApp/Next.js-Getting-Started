@@ -31,10 +31,10 @@ export default function HistoryModal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end mb-0">
-            <div className="bg-white w-full rounded-t-2xl max-h-[95vh] overflow-y-auto mb-0">
+        <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 overflow-y-auto p-4">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl my-8">
                 {/* モーダルヘッダー */}
-                <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+                <div className="bg-white rounded-t-xl border-b border-gray-200 p-4 flex items-center justify-between sticky top-0 z-10">
                     <div>
                         <h2 className="text-lg font-bold text-gray-800">{title}</h2>
                     </div>
