@@ -46,11 +46,21 @@ export default function CreateEventPage() {
     const [historyMode, setHistoryMode] = useState<'edit' | 'template'>('edit');
 
     const openHistoryForEdit = () => {
+        // Toggle like the Debug button
+        if (isHistoryOpen && historyMode === 'edit') {
+            setIsHistoryOpen(false);
+            return;
+        }
         setHistoryMode('edit');
         setIsHistoryOpen(true);
     };
 
     const openHistoryForTemplate = () => {
+        // Toggle like the Debug button
+        if (isHistoryOpen && historyMode === 'template') {
+            setIsHistoryOpen(false);
+            return;
+        }
         setHistoryMode('template');
         setIsHistoryOpen(true);
     };
@@ -477,7 +487,7 @@ export default function CreateEventPage() {
                                             {row.title}
                                         </p>
                                         <p className="text-[10px] text-gray-500 truncate">
-                                            id={row.id} · {row.date || '日時未設定'} · {row.location || '場所未設定'}
+                                            {row.date || '日時未設定'} · {row.location || '場所未設定'}
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-2">
