@@ -4,7 +4,6 @@
 
 import { EventFilters } from './_hooks/useEventFilters';
 import { EVENT_CATEGORIES, AVAILABLE_LANGUAGES, AVAILABLE_LOCATIONS } from '@/lib/constants';
-import { EventCategory } from '@/types/event';
 
 // コンポーネントのプロパティ型定義
 interface FilterModalProps {
