@@ -313,8 +313,8 @@ export default function CreateEventPage() {
             ? `${submitData.date}${submitData.time ? ` ${submitData.time}` : ''}`
             : '';
 
-        const dayOfWeek = 'mon';
-        const period = 1;
+        const dayOfWeek = submitData.dayOfWeek ?? 'mon';
+        const period = submitData.period ?? 1;
 
         if (isEditMode) {
             const { error } = await supabase
