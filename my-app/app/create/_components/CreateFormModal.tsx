@@ -32,7 +32,6 @@ interface CreateFormModalProps {
     debugOpen: boolean;
     setDebugOpen: React.Dispatch<React.SetStateAction<boolean>>;
     lastDebug: any;
-    pageMode: string;
     isTemplateModalOpen: boolean;
     isEditModalOpen: boolean;
     historyLoading: boolean;
@@ -68,7 +67,6 @@ export default function CreateFormModal({
     debugOpen,
     setDebugOpen,
     lastDebug,
-    pageMode,
     isTemplateModalOpen,
     isEditModalOpen,
     historyLoading,
@@ -132,7 +130,6 @@ export default function CreateFormModal({
                             </button>
                         </div>
                         <pre className="whitespace-pre-wrap break-words">{JSON.stringify({
-                            pageMode,
                             isTemplateModalOpen,
                             isEditModalOpen,
                             historyLoading,
