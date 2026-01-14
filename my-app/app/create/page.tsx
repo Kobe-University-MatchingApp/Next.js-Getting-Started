@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { EventCategory, EventFormData } from '@/types/event';
 import { supabase } from '@/lib/supabaseClient';
 import { EVENT_CATEGORIES, AVAILABLE_LANGUAGES } from '@/lib/constants';
+import { useModal } from '@/app/_contexts/ModalContext';
 import HistoryModal from './_components/HistoryModal';
 import CreateFormModal from './_components/CreateFormModal';
 
@@ -16,6 +17,7 @@ export default function CreateEventPage() {
     const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isCreateFormModalOpen, setIsCreateFormModalOpen] = useState(false);
+    const { setIsModalOpen } = useModal();
 
     const [formData, setFormData] = useState<EventFormData>({
         title: '',
@@ -173,6 +175,12 @@ export default function CreateEventPage() {
             fetchHistory();
         }
     }, [isTemplateModalOpen, isEditModalOpen]);
+
+    // モーダル開閉時にグローバル状態を更新（BottomNavの表示制御）
+    useEffect(() => {
+        const isAnyModalOpen = isTemplateModalOpen || isEditModalOpen || isCreateFormModalOpen;
+        setIsModalOpen(isAnyModalOpen);
+    }, [isTemplateModalOpen, isEditModalOpen, isCreateFormModalOpen, setIsModalOpen]);
 
     const loadEventIntoForm = (row: any) => {
         try {
