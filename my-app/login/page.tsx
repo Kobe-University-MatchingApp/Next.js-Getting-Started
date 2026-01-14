@@ -1,41 +1,11 @@
 'use client';
 
-import { supabase } from '@/lib/supabaseClient';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
+import { useState } from 'react';
 
-export default function Home() {
+export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [initializing, setInitializing] = useState(true);
-  const router = useRouter();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          router.replace('/home');
-        } else {
-          setInitializing(false);
-        }
-      } catch (e) {
-        setInitializing(false);
-      }
-    };
-
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        router.replace('/home');
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [router]);
 
   const handleGoogleLogin = async () => {
     setLoading(true);
@@ -44,7 +14,7 @@ export default function Home() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/`,
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
 
@@ -53,14 +23,6 @@ export default function Home() {
       setLoading(false);
     }
   };
-
-  if (initializing) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-pink-50">
-        <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-pink-50 px-4">
@@ -139,3 +101,6 @@ export default function Home() {
     </div>
   );
 }
+
+
+

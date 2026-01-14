@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import BottomNav from "./_components/BottomNav";
 import { ModalProvider } from "./_contexts/ModalContext";
 
 const geistSans = Geist({
@@ -34,10 +33,9 @@ export default function RootLayout({
       >
         <ModalProvider>
           <div className="mobile-container">
-            <main className="main-content pb-16">
+            <main className="main-content">
               {children}
             </main>
-            <BottomNav />
           </div>
         </ModalProvider>
       </body>
