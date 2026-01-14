@@ -8,12 +8,8 @@ import { getProfile } from '@/lib/profile';
 export default async function ProfilePage() {
 
     // プロフィールデータを取得
-<<<<<<< Updated upstream
-    const profile = await getProfile('mishima2'); // 例として 'John Smith' のプロフィールを取得
-=======
     // TODO: 将来的にログイン中のユーザーIDを動的に指定するように変更する
-    const profile = await getProfile('mishima2'); 
->>>>>>> Stashed changes
+    const profile = await getProfile('mishima2');
 
     // プロフィールが存在しない場合の処理
     if (!profile) {
@@ -34,13 +30,13 @@ export default async function ProfilePage() {
 
     return (
         <div className="py-3 space-y-3 min-h-screen pb-20">
-            
+
             {/* ヘッダーエリア：タイトルと編集ボタン */}
             <div className="bg-white border-b border-gray-200 p-4 mx-0 flex justify-between items-center">
                 <h1 className="text-xl font-bold text-gray-900">プロフィール</h1>
-                
+
                 {/* 編集ページへのリンクボタンに変更 */}
-                <Link 
+                <Link
                     href="/profile/edit"
                     className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full font-medium transition-colors flex items-center gap-1"
                 >
@@ -62,7 +58,7 @@ export default async function ProfilePage() {
                         <h2 className="text-xl font-bold text-white">
                             {profile.name}, {profile.age}
                         </h2>
-                        
+
                         {/* 詳細情報：場所、職業、国籍 */}
                         <div className="flex flex-wrap gap-2 text-white/90 text-xs mt-1">
                             {/* 場所 */}
