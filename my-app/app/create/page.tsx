@@ -1,52 +1,227 @@
-// イベント作成ページ
-
 'use client';
 
-import { useState } from 'react';
-import { EventFormData } from '@/types/event';
-import { createClient } from '@supabase/supabase-js';
+import { useEffect, useState } from 'react';
+import { EventCategory, EventFormData } from '@/types/event';
+import { supabase } from '@/lib/supabaseClient';
 import { EVENT_CATEGORIES, AVAILABLE_LANGUAGES } from '@/lib/constants';
 
-// Supabase client (client-side)
-// IMPORTANT:
-// - In Next.js client components, only NEXT_PUBLIC_* env vars are available.
-// - Use the anon key for client-side inserts (RLS must allow it) or move writes to an API route.
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase =
-    supabaseUrl && supabaseAnonKey
-        ? createClient(supabaseUrl, supabaseAnonKey)
-        : null;
+const categories: EventCategory[] = EVENT_CATEGORIES;
+
+const availableLanguages = AVAILABLE_LANGUAGES;
 
 export default function CreateEventPage() {
-
-    // フォームデータの状態管理
     const [formData, setFormData] = useState<EventFormData>({
         title: '',
         description: '',
         category: '言語交換',
         date: '',
-        dayOfWeek: '',
+        dayOfWeek: 'mon',
         period: 1,
         location: '',
         maxParticipants: 10,
         fee: 0,
         languages: [],
         tags: [],
+        inoutdoor: 'in',
     });
 
-    // 対応言語の状態管理
     const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState('');
 
-    // Images are not part of EventFormData in the main branch snapshot.
     const [images, setImages] = useState<string[]>([]);
     const [imageInput, setImageInput] = useState('');
 
-    // time is not present in EventFormData (main branch). Keep it local.
     const [time, setTime] = useState('');
 
-    // フォーム入力変更時に実行される関数
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+    const [historyLoading, setHistoryLoading] = useState(false);
+    const [historyError, setHistoryError] = useState<string | null>(null);
+    const [historyEvents, setHistoryEvents] = useState<any[]>([]);
+
+    const [editingId, setEditingId] = useState<string | null>(null);
+
+    const [debugOpen, setDebugOpen] = useState(false);
+    const [lastDebug, setLastDebug] = useState<any>(null);
+
+    const [historyMode, setHistoryMode] = useState<'edit' | 'template'>('edit');
+
+    const openHistoryForEdit = () => {
+        // Toggle like the Debug button
+        if (isHistoryOpen && historyMode === 'edit') {
+            setIsHistoryOpen(false);
+            return;
+        }
+        setHistoryMode('edit');
+        setIsHistoryOpen(true);
+    };
+
+    const openHistoryForTemplate = () => {
+        // Toggle like the Debug button
+        if (isHistoryOpen && historyMode === 'template') {
+            setIsHistoryOpen(false);
+            return;
+        }
+        setHistoryMode('template');
+        setIsHistoryOpen(true);
+    };
+
+    const loadEventAsTemplate = (row: any) => {
+        try {
+            const dateText: string = String(row?.date ?? '');
+            const [dPart, tPart] = dateText.split(' ');
+
+            // IMPORTANT: template mode must NOT set editingId.
+            setEditingId(null);
+
+            setFormData((prev) => ({
+                ...prev,
+                title: String(row?.title ?? ''),
+                description: String(row?.description ?? ''),
+                category: (row?.category ?? '言語交換') as EventCategory,
+                date: dPart || '',
+                location: String(row?.location ?? ''),
+                maxParticipants: Number(row?.maxparticipants ?? 10),
+                fee: typeof row?.fee === 'number' ? row.fee : 0,
+                tags: Array.isArray(row?.tags) ? row.tags : [],
+                inoutdoor: (row?.inoutdoor === 'out' ? 'out' : 'in') as any,
+            }));
+
+            setTime(tPart || '');
+            setSelectedLanguages(Array.isArray(row?.languages) ? row.languages : []);
+            setImages(Array.isArray(row?.images) ? row.images : []);
+            setImageInput('');
+            setTagInput('');
+            setIsHistoryOpen(false);
+        } catch (e: any) {
+            const errInfo = {
+                at: new Date().toISOString(),
+                where: 'loadEventAsTemplate',
+                message: e?.message ?? String(e),
+                row,
+            };
+            setLastDebug(errInfo);
+            console.error('[create/history] loadEventAsTemplate error', errInfo);
+            alert(`TypeError: ${errInfo.message}`);
+        }
+    };
+
+    const isEditMode = editingId !== null;
+
+    const computeStatus = (dateText: string | null | undefined): 'hold' | 'completed' => {
+        if (!dateText) return 'hold';
+        const isoCandidate = dateText.includes('T') ? dateText : dateText.replace(' ', 'T');
+        const d = new Date(isoCandidate);
+        if (Number.isNaN(d.getTime())) return 'hold';
+        return d.getTime() < Date.now() ? 'completed' : 'hold';
+    };
+
+    const canEditEvent = (row: any) => computeStatus(row?.date) !== 'completed';
+
+    const resetToCreateMode = () => {
+        setEditingId(null);
+        setFormData({
+            title: '',
+            description: '',
+            category: '言語交換',
+            date: '',
+            dayOfWeek: 'mon',
+            period: 1,
+            location: '',
+            maxParticipants: 10,
+            fee: 0,
+            languages: [],
+            tags: [],
+            inoutdoor: 'in',
+        });
+        setSelectedLanguages([]);
+        setImages([]);
+        setImageInput('');
+        setTagInput('');
+        setTime('');
+    };
+
+    const fetchHistory = async () => {
+        setHistoryLoading(true);
+        setHistoryError(null);
+
+        const { data, error } = await supabase
+            .schema('public')
+            .from('events')
+            .select('id,title,category,date,location,maxparticipants,currentparticipants,fee,languages,tags,images,description,inoutdoor')
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+        const debugPayload = {
+            at: new Date().toISOString(),
+            error: error
+                ? {
+                    message: error.message,
+                    code: (error as any).code,
+                    details: (error as any).details,
+                    hint: (error as any).hint,
+                }
+                : null,
+            dataType: Array.isArray(data) ? 'array' : typeof data,
+            length: Array.isArray(data) ? data.length : null,
+            sample: Array.isArray(data) ? data.slice(0, 2) : data,
+        };
+        setLastDebug(debugPayload);
+        console.log('[create/history] fetchHistory', debugPayload);
+
+        if (error) {
+            setHistoryError(error.message);
+            setHistoryEvents([]);
+            setHistoryLoading(false);
+            return;
+        }
+
+        setHistoryEvents(data || []);
+        setHistoryLoading(false);
+    };
+
+    useEffect(() => {
+        if (isHistoryOpen) {
+            fetchHistory();
+        }
+    }, [isHistoryOpen]);
+
+    const loadEventIntoForm = (row: any) => {
+        try {
+            const dateText: string = String(row?.date ?? '');
+            const [dPart, tPart] = dateText.split(' ');
+
+            setEditingId(String(row.id));
+
+            setFormData((prev) => ({
+                ...prev,
+                title: String(row?.title ?? ''),
+                description: String(row?.description ?? ''),
+                category: (row?.category ?? '言語交換') as EventCategory,
+                date: dPart || '',
+                location: String(row?.location ?? ''),
+                maxParticipants: Number(row?.maxparticipants ?? 10),
+                fee: typeof row?.fee === 'number' ? row.fee : 0,
+                tags: Array.isArray(row?.tags) ? row.tags : [],
+                inoutdoor: (row?.inoutdoor === 'out' ? 'out' : 'in') as any,
+            }));
+
+            setTime(tPart || '');
+            setSelectedLanguages(Array.isArray(row?.languages) ? row.languages : []);
+            setImages(Array.isArray(row?.images) ? row.images : []);
+            setIsHistoryOpen(false);
+        } catch (e: any) {
+            const errInfo = {
+                at: new Date().toISOString(),
+                where: 'loadEventIntoForm',
+                message: e?.message ?? String(e),
+                row,
+            };
+            setLastDebug(errInfo);
+            console.error('[create/history] loadEventIntoForm error', errInfo);
+            alert(`TypeError: ${errInfo.message}`);
+        }
+    };
+
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => {
@@ -57,7 +232,13 @@ export default function CreateEventPage() {
         }));
     };
 
-    // 言語の選択・解除をトグルする関数
+    const setInOutDoor = (value: 'in' | 'out') => {
+        setFormData((prev) => ({
+            ...prev,
+            inoutdoor: value,
+        }));
+    };
+
     const toggleLanguage = (language: string) => {
         setSelectedLanguages((prev) =>
             prev.includes(language)
@@ -66,7 +247,6 @@ export default function CreateEventPage() {
         );
     };
 
-    // 趣味タグの追加・削除関数
     const addTag = () => {
         const next = tagInput.trim();
         if (next && !formData.tags?.includes(next)) {
@@ -78,7 +258,6 @@ export default function CreateEventPage() {
         }
     };
 
-    // 趣味タグ削除
     const removeTag = (tag: string) => {
         setFormData((prev) => ({
             ...prev,
@@ -86,7 +265,6 @@ export default function CreateEventPage() {
         }));
     };
 
-    // 画像URLの追加・削除関数
     const addImage = () => {
         const next = imageInput.trim();
         if (next && !images.includes(next)) {
@@ -95,28 +273,30 @@ export default function CreateEventPage() {
         }
     };
 
-    // 画像URL削除
     const removeImage = (url: string) => {
         setImages((prev) => prev.filter((img) => img !== url));
     };
 
-    // フォーム送信時に実行される関数
-    // async: この関数内でawaitを使うため非同期関数として定義
     const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
 
-        e.preventDefault(); // フォームのデフォルトの送信動作=再読み込みを防止
+        const pendingImage = imageInput.trim();
+        const mergedImages = pendingImage && !images.includes(pendingImage)
+            ? [...images, pendingImage]
+            : images;
+
+        const normalizedImages = mergedImages
+            .map((u) => u.trim())
+            .filter((u) => u.length > 0);
 
         const submitData = {
             ...formData,
             languages: selectedLanguages,
-            tags: formData.tags || [],
-            images,
+            tags: (formData.tags || []).map((t) => t.trim()).filter((t) => t.length > 0),
+            images: normalizedImages,
             time,
         };
 
-        console.log('イベント作成:', submitData);
-
-        // If env vars are not set, keep it as a demo / no-op.
         if (!supabase) {
             alert(
                 'Supabaseの設定が見つかりません（.env.local の NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY を確認してください）'
@@ -124,48 +304,230 @@ export default function CreateEventPage() {
             return;
         }
 
-        // Supabaseにデータを挿入
+        const dateTimeText = submitData.date
+            ? `${submitData.date}${submitData.time ? ` ${submitData.time}` : ''}`
+            : '';
+
+        const dayOfWeek = submitData.dayOfWeek ?? 'mon';
+        const period = submitData.period ?? 1;
+
+        if (isEditMode) {
+            const { error } = await supabase
+                .schema('public')
+                .from('events')
+                .update({
+                    title: submitData.title,
+                    description: submitData.description,
+                    category: submitData.category,
+                    date: dateTimeText,
+                    dayofweek: dayOfWeek,
+                    period,
+                    location: submitData.location,
+                    maxparticipants: submitData.maxParticipants,
+                    fee: submitData.fee ?? 0,
+                    languages: submitData.languages,
+                    tags: submitData.tags,
+                    images: submitData.images,
+                    inoutdoor: submitData.inoutdoor ?? 'in',
+                })
+                .eq('id', editingId as string);
+
+            if (error) {
+                console.error('Supabase update error:', error);
+                alert(`更新に失敗しました: ${error.message}`);
+                return;
+            }
+
+            alert(`イベントを更新しました！（id=${editingId}）`);
+            resetToCreateMode();
+            return;
+        }
+
+        const id = String(Date.now());
+
         const { error } = await supabase
-            .schema('create_event')
-            .from('created_data')
+            .schema('public')
+            .from('events')
             .insert({
+                id,
                 title: submitData.title,
-                category: submitData.category,
-                event_date: submitData.date,
-                event_time: submitData.time,
-                location: submitData.location,
                 description: submitData.description,
-                max_participants: submitData.maxParticipants,
+                category: submitData.category,
+                date: dateTimeText,
+                dayofweek: dayOfWeek,
+                period,
+                location: submitData.location,
+                maxparticipants: submitData.maxParticipants,
+                currentparticipants: 0,
                 fee: submitData.fee ?? 0,
-                current_participants: 0,
                 languages: submitData.languages,
+                organizer_id: null,
+                organizer_name: '未設定',
+                organizer_avatar: '',
                 tags: submitData.tags,
                 images: submitData.images,
+                inoutdoor: submitData.inoutdoor ?? 'in',
             });
 
-        // エラーハンドリング
         if (error) {
             console.error('Supabase insert error:', error);
             alert(`保存に失敗しました: ${error.message}`);
             return;
         }
 
-        // 成功時の処理（ゆくゆくはプレビューを挟んで→作成保存→成功画面）
-        alert('イベントが作成されました！（Supabaseに保存しました）');
+        alert(`イベントが作成されました！（id=${id}）`);
     };
 
     return (
-        <div className="py-3 space-y-3 min-h-screen pb-20">
-            {/* ヘッダー */}
-            <div className="bg-white border-b border-gray-200 p-4 mx-0">
-                <h1 className="text-xl font-bold text-gray-900">イベント作成</h1>
+        <div className="py-3 space-y-3">
+            <div className="bg-white rounded-lg shadow-sm p-3 mx-2 flex items-center justify-between">
+                <h1 className="text-lg font-bold text-gray-800">
+                    {isEditMode ? 'イベント編集' : 'イベント作成'}
+                </h1>
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setDebugOpen((v) => !v)}
+                        className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-xs font-medium"
+                    >
+                        Debug
+                    </button>
+                    <button
+                        type="button"
+                        onClick={openHistoryForTemplate}
+                        className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-medium"
+                    >
+                        履歴から作成
+                    </button>
+                    {isEditMode && (
+                        <button
+                            type="button"
+                            onClick={resetToCreateMode}
+                            className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium"
+                        >
+                            新規作成へ
+                        </button>
+                    )}
+                    <button
+                        type="button"
+                        onClick={openHistoryForEdit}
+                        className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium"
+                    >
+                        履歴
+                    </button>
+                </div>
             </div>
 
-            {/* フォーム */}
-            <form onSubmit={handleSubmit} className="space-y-3">
+            {debugOpen && (
+                <div className="bg-black text-green-200 rounded-lg shadow-sm p-3 mx-2 text-[10px] overflow-x-auto">
+                    <div className="flex items-center justify-between mb-2">
+                        <p className="font-bold">Debug Panel</p>
+                        <button
+                            type="button"
+                            className="px-2 py-1 bg-green-700 text-white rounded"
+                            onClick={fetchHistory}
+                        >
+                            fetchHistory()
+                        </button>
+                    </div>
+                    <pre className="whitespace-pre-wrap break-words">{JSON.stringify({
+                        isHistoryOpen,
+                        historyLoading,
+                        historyError,
+                        historyCount: historyEvents.length,
+                        isEditMode,
+                        editingId,
+                        lastDebug,
+                    }, null, 2)}</pre>
+                </div>
+            )}
 
-                {/* タイトル入力 */}
-                <div className="bg-white border-b border-gray-200 p-4 mx-0">
+            {isHistoryOpen && (
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2 space-y-2">
+                    <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold text-gray-700">イベント履歴（最新20件）</p>
+                        <button
+                            type="button"
+                            onClick={fetchHistory}
+                            className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-[10px]"
+                            disabled={historyLoading}
+                        >
+                            更新
+                        </button>
+                    </div>
+
+                    {historyLoading && (
+                        <p className="text-xs text-gray-500">読み込み中...</p>
+                    )}
+
+                    {historyError && (
+                        <p className="text-xs text-red-600">{historyError}</p>
+                    )}
+
+                    {!historyLoading && !historyError && historyEvents.length === 0 && (
+                        <p className="text-xs text-gray-500">履歴がありません</p>
+                    )}
+
+                    <div className="space-y-2">
+                        {historyEvents.map((row) => {
+                            const status = computeStatus(row?.date);
+                            const editable = canEditEvent(row);
+                            return (
+                                <div
+                                    key={row.id}
+                                    className="border border-gray-200 rounded-lg p-2 flex items-center justify-between gap-2"
+                                >
+                                    <div className="min-w-0">
+                                        <p className="text-xs font-semibold text-gray-900 truncate">
+                                            {row.title}
+                                        </p>
+                                        <p className="text-[10px] text-gray-500 truncate">
+                                            {row.date || '日時未設定'} · {row.location || '場所未設定'}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span
+                                            className={`text-[10px] px-2 py-0.5 rounded-full ${
+                                                status === 'completed'
+                                                    ? 'bg-gray-200 text-gray-700'
+                                                    : 'bg-green-100 text-green-700'
+                                            }`}
+                                        >
+                                            {status}
+                                        </span>
+
+                                        {historyMode === 'template' ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => loadEventAsTemplate(row)}
+                                                className="px-2 py-1 rounded text-[10px] font-medium bg-indigo-600 text-white"
+                                            >
+                                                これで作成
+                                            </button>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                disabled={!editable}
+                                                onClick={() => loadEventIntoForm(row)}
+                                                className={`px-2 py-1 rounded text-[10px] font-medium ${
+                                                    editable
+                                                        ? 'bg-purple-500 text-white'
+                                                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                }`}
+                                            >
+                                                編集
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-3">
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         タイトル <span className="text-red-500">*</span>
                     </label>
@@ -180,21 +542,21 @@ export default function CreateEventPage() {
                     />
                 </div>
 
-                {/* カテゴリー選択 */}
-                <div className="bg-white border-b border-gray-200 p-4 mx-0">
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         カテゴリー <span className="text-red-500">*</span>
                     </label>
                     <div className="grid grid-cols-3 gap-2">
-                        {EVENT_CATEGORIES.map((category) => (
+                        {categories.map((category) => (
                             <button
                                 key={category}
                                 type="button"
                                 onClick={() => setFormData((prev) => ({ ...prev, category }))}
-                                className={`py-2 px-2 rounded-lg text-xs font-medium transition-all ${formData.category === category
-                                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                                    : 'bg-gray-100 text-gray-700'
-                                    }`}
+                                className={`py-2 px-2 rounded-lg text-xs font-medium transition-all ${
+                                    formData.category === category
+                                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                                        : 'bg-gray-100 text-gray-700'
+                                }`}
                             >
                                 {category}
                             </button>
@@ -202,8 +564,7 @@ export default function CreateEventPage() {
                     </div>
                 </div>
 
-                {/* 開催日時・場所入力 */}
-                <div className="bg-white border-b border-gray-200 p-4 mx-0">
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         開催日時 <span className="text-red-500">*</span>
                     </label>
@@ -239,8 +600,7 @@ export default function CreateEventPage() {
                     />
                 </div>
 
-                {/* 最大参加人数・参加費入力 */}
-                <div className="bg-white border-b border-gray-200 p-4 mx-0">
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
                     <div className="grid grid-cols-2 gap-2">
                         <div>
                             <label className="block text-xs font-bold text-gray-700 mb-1.5">
@@ -274,21 +634,51 @@ export default function CreateEventPage() {
                     </div>
                 </div>
 
-                {/* 対応言語選択 */}
-                <div className="bg-white border-b border-gray-200 p-4 mx-0">
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                        屋内 / 屋外 <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setInOutDoor('in')}
+                            className={`py-2 px-2 rounded-lg text-xs font-medium transition-all ${
+                                (formData.inoutdoor ?? 'in') === 'in'
+                                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                                    : 'bg-gray-100 text-gray-700'
+                            }`}
+                        >
+                            Indoor
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setInOutDoor('out')}
+                            className={`py-2 px-2 rounded-lg text-xs font-medium transition-all ${
+                                formData.inoutdoor === 'out'
+                                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                                    : 'bg-gray-100 text-gray-700'
+                            }`}
+                        >
+                            Outdoor
+                        </button>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         対応言語 <span className="text-red-500">*</span>
                     </label>
                     <div className="flex flex-wrap gap-1.5">
-                        {AVAILABLE_LANGUAGES.map((language) => (
+                        {availableLanguages.map((language) => (
                             <button
                                 key={language}
                                 type="button"
                                 onClick={() => toggleLanguage(language)}
-                                className={`px-2 py-1 rounded text-xs font-medium transition-all ${selectedLanguages.includes(language)
-                                    ? 'bg-blue-500 text-white'
-                                    : 'bg-gray-100 text-gray-700'
-                                    }`}
+                                className={`px-2 py-1 rounded text-xs font-medium transition-all ${
+                                    selectedLanguages.includes(language)
+                                        ? 'bg-blue-500 text-white'
+                                        : 'bg-gray-100 text-gray-700'
+                                }`}
                             >
                                 {language}
                             </button>
@@ -296,8 +686,7 @@ export default function CreateEventPage() {
                     </div>
                 </div>
 
-                {/* 詳細入力 */}
-                <div className="bg-white border-b border-gray-200 p-4 mx-0">
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         詳細 <span className="text-red-500">*</span>
                     </label>
@@ -312,8 +701,7 @@ export default function CreateEventPage() {
                     />
                 </div>
 
-                {/* 画像URL入力 */}
-                <div className="bg-white border-b border-gray-200 p-4 mx-0">
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         画像URL（任意・複数可）
                     </label>
@@ -322,8 +710,6 @@ export default function CreateEventPage() {
                             type="url"
                             value={imageInput}
                             onChange={(e) => setImageInput(e.target.value)}
-                            // Enterキー押下時の処理
-                            // inputタグ内でEnterを押すと通常はフォーム全体が送信されてしまうが、addImageだけを実行する
                             onKeyDown={(e) =>
                                 e.key === 'Enter' && (e.preventDefault(), addImage())
                             }
@@ -357,8 +743,7 @@ export default function CreateEventPage() {
                     </div>
                 </div>
 
-                {/* 趣味タグ入力 */}
-                <div className="bg-white border-b border-gray-200 p-4 mx-0">
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         タグ
                     </label>
@@ -367,8 +752,6 @@ export default function CreateEventPage() {
                             type="text"
                             value={tagInput}
                             onChange={(e) => setTagInput(e.target.value)}
-                            // Enterキー押下時の処理
-                            // inputタグ内でEnterを押すと通常はフォーム全体が送信されてしまうが、addTagだけを実行する
                             onKeyDown={(e) =>
                                 e.key === 'Enter' && (e.preventDefault(), addTag())
                             }
@@ -402,17 +785,15 @@ export default function CreateEventPage() {
                     </div>
                 </div>
 
-                {/* 送信ボタン */}
-                <div className="mx-0 px-4 pb-4">
+                <div className="mx-2 pb-4">
                     <button
                         type="submit"
                         disabled={selectedLanguages.length === 0}
                         className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-lg font-bold text-sm disabled:opacity-50"
                     >
-                        イベントを作成
+                        {isEditMode ? 'イベントを更新' : 'イベントを作成'}
                     </button>
                 </div>
-
             </form>
         </div>
     );
