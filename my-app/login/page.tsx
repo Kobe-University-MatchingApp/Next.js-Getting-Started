@@ -95,7 +95,7 @@ export default function LoginPage() {
 
         {/* フッター */}
         <p className="text-center text-gray-400 text-sm mt-8">
-          © 2025 異文化交流アプリ
+          © 2026 異文化交流アプリ
         </p>
       </div>
     </div>
