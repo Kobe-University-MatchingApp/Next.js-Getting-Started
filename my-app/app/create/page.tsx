@@ -297,11 +297,6 @@ export default function CreateEventPage() {
             time,
         };
 
-        console.log('Insert payload (events):', {
-            images: submitData.images,
-            imagesCount: submitData.images.length,
-        });
-
         if (!supabase) {
             alert(
                 'Supabaseの設定が見つかりません（.env.local の NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY を確認してください）'
