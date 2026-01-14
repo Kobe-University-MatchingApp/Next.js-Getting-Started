@@ -1,3 +1,6 @@
+// app/profile/layout.tsx
+// プロフィールページのレイアウト定義
+
 export default function ProfileLayout({
     children,
 }: {
