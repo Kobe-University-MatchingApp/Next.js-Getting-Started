@@ -3,7 +3,6 @@
 'use client';
 
 import { EventFilters } from '../_hooks/useEventFilters';
-import { EVENT_CATEGORIES } from '@/lib/constants';
 
 // コンポーネントのプロパティ型定義
 interface ActiveFiltersProps {
