@@ -3,7 +3,8 @@
 'use client';
 
 import { EventFilters } from './_hooks/useEventFilters';
-import { DAYS_OF_WEEK, PERIODS, AVAILABLE_LANGUAGES, AVAILABLE_LOCATIONS, AVAILABLE_TAGS } from '@/lib/constants';
+import { EVENT_CATEGORIES, AVAILABLE_LANGUAGES, AVAILABLE_LOCATIONS } from '@/lib/constants';
+import { EventCategory } from '@/types/event';
 
 // コンポーネントのプロパティ型定義
 interface FilterModalProps {
@@ -24,20 +25,6 @@ export default function FilterModal({
     resultCount,
 }: FilterModalProps) {
 
-    // 時限の選択・解除をトグルする関数
-    const toggleTimeSlot = (dayId: string, periodId: number) => {
-        // スロットIDを生成（例: "mon-1" = 月曜1限）
-        const slotId = `${dayId}-${periodId}`;
-
-        // 既に選択されていれば削除、未選択なら追加
-        // （三項演算子: 条件 ? 真の場合 : 偽の場合 ※if文の簡略版）
-        const newSlots = filters.timeSlots.includes(slotId)
-            ? filters.timeSlots.filter(s => s !== slotId)
-            : [...filters.timeSlots, slotId];
-
-        setFilters({ ...filters, timeSlots: newSlots });
-    };
-
     // モーダルが閉じている場合は何もレンダリングしない
     if (!isOpen) return null;
 
@@ -48,7 +35,7 @@ export default function FilterModal({
                 {/* モーダルヘッダー */}
                 <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
                     <div>
-                        <h2 className="text-lg font-bold text-gray-800">絞り込み</h2>
+                        <h2 className="text-lg font-bold text-gray-800">項目で絞り込み</h2>
                     </div>
                     <button
                         onClick={onClose}
@@ -62,6 +49,52 @@ export default function FilterModal({
 
                 {/* フィルターコンテンツ */}
                 <div className="p-4 space-y-4">
+                    {/* カテゴリー */}
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">カテゴリー</label>
+                        <div className="grid grid-cols-3 gap-2">
+                            {EVENT_CATEGORIES.map(cat => (
+                                <button
+                                    key={cat}
+                                    type="button"
+                                    onClick={() => {
+                                        const newCategories = filters.categories.includes(cat)
+                                            ? filters.categories.filter(c => c !== cat)
+                                            : [...filters.categories, cat];
+                                        setFilters({ ...filters, categories: newCategories });
+                                    }}
+                                    className={`py-2 px-2 rounded-lg text-xs font-medium transition-all ${filters.categories.includes(cat)
+                                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                                        : 'bg-gray-100 text-gray-700'
+                                        }`}
+                                >
+                                    {cat}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* 開催日時 */}
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">開催日</label>
+                        <input
+                            type="date"
+                            value={filters.date}
+                            onChange={(e) => setFilters({ ...filters, date: e.target.value })}
+                            className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">開催時間</label>
+                        <input
+                            type="time"
+                            value={filters.time}
+                            onChange={(e) => setFilters({ ...filters, time: e.target.value })}
+                            className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        />
+                    </div>
+
                     {/* 場所 */}
                     <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">場所</label>
@@ -77,63 +110,18 @@ export default function FilterModal({
                         </select>
                     </div>
 
-                    {/* 開講時限 */}
+                    {/* 屋内・屋外 */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">開講時限</label>
-                        <div className="overflow-x-auto">
-                            <table className="w-full border-collapse">
-                                <thead>
-                                    <tr>
-                                        <th className="border border-gray-300 bg-gray-50 p-2 text-xs font-medium text-gray-600"></th>
-                                        {DAYS_OF_WEEK.map(day => (
-                                            <th key={day.id} className="border border-gray-300 bg-gray-50 p-2 text-xs font-medium text-gray-700">
-                                                {day.label}
-                                            </th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {PERIODS.map(period => (
-                                        <tr key={period.id}>
-                                            <td className="border border-gray-300 bg-gray-50 p-2 text-xs font-medium text-gray-600 whitespace-nowrap">
-                                                {period.label}
-                                                <div className="text-[10px] text-gray-500">{period.time}</div>
-                                            </td>
-                                            {DAYS_OF_WEEK.map(day => {
-                                                const slotId = `${day.id}-${period.id}`;
-                                                const isSelected = filters.timeSlots.includes(slotId);
-                                                return (
-                                                    <td key={day.id} className="border border-gray-300 p-0">
-                                                        <button
-                                                            onClick={() => toggleTimeSlot(day.id, period.id)}
-                                                            className={`w-full h-12 transition-colors ${isSelected
-                                                                ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                                                                : 'bg-white hover:bg-gray-50 text-gray-700'
-                                                                }`}
-                                                        >
-                                                            {isSelected && (
-                                                                <svg className="w-5 h-5 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                                </svg>
-                                                            )}
-                                                        </button>
-                                                    </td>
-                                                );
-                                            })}
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    {/* 時間の長さ */}
-                    <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">時間の長さ</label>
-                        <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700">
-                            1コマ(90分)
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">すべてのイベントは1コマ分です</p>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">屋内 / 屋外</label>
+                        <select
+                            value={filters.inoutdoor}
+                            onChange={(e) => setFilters({ ...filters, inoutdoor: e.target.value })}
+                            className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        >
+                            <option value="">すべて</option>
+                            <option value="in">Indoor</option>
+                            <option value="out">Outdoor</option>
+                        </select>
                     </div>
 
                     {/* 人数 */}
@@ -160,9 +148,26 @@ export default function FilterModal({
                         </div>
                     </div>
 
-                    {/* 言語 */}
+                    {/* 参加費 */}
                     <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">会話言語</label>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">参加費(最大)</label>
+                        <select
+                            value={filters.maxFee || ''}
+                            onChange={(e) => setFilters({ ...filters, maxFee: e.target.value ? Number(e.target.value) : null })}
+                            className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                        >
+                            <option value="">指定なし</option>
+                            <option value="0">無料</option>
+                            <option value="1000">¥1,000以下</option>
+                            <option value="3000">¥3,000以下</option>
+                            <option value="5000">¥5,000以下</option>
+                            <option value="10000">¥10,000以下</option>
+                        </select>
+                    </div>
+
+                    {/* 対応言語 */}
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">対応言語</label>
                         <div className="flex flex-wrap gap-1.5">
                             {AVAILABLE_LANGUAGES.map(lang => (
                                 <button
@@ -182,47 +187,6 @@ export default function FilterModal({
                                 </button>
                             ))}
                         </div>
-                    </div>
-
-                    {/* 趣味タグ */}
-                    <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">趣味タグ</label>
-                        <div className="flex flex-wrap gap-1.5">
-                            {AVAILABLE_TAGS.map(tag => (
-                                <button
-                                    key={tag}
-                                    onClick={() => {
-                                        const newTags = filters.tags.includes(tag)
-                                            ? filters.tags.filter(t => t !== tag)
-                                            : [...filters.tags, tag];
-                                        setFilters({ ...filters, tags: newTags });
-                                    }}
-                                    className={`px-2 py-1 rounded-full text-xs font-medium transition-all ${filters.tags.includes(tag)
-                                        ? 'bg-pink-500 text-white'
-                                        : 'bg-gray-100 text-gray-700'
-                                        }`}
-                                >
-                                    {tag}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* 予算 */}
-                    <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">予算(最大)</label>
-                        <select
-                            value={filters.maxFee || ''}
-                            onChange={(e) => setFilters({ ...filters, maxFee: e.target.value ? Number(e.target.value) : null })}
-                            className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
-                        >
-                            <option value="">指定なし</option>
-                            <option value="0">無料</option>
-                            <option value="1000">¥1,000以下</option>
-                            <option value="3000">¥3,000以下</option>
-                            <option value="5000">¥5,000以下</option>
-                            <option value="10000">¥10,000以下</option>
-                        </select>
                     </div>
                 </div>
 

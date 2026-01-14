@@ -18,6 +18,7 @@ export default function CreateEventPage() {
         dayOfWeek: 'mon',
         period: 1,
         location: '',
+        minParticipants: 2,
         maxParticipants: 10,
         fee: 0,
         languages: [],
@@ -80,6 +81,7 @@ export default function CreateEventPage() {
                 category: (row?.category ?? '言語交換') as EventCategory,
                 date: dPart || '',
                 location: String(row?.location ?? ''),
+                minParticipants: Number(row?.minparticipants ?? 2),
                 maxParticipants: Number(row?.maxparticipants ?? 10),
                 fee: typeof row?.fee === 'number' ? row.fee : 0,
                 tags: Array.isArray(row?.tags) ? row.tags : [],
@@ -127,6 +129,7 @@ export default function CreateEventPage() {
             dayOfWeek: 'mon',
             period: 1,
             location: '',
+            minParticipants: 2,
             maxParticipants: 10,
             fee: 0,
             languages: [],
@@ -147,7 +150,7 @@ export default function CreateEventPage() {
         const { data, error } = await supabase
             .schema('public')
             .from('events')
-            .select('id,title,category,date,location,maxparticipants,currentparticipants,fee,languages,tags,images,description,inoutdoor')
+            .select('id,title,category,date,location,minparticipants,maxparticipants,currentparticipants,fee,languages,tags,images,description,inoutdoor')
             .order('created_at', { ascending: false })
             .limit(20);
 
@@ -199,6 +202,7 @@ export default function CreateEventPage() {
                 category: (row?.category ?? '言語交換') as EventCategory,
                 date: dPart || '',
                 location: String(row?.location ?? ''),
+                minParticipants: Number(row?.minparticipants ?? 2),
                 maxParticipants: Number(row?.maxparticipants ?? 10),
                 fee: typeof row?.fee === 'number' ? row.fee : 0,
                 tags: Array.isArray(row?.tags) ? row.tags : [],
@@ -228,7 +232,7 @@ export default function CreateEventPage() {
         const { name, value } = e.target;
         setFormData((prev) => ({
             ...prev,
-            [name]: name === 'maxParticipants' || name === 'fee' ? Number(value) : value,
+            [name]: name === 'minParticipants' || name === 'maxParticipants' || name === 'fee' ? Number(value) : value,
         }));
     };
 
@@ -323,6 +327,7 @@ export default function CreateEventPage() {
                     dayofweek: dayOfWeek,
                     period,
                     location: submitData.location,
+                    minparticipants: submitData.minParticipants ?? 2,
                     maxparticipants: submitData.maxParticipants,
                     fee: submitData.fee ?? 0,
                     languages: submitData.languages,
@@ -357,6 +362,7 @@ export default function CreateEventPage() {
                 dayofweek: dayOfWeek,
                 period,
                 location: submitData.location,
+                minparticipants: submitData.minParticipants ?? 2,
                 maxparticipants: submitData.maxParticipants,
                 currentparticipants: 0,
                 fee: submitData.fee ?? 0,
@@ -487,11 +493,10 @@ export default function CreateEventPage() {
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span
-                                            className={`text-[10px] px-2 py-0.5 rounded-full ${
-                                                status === 'completed'
-                                                    ? 'bg-gray-200 text-gray-700'
-                                                    : 'bg-green-100 text-green-700'
-                                            }`}
+                                            className={`text-[10px] px-2 py-0.5 rounded-full ${status === 'completed'
+                                                ? 'bg-gray-200 text-gray-700'
+                                                : 'bg-green-100 text-green-700'
+                                                }`}
                                         >
                                             {status}
                                         </span>
@@ -509,11 +514,10 @@ export default function CreateEventPage() {
                                                 type="button"
                                                 disabled={!editable}
                                                 onClick={() => loadEventIntoForm(row)}
-                                                className={`px-2 py-1 rounded text-[10px] font-medium ${
-                                                    editable
-                                                        ? 'bg-purple-500 text-white'
-                                                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                }`}
+                                                className={`px-2 py-1 rounded text-[10px] font-medium ${editable
+                                                    ? 'bg-purple-500 text-white'
+                                                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                    }`}
                                             >
                                                 編集
                                             </button>
@@ -552,11 +556,10 @@ export default function CreateEventPage() {
                                 key={category}
                                 type="button"
                                 onClick={() => setFormData((prev) => ({ ...prev, category }))}
-                                className={`py-2 px-2 rounded-lg text-xs font-medium transition-all ${
-                                    formData.category === category
-                                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                                        : 'bg-gray-100 text-gray-700'
-                                }`}
+                                className={`py-2 px-2 rounded-lg text-xs font-medium transition-all ${formData.category === category
+                                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                                    : 'bg-gray-100 text-gray-700'
+                                    }`}
                             >
                                 {category}
                             </button>
@@ -568,7 +571,7 @@ export default function CreateEventPage() {
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         開催日時 <span className="text-red-500">*</span>
                     </label>
-                    <div className="grid grid-cols-2 gap-2 mb-3">
+                    <div className="grid grid-cols-2 gap-2">
                         <input
                             type="date"
                             name="date"
@@ -585,7 +588,9 @@ export default function CreateEventPage() {
                             required
                         />
                     </div>
+                </div>
 
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
                         場所 <span className="text-red-500">*</span>
                     </label>
@@ -601,10 +606,55 @@ export default function CreateEventPage() {
                 </div>
 
                 <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                        屋内 / 屋外 <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setInOutDoor('in')}
+                            className={`py-2 px-2 rounded-lg text-xs font-medium transition-all ${(formData.inoutdoor ?? 'in') === 'in'
+                                ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                                : 'bg-gray-100 text-gray-700'
+                                }`}
+                        >
+                            Indoor
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setInOutDoor('out')}
+                            className={`py-2 px-2 rounded-lg text-xs font-medium transition-all ${formData.inoutdoor === 'out'
+                                ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                                : 'bg-gray-100 text-gray-700'
+                                }`}
+                        >
+                            Outdoor
+                        </button>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                        参加人数 <span className="text-red-500">*</span>
+                    </label>
                     <div className="grid grid-cols-2 gap-2">
                         <div>
-                            <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                                最大参加人数
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                                最小
+                            </label>
+                            <input
+                                type="number"
+                                name="minParticipants"
+                                value={formData.minParticipants}
+                                onChange={handleInputChange}
+                                min={2}
+                                max={100}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                                最大
                             </label>
                             <input
                                 type="number"
@@ -617,51 +667,22 @@ export default function CreateEventPage() {
                                 required
                             />
                         </div>
-                        <div>
-                            <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                                参加費（円）
-                            </label>
-                            <input
-                                type="number"
-                                name="fee"
-                                value={formData.fee}
-                                onChange={handleInputChange}
-                                min={0}
-                                placeholder="0"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
-                            />
-                        </div>
                     </div>
                 </div>
 
                 <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                        屋内 / 屋外 <span className="text-red-500">*</span>
+                        参加費（円）
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setInOutDoor('in')}
-                            className={`py-2 px-2 rounded-lg text-xs font-medium transition-all ${
-                                (formData.inoutdoor ?? 'in') === 'in'
-                                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
-                                    : 'bg-gray-100 text-gray-700'
-                            }`}
-                        >
-                            Indoor
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setInOutDoor('out')}
-                            className={`py-2 px-2 rounded-lg text-xs font-medium transition-all ${
-                                formData.inoutdoor === 'out'
-                                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
-                                    : 'bg-gray-100 text-gray-700'
-                            }`}
-                        >
-                            Outdoor
-                        </button>
-                    </div>
+                    <input
+                        type="number"
+                        name="fee"
+                        value={formData.fee}
+                        onChange={handleInputChange}
+                        min={0}
+                        placeholder="0"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
+                    />
                 </div>
 
                 <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
@@ -674,11 +695,10 @@ export default function CreateEventPage() {
                                 key={language}
                                 type="button"
                                 onClick={() => toggleLanguage(language)}
-                                className={`px-2 py-1 rounded text-xs font-medium transition-all ${
-                                    selectedLanguages.includes(language)
-                                        ? 'bg-blue-500 text-white'
-                                        : 'bg-gray-100 text-gray-700'
-                                }`}
+                                className={`px-2 py-1 rounded text-xs font-medium transition-all ${selectedLanguages.includes(language)
+                                    ? 'bg-blue-500 text-white'
+                                    : 'bg-gray-100 text-gray-700'
+                                    }`}
                             >
                                 {language}
                             </button>
