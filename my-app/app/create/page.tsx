@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { EventCategory, EventFormData } from '@/types/event';
-import { supabase } from '@/lib/supabaseClient';
 import { EVENT_CATEGORIES, AVAILABLE_LANGUAGES } from '@/lib/constants';
+import { createEvent, fetchRecentEvents, updateEvent } from '@/lib/events';
 
 const categories: EventCategory[] = EVENT_CATEGORIES;
 
@@ -18,6 +18,7 @@ export default function CreateEventPage() {
         dayOfWeek: 'mon',
         period: 1,
         location: '',
+        minParticipants: 2,
         maxParticipants: 10,
         fee: 0,
         languages: [],
@@ -46,7 +47,6 @@ export default function CreateEventPage() {
     const [historyMode, setHistoryMode] = useState<'edit' | 'template'>('edit');
 
     const openHistoryForEdit = () => {
-        // Toggle like the Debug button
         if (isHistoryOpen && historyMode === 'edit') {
             setIsHistoryOpen(false);
             return;
@@ -56,7 +56,6 @@ export default function CreateEventPage() {
     };
 
     const openHistoryForTemplate = () => {
-        // Toggle like the Debug button
         if (isHistoryOpen && historyMode === 'template') {
             setIsHistoryOpen(false);
             return;
@@ -70,7 +69,6 @@ export default function CreateEventPage() {
             const dateText: string = String(row?.date ?? '');
             const [dPart, tPart] = dateText.split(' ');
 
-            // IMPORTANT: template mode must NOT set editingId.
             setEditingId(null);
 
             setFormData((prev) => ({
@@ -80,6 +78,7 @@ export default function CreateEventPage() {
                 category: (row?.category ?? '言語交換') as EventCategory,
                 date: dPart || '',
                 location: String(row?.location ?? ''),
+                minParticipants: Number(row?.minparticipants ?? 2),
                 maxParticipants: Number(row?.maxparticipants ?? 10),
                 fee: typeof row?.fee === 'number' ? row.fee : 0,
                 tags: Array.isArray(row?.tags) ? row.tags : [],
@@ -127,6 +126,7 @@ export default function CreateEventPage() {
             dayOfWeek: 'mon',
             period: 1,
             location: '',
+            minParticipants: 2,
             maxParticipants: 10,
             fee: 0,
             languages: [],
@@ -144,39 +144,37 @@ export default function CreateEventPage() {
         setHistoryLoading(true);
         setHistoryError(null);
 
-        const { data, error } = await supabase
-            .schema('public')
-            .from('events')
-            .select('id,title,category,date,location,maxparticipants,currentparticipants,fee,languages,tags,images,description,inoutdoor')
-            .order('created_at', { ascending: false })
-            .limit(20);
+        try {
+            const data = await fetchRecentEvents(20);
 
-        const debugPayload = {
-            at: new Date().toISOString(),
-            error: error
-                ? {
-                    message: error.message,
-                    code: (error as any).code,
-                    details: (error as any).details,
-                    hint: (error as any).hint,
-                }
-                : null,
-            dataType: Array.isArray(data) ? 'array' : typeof data,
-            length: Array.isArray(data) ? data.length : null,
-            sample: Array.isArray(data) ? data.slice(0, 2) : data,
-        };
-        setLastDebug(debugPayload);
-        console.log('[create/history] fetchHistory', debugPayload);
+            const debugPayload = {
+                at: new Date().toISOString(),
+                error: null,
+                dataType: Array.isArray(data) ? 'array' : typeof data,
+                length: Array.isArray(data) ? data.length : null,
+                sample: Array.isArray(data) ? data.slice(0, 2) : data,
+            };
+            setLastDebug(debugPayload);
+            console.log('[create/history] fetchHistory', debugPayload);
 
-        if (error) {
-            setHistoryError(error.message);
+            setHistoryEvents(data || []);
+        } catch (e: any) {
+            const msg = e?.message ? String(e.message) : String(e);
+            setHistoryError(msg);
             setHistoryEvents([]);
-            setHistoryLoading(false);
-            return;
-        }
 
-        setHistoryEvents(data || []);
-        setHistoryLoading(false);
+            const debugPayload = {
+                at: new Date().toISOString(),
+                error: { message: msg },
+                dataType: 'unknown',
+                length: null,
+                sample: null,
+            };
+            setLastDebug(debugPayload);
+            console.log('[create/history] fetchHistory', debugPayload);
+        } finally {
+            setHistoryLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -199,6 +197,7 @@ export default function CreateEventPage() {
                 category: (row?.category ?? '言語交換') as EventCategory,
                 date: dPart || '',
                 location: String(row?.location ?? ''),
+                minParticipants: Number(row?.minparticipants ?? 2),
                 maxParticipants: Number(row?.maxparticipants ?? 10),
                 fee: typeof row?.fee === 'number' ? row.fee : 0,
                 tags: Array.isArray(row?.tags) ? row.tags : [],
@@ -289,93 +288,37 @@ export default function CreateEventPage() {
             .map((u) => u.trim())
             .filter((u) => u.length > 0);
 
-        const submitData = {
-            ...formData,
-            languages: selectedLanguages,
-            tags: (formData.tags || []).map((t) => t.trim()).filter((t) => t.length > 0),
-            images: normalizedImages,
-            time,
-        };
+        const submitTags = (formData.tags || []).map((t) => t.trim()).filter((t) => t.length > 0);
 
-        if (!supabase) {
-            alert(
-                'Supabaseの設定が見つかりません（.env.local の NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY を確認してください）'
-            );
-            return;
-        }
+        try {
+            if (isEditMode) {
+                await updateEvent({
+                    id: editingId as string,
+                    form: formData,
+                    time,
+                    selectedLanguages,
+                    tags: submitTags,
+                    images: normalizedImages,
+                });
 
-        const dateTimeText = submitData.date
-            ? `${submitData.date}${submitData.time ? ` ${submitData.time}` : ''}`
-            : '';
-
-        const dayOfWeek = submitData.dayOfWeek ?? 'mon';
-        const period = submitData.period ?? 1;
-
-        if (isEditMode) {
-            const { error } = await supabase
-                .schema('public')
-                .from('events')
-                .update({
-                    title: submitData.title,
-                    description: submitData.description,
-                    category: submitData.category,
-                    date: dateTimeText,
-                    dayofweek: dayOfWeek,
-                    period,
-                    location: submitData.location,
-                    maxparticipants: submitData.maxParticipants,
-                    fee: submitData.fee ?? 0,
-                    languages: submitData.languages,
-                    tags: submitData.tags,
-                    images: submitData.images,
-                    inoutdoor: submitData.inoutdoor ?? 'in',
-                })
-                .eq('id', editingId as string);
-
-            if (error) {
-                console.error('Supabase update error:', error);
-                alert(`更新に失敗しました: ${error.message}`);
+                alert(`イベントを更新しました！（id=${editingId}）`);
+                resetToCreateMode();
                 return;
             }
 
-            alert(`イベントを更新しました！（id=${editingId}）`);
-            resetToCreateMode();
-            return;
-        }
-
-        const id = String(Date.now());
-
-        const { error } = await supabase
-            .schema('public')
-            .from('events')
-            .insert({
-                id,
-                title: submitData.title,
-                description: submitData.description,
-                category: submitData.category,
-                date: dateTimeText,
-                dayofweek: dayOfWeek,
-                period,
-                location: submitData.location,
-                maxparticipants: submitData.maxParticipants,
-                currentparticipants: 0,
-                fee: submitData.fee ?? 0,
-                languages: submitData.languages,
-                organizer_id: null,
-                organizer_name: '未設定',
-                organizer_avatar: '',
-                tags: submitData.tags,
-                images: submitData.images,
-                inoutdoor: submitData.inoutdoor ?? 'in',
+            const { id } = await createEvent({
+                form: formData,
+                time,
+                selectedLanguages,
+                tags: submitTags,
+                images: normalizedImages,
             });
 
-        if (error) {
-            console.error('Supabase insert error:', error);
-            alert(`保存に失敗しました: ${error.message}`);
-            return;
+            alert(`イベントが作成されました！（id=${id}）`);
+        } catch (error: any) {
+            console.error('Supabase save error:', error);
+            alert(`保存に失敗しました: ${error?.message ?? String(error)}`);
         }
-
-        alert(`イベントが作成されました！（id=${id}）`);
     };
 
     return (
@@ -604,6 +547,21 @@ export default function CreateEventPage() {
                     <div className="grid grid-cols-2 gap-2">
                         <div>
                             <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                                最小参加人数
+                            </label>
+                            <input
+                                type="number"
+                                name="minParticipants"
+                                value={formData.minParticipants ?? 2}
+                                onChange={handleInputChange}
+                                min={2}
+                                max={formData.maxParticipants}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-gray-700 mb-1.5">
                                 最大参加人数
                             </label>
                             <input
@@ -611,12 +569,17 @@ export default function CreateEventPage() {
                                 name="maxParticipants"
                                 value={formData.maxParticipants}
                                 onChange={handleInputChange}
-                                min={2}
+                                min={formData.minParticipants ?? 2}
                                 max={100}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
                                 required
                             />
                         </div>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-lg shadow-sm p-3 mx-2">
+                    <div className="grid grid-cols-1 gap-2">
                         <div>
                             <label className="block text-xs font-bold text-gray-700 mb-1.5">
                                 参加費（円）

@@ -40,6 +40,8 @@ export interface EventFormData {
     dayOfWeek: string;
     period: number;
     location: string;
+    // Minimum required participants (DB column: minparticipants)
+    minParticipants?: number;
     maxParticipants: number;
     fee?: number;
     languages: string[];
