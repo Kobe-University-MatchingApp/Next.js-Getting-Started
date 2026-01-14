@@ -337,6 +337,7 @@ export default function CreateEventPage() {
             }
 
             alert(`イベントを更新しました！（id=${editingId}）`);
+            setIsCreateFormModalOpen(false);
             resetToCreateMode();
             return;
         }
@@ -375,6 +376,7 @@ export default function CreateEventPage() {
         }
 
         alert(`イベントが作成されました！（id=${id}）`);
+        setIsCreateFormModalOpen(false);
         resetToCreateMode();
     };
 
