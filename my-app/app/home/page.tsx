@@ -55,7 +55,6 @@ export default function HomePage() {
     return (
       <section className="mb-8">
         <div className="flex items-center gap-2 mb-4">
-          {/* 装飾用のバー */}
           <span className="w-1.5 h-6 bg-purple-500 rounded-full"></span>
           <h2 className="text-lg font-bold text-gray-800">{title}</h2>
         </div>
@@ -73,17 +72,24 @@ export default function HomePage() {
     <div className="min-h-screen bg-gray-50 pb-24">
 
       {/* --- ヘッダーエリア --- */}
-      <header className="bg-white px-4 pt-12 pb-4 shadow-sm sticky top-0 z-20">
+      <header className="bg-white px-4 py-4 shadow-sm sticky top-0 z-20">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-xl font-bold text-gray-800">こんにちは、{userName}さん</h1>
+          <h1 className="text-xl font-bold text-gray-800">{userName}さんへのおすすめ</h1>
           <button
             onClick={() => setIsBookmarkModalOpen(true)}
-            className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center border border-purple-200 hover:bg-purple-200 transition-all"
+            className="flex flex-col items-center gap-1 hover:opacity-80 transition-all"
             aria-label="予約済みイベント"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-            </svg>
+            <div className="relative w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center border border-purple-200">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+              {/* 通知バッジ */}
+              <span className="absolute -top-1 -right-2 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                3
+              </span>
+            </div>
+            <span className="text-xs text-gray-600">予約確認</span>
           </button>
         </div>
 
@@ -123,8 +129,16 @@ export default function HomePage() {
           events[activeFilter === 'tags' ? 'byTags' :
             activeFilter === 'history' ? 'byHistory' :
               activeFilter === 'faculty' ? 'byFaculty' : 'byUpcoming'].length === 0 && (
-            <div className="text-center py-10 text-gray-500 text-sm">
-              該当するイベントはありませんでした。
+            <div className="text-center py-10">
+              <p className="text-gray-500 text-sm mb-2">該当するイベントはありませんでした。</p>
+              <br></br>
+              <p className="text-gray-600 text-sm mb-4">イベントを作成してみませんか？</p>
+              <Link
+                href="/create"
+                className="inline-block px-6 py-2.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
+              >
+                イベントを作成する
+              </Link>
             </div>
           )}
 
