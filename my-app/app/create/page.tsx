@@ -1,223 +1,59 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { EventCategory, EventFormData } from '@/types/event';
-import { supabase } from '@/lib/supabaseClient';
-import { EVENT_CATEGORIES, AVAILABLE_LANGUAGES } from '@/lib/constants';
-import { useModal } from '@/app/_contexts/ModalContext';
-import HistoryModal from './_components/HistoryModal';
+import { useCallback, useMemo, useState } from 'react';
+import { EventFormData } from '@/types/event';
 import CreateFormModal from './_components/CreateFormModal';
+import HistoryModal from './_components/HistoryModal';
+import { createClient } from '@supabase/supabase-js';
 
-const categories: EventCategory[] = EVENT_CATEGORIES;
+// Supabase client (client-side)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase =
+    supabaseUrl && supabaseAnonKey
+        ? createClient(supabaseUrl, supabaseAnonKey)
+        : null;
 
-const availableLanguages = AVAILABLE_LANGUAGES;
+const emptyForm: EventFormData = {
+    title: '',
+    description: '',
+    category: '言語交換',
+    date: '',
+    dayOfWeek: 'mon',
+    period: 1,
+    location: '',
+    minParticipants: 2,
+    maxParticipants: 10,
+    fee: 0,
+    languages: [],
+    tags: [],
+    inoutdoor: 'in',
+};
 
 export default function CreateEventPage() {
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [isCreateFormModalOpen, setIsCreateFormModalOpen] = useState(false);
-    const { setIsModalOpen } = useModal();
 
-    const [formData, setFormData] = useState<EventFormData>({
-        title: '',
-        description: '',
-        category: '言語交換',
-        date: '',
-        dayOfWeek: 'mon',
-        period: 1,
-        location: '',
-        minParticipants: 2,
-        maxParticipants: 10,
-        fee: 0,
-        languages: [],
-        tags: [],
-        inoutdoor: 'in',
-    });
-
+    const [formData, setFormData] = useState<EventFormData>(emptyForm);
     const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState('');
 
     const [images, setImages] = useState<string[]>([]);
     const [imageInput, setImageInput] = useState('');
-
     const [time, setTime] = useState('');
 
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
+
+    // History state
     const [historyLoading, setHistoryLoading] = useState(false);
     const [historyError, setHistoryError] = useState<string | null>(null);
     const [historyEvents, setHistoryEvents] = useState<any[]>([]);
 
-    const [editingId, setEditingId] = useState<string | null>(null);
-
+    // debug panel
     const [debugOpen, setDebugOpen] = useState(false);
     const [lastDebug, setLastDebug] = useState<any>(null);
-
-    const loadEventAsTemplate = (row: any) => {
-        try {
-            const dateText: string = String(row?.date ?? '');
-            const [dPart, tPart] = dateText.split(' ');
-
-            // IMPORTANT: template mode must NOT set editingId.
-            setEditingId(null);
-
-            setFormData((prev) => ({
-                ...prev,
-                title: String(row?.title ?? ''),
-                description: String(row?.description ?? ''),
-                category: (row?.category ?? '言語交換') as EventCategory,
-                date: dPart || '',
-                location: String(row?.location ?? ''),
-                minParticipants: Number(row?.minparticipants ?? 2),
-                maxParticipants: Number(row?.maxparticipants ?? 10),
-                fee: typeof row?.fee === 'number' ? row.fee : 0,
-                tags: Array.isArray(row?.tags) ? row.tags : [],
-                inoutdoor: (row?.inoutdoor === 'out' ? 'out' : 'in') as any,
-            }));
-
-            setTime(tPart || '');
-            setSelectedLanguages(Array.isArray(row?.languages) ? row.languages : []);
-            setImages(Array.isArray(row?.images) ? row.images : []);
-            setImageInput('');
-            setTagInput('');
-            setIsTemplateModalOpen(false);
-            setIsCreateFormModalOpen(true);
-        } catch (e: any) {
-            const errInfo = {
-                at: new Date().toISOString(),
-                where: 'loadEventAsTemplate',
-                message: e?.message ?? String(e),
-                row,
-            };
-            setLastDebug(errInfo);
-            console.error('[create/history] loadEventAsTemplate error', errInfo);
-            alert(`TypeError: ${errInfo.message}`);
-        }
-    };
-
-    const isEditMode = editingId !== null;
-
-    const computeStatus = (dateText: string | null | undefined): 'hold' | 'completed' => {
-        if (!dateText) return 'hold';
-        const isoCandidate = dateText.includes('T') ? dateText : dateText.replace(' ', 'T');
-        const d = new Date(isoCandidate);
-        if (Number.isNaN(d.getTime())) return 'hold';
-        return d.getTime() < Date.now() ? 'completed' : 'hold';
-    };
-
-    const canEditEvent = (row: any) => computeStatus(row?.date) !== 'completed';
-
-    const resetToCreateMode = () => {
-        setEditingId(null);
-        setFormData({
-            title: '',
-            description: '',
-            category: '言語交換',
-            date: '',
-            dayOfWeek: 'mon',
-            period: 1,
-            location: '',
-            minParticipants: 2,
-            maxParticipants: 10,
-            fee: 0,
-            languages: [],
-            tags: [],
-            inoutdoor: 'in',
-        });
-        setSelectedLanguages([]);
-        setImages([]);
-        setImageInput('');
-        setTagInput('');
-        setTime('');
-    };
-
-    const fetchHistory = async () => {
-        setHistoryLoading(true);
-        setHistoryError(null);
-
-        const { data, error } = await supabase
-            .schema('public')
-            .from('events')
-            .select('id,title,category,date,location,minparticipants,maxparticipants,currentparticipants,fee,languages,tags,images,description,inoutdoor')
-            .order('created_at', { ascending: false })
-            .limit(20);
-
-        const debugPayload = {
-            at: new Date().toISOString(),
-            error: error
-                ? {
-                    message: error.message,
-                    code: (error as any).code,
-                    details: (error as any).details,
-                    hint: (error as any).hint,
-                }
-                : null,
-            dataType: Array.isArray(data) ? 'array' : typeof data,
-            length: Array.isArray(data) ? data.length : null,
-            sample: Array.isArray(data) ? data.slice(0, 2) : data,
-        };
-        setLastDebug(debugPayload);
-        console.log('[create/history] fetchHistory', debugPayload);
-
-        if (error) {
-            setHistoryError(error.message);
-            setHistoryEvents([]);
-            setHistoryLoading(false);
-            return;
-        }
-
-        setHistoryEvents(data || []);
-        setHistoryLoading(false);
-    };
-
-    useEffect(() => {
-        if (isTemplateModalOpen || isEditModalOpen) {
-            fetchHistory();
-        }
-    }, [isTemplateModalOpen, isEditModalOpen]);
-
-    // モーダル開閉時にグローバル状態を更新（BottomNavの表示制御）
-    useEffect(() => {
-        const isAnyModalOpen = isTemplateModalOpen || isEditModalOpen || isCreateFormModalOpen;
-        setIsModalOpen(isAnyModalOpen);
-    }, [isTemplateModalOpen, isEditModalOpen, isCreateFormModalOpen, setIsModalOpen]);
-
-    const loadEventIntoForm = (row: any) => {
-        try {
-            const dateText: string = String(row?.date ?? '');
-            const [dPart, tPart] = dateText.split(' ');
-
-            setEditingId(String(row.id));
-
-            setFormData((prev) => ({
-                ...prev,
-                title: String(row?.title ?? ''),
-                description: String(row?.description ?? ''),
-                category: (row?.category ?? '言語交換') as EventCategory,
-                date: dPart || '',
-                location: String(row?.location ?? ''),
-                minParticipants: Number(row?.minparticipants ?? 2),
-                maxParticipants: Number(row?.maxparticipants ?? 10),
-                fee: typeof row?.fee === 'number' ? row.fee : 0,
-                tags: Array.isArray(row?.tags) ? row.tags : [],
-                inoutdoor: (row?.inoutdoor === 'out' ? 'out' : 'in') as any,
-            }));
-
-            setTime(tPart || '');
-            setSelectedLanguages(Array.isArray(row?.languages) ? row.languages : []);
-            setImages(Array.isArray(row?.images) ? row.images : []);
-            setIsEditModalOpen(false);
-            setIsCreateFormModalOpen(true);
-        } catch (e: any) {
-            const errInfo = {
-                at: new Date().toISOString(),
-                where: 'loadEventIntoForm',
-                message: e?.message ?? String(e),
-                row,
-            };
-            setLastDebug(errInfo);
-            console.error('[create/history] loadEventIntoForm error', errInfo);
-            alert(`TypeError: ${errInfo.message}`);
-        }
-    };
 
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -225,15 +61,18 @@ export default function CreateEventPage() {
         const { name, value } = e.target;
         setFormData((prev) => ({
             ...prev,
-            [name]: name === 'minParticipants' || name === 'maxParticipants' || name === 'fee' ? Number(value) : value,
+            [name]:
+                name === 'maxParticipants' ||
+                name === 'minParticipants' ||
+                name === 'fee' ||
+                name === 'period'
+                    ? Number(value)
+                    : value,
         }));
     };
 
     const setInOutDoor = (value: 'in' | 'out') => {
-        setFormData((prev) => ({
-            ...prev,
-            inoutdoor: value,
-        }));
+        setFormData((prev) => ({ ...prev, inoutdoor: value }));
     };
 
     const toggleLanguage = (language: string) => {
@@ -274,180 +113,224 @@ export default function CreateEventPage() {
         setImages((prev) => prev.filter((img) => img !== url));
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const resetToCreateMode = () => {
+        setIsEditMode(false);
+        setEditingId(null);
+        setFormData(emptyForm);
+        setSelectedLanguages([]);
+        setImages([]);
+        setTime('');
+        setTagInput('');
+        setImageInput('');
+    };
 
-        const pendingImage = imageInput.trim();
-        const mergedImages = pendingImage && !images.includes(pendingImage)
-            ? [...images, pendingImage]
-            : images;
+    const computeStatus = (dateText: string | null | undefined) => {
+        // dateText can be ISO date string
+        if (!dateText) return 'hold' as const;
+        const d = new Date(dateText);
+        if (Number.isNaN(d.getTime())) return 'hold' as const;
+        return d.getTime() < Date.now() ? ('completed' as const) : ('hold' as const);
+    };
 
-        const normalizedImages = mergedImages
-            .map((u) => u.trim())
-            .filter((u) => u.length > 0);
+    const canEditEvent = (row: any) => {
+        // "still not finished" only
+        return computeStatus(row?.date) === 'hold';
+    };
 
-        const submitData = {
-            ...formData,
-            languages: selectedLanguages,
-            tags: (formData.tags || []).map((t) => t.trim()).filter((t) => t.length > 0),
-            images: normalizedImages,
-            time,
-        };
+    const fetchHistory = useCallback(async () => {
+        setHistoryLoading(true);
+        setHistoryError(null);
+
+        const createdBy = '*';
 
         if (!supabase) {
-            alert(
-                'Supabaseの設定が見つかりません（.env.local の NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY を確認してください）'
-            );
+            setHistoryLoading(false);
+            setHistoryError('Supabaseの設定が見つかりません（環境変数を確認してください）');
             return;
         }
 
-        const dateTimeText = submitData.date
-            ? `${submitData.date}${submitData.time ? ` ${submitData.time}` : ''}`
-            : '';
-
-        const dayOfWeek = submitData.dayOfWeek ?? 'mon';
-        const period = submitData.period ?? 1;
-
-        if (isEditMode) {
-            const { error } = await supabase
-                .schema('public')
+        try {
+            const { data, error } = await supabase
+                // Actual table: public.events
                 .from('events')
-                .update({
-                    title: submitData.title,
-                    description: submitData.description,
-                    category: submitData.category,
-                    date: dateTimeText,
-                    dayofweek: dayOfWeek,
-                    period,
-                    location: submitData.location,
-                    minparticipants: submitData.minParticipants ?? 2,
-                    maxparticipants: submitData.maxParticipants,
-                    fee: submitData.fee ?? 0,
-                    languages: submitData.languages,
-                    tags: submitData.tags,
-                    images: submitData.images,
-                    inoutdoor: submitData.inoutdoor ?? 'in',
-                })
-                .eq('id', editingId as string);
+                .select('*')
+                // TODO(auth): replace '*' with real user id
+                // .eq('organizer_id', createdBy)
+                .order('created_at', { ascending: false })
+                .limit(20);
 
+            if (error) throw error;
+            setHistoryEvents(data ?? []);
+            setLastDebug({ createdBy, rows: (data ?? []).length });
+        } catch (err: any) {
+            setHistoryError(err?.message ?? '履歴の取得に失敗しました');
+        } finally {
+            setHistoryLoading(false);
+        }
+    }, []);
+
+    const openCreateNew = () => {
+        resetToCreateMode();
+        setIsCreateModalOpen(true);
+    };
+
+    const openTemplateHistory = async () => {
+        setIsTemplateModalOpen(true);
+        await fetchHistory();
+    };
+
+    const openEditHistory = async () => {
+        setIsEditModalOpen(true);
+        await fetchHistory();
+    };
+
+    const onSelectTemplate = (row: any) => {
+        // apply row values into form (id not used for now)
+        setFormData((prev) => ({
+            ...prev,
+            title: String(row?.title ?? ''),
+            description: String(row?.description ?? ''),
+            category: (row?.category ?? '言語交換') as any,
+            date: String(row?.date ?? ''),
+            dayOfWeek: String(row?.dayofweek ?? row?.dayOfWeek ?? prev.dayOfWeek ?? 'mon'),
+            period: Number(row?.period ?? prev.period ?? 1),
+            location: String(row?.location ?? ''),
+            minParticipants: Number(row?.minparticipants ?? row?.minParticipants ?? prev.minParticipants ?? 2),
+            maxParticipants: Number(row?.maxparticipants ?? row?.maxParticipants ?? prev.maxParticipants ?? 10),
+            fee: typeof row?.fee === 'number' ? row.fee : prev.fee,
+            tags: Array.isArray(row?.tags) ? row.tags : prev.tags,
+            inoutdoor:
+                row?.inoutdoor === 'out'
+                    ? 'out'
+                    : row?.inoutdoor === 'in'
+                        ? 'in'
+                        : prev.inoutdoor,
+        }));
+
+        setSelectedLanguages(Array.isArray(row?.languages) ? row.languages : []);
+        setImages(Array.isArray(row?.images) ? row.images : []);
+        setTime(String(row?.time ?? row?.event_time ?? ''));
+
+        setIsTemplateModalOpen(false);
+        setIsCreateModalOpen(true);
+    };
+
+    const onSelectEdit = (row: any) => {
+        if (!canEditEvent(row)) return;
+
+        setIsEditMode(true);
+        setEditingId(String(row?.id ?? ''));
+
+        // populate same as template
+        onSelectTemplate(row);
+
+        // reopen create modal in edit mode
+        setIsCreateModalOpen(true);
+    };
+
+    const onSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!supabase) {
+            alert('Supabaseの設定が見つかりません（環境変数を確認してください）');
+            return;
+        }
+
+        // Map to existing public.events columns
+        const payload = {
+            // id is text PK; generate a simple unique id for now (no auth/user binding yet)
+            id: `evt_${Date.now()}`,
+            title: formData.title,
+            description: formData.description,
+            category: formData.category,
+            date: formData.date,
+            dayofweek: formData.dayOfWeek,
+            period: formData.period,
+            location: formData.location,
+            minparticipants: formData.minParticipants ?? null,
+            maxparticipants: formData.maxParticipants,
+            currentparticipants: 0,
+            fee: formData.fee ?? 0,
+            languages: selectedLanguages,
+            organizer_id: '*',
+            organizer_name: '*',
+            organizer_avatar: null,
+            tags: formData.tags ?? [],
+            images,
+            inoutdoor: formData.inoutdoor ?? null,
+        };
+
+        if (!isEditMode) {
+            const { error } = await supabase.from('events').insert(payload as any);
             if (error) {
-                console.error('Supabase update error:', error);
-                alert(`更新に失敗しました: ${error.message}`);
+                alert(`保存に失敗しました: ${error.message}`);
                 return;
             }
-
-            alert(`イベントを更新しました！（id=${editingId}）`);
-            setIsCreateFormModalOpen(false);
+            alert('イベントが作成されました！');
+            setIsCreateModalOpen(false);
             resetToCreateMode();
             return;
         }
 
-        const id = String(Date.now());
-
-        const { error } = await supabase
-            .schema('public')
-            .from('events')
-            .insert({
-                id,
-                title: submitData.title,
-                description: submitData.description,
-                category: submitData.category,
-                date: dateTimeText,
-                dayofweek: dayOfWeek,
-                period,
-                location: submitData.location,
-                minparticipants: submitData.minParticipants ?? 2,
-                maxparticipants: submitData.maxParticipants,
-                currentparticipants: 0,
-                fee: submitData.fee ?? 0,
-                languages: submitData.languages,
-                organizer_id: null,
-                organizer_name: '未設定',
-                organizer_avatar: '',
-                tags: submitData.tags,
-                images: submitData.images,
-                inoutdoor: submitData.inoutdoor ?? 'in',
-            });
-
-        if (error) {
-            console.error('Supabase insert error:', error);
-            alert(`保存に失敗しました: ${error.message}`);
+        if (!editingId) {
+            alert('編集対象が見つかりません');
             return;
         }
 
-        alert(`イベントが作成されました！（id=${id}）`);
-        setIsCreateFormModalOpen(false);
+        // For update, do not replace id
+        const { id: _drop, ...updatePayload } = payload as any;
+
+        const { error } = await supabase
+            .from('events')
+            .update(updatePayload)
+            .eq('id', editingId);
+
+        if (error) {
+            alert(`更新に失敗しました: ${error.message}`);
+            return;
+        }
+
+        alert('イベントを更新しました！');
+        setIsCreateModalOpen(false);
         resetToCreateMode();
     };
 
-    // トップページレンダリング
     return (
-        <div className="py-3 space-y-3 min-h-screen bg-gray-50">
-            {/* ヘッダー */}
-            <div className="bg-white border-b border-gray-200 p-4 mx-0">
-                <h1 className="text-xl font-bold text-gray-900">イベント作成</h1>
+        <div className="py-3 space-y-3">
+            <div className="bg-white rounded-lg shadow-sm p-3 mx-2 flex items-center justify-between">
+                <h1 className="text-lg font-bold text-gray-800">イベント作成</h1>
+                <button
+                    type="button"
+                    onClick={openCreateNew}
+                    className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-xs font-bold"
+                >
+                    新規作成
+                </button>
             </div>
 
-            {/* メインコンテンツ */}
-            <div className="flex items-center justify-center p-8 pt-20">
-                <div className="w-full max-w-md space-y-4">
-                    <button
-                        onClick={() => setIsCreateFormModalOpen(true)}
-                        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
-                    >
-                        イベント作成
-                    </button>
-
-                    <button
-                        onClick={() => setIsTemplateModalOpen(true)}
-                        className="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
-                    >
-                        履歴から作成
-                    </button>
-
-                    <button
-                        onClick={() => setIsEditModalOpen(true)}
-                        className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
-                    >
-                        作成済みイベントを編集
-                    </button>
-                </div>
+            <div className="bg-white rounded-lg shadow-sm p-3 mx-2 space-y-2">
+                <button
+                    type="button"
+                    onClick={openTemplateHistory}
+                    className="w-full px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold"
+                >
+                    履歴から作成
+                </button>
+                <button
+                    type="button"
+                    onClick={openEditHistory}
+                    className="w-full px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold"
+                >
+                    未完了の作成履歴を編集
+                </button>
+                <p className="text-[11px] text-gray-500">
+                    ※ まだ権限チェックを入れていないため、ユーザーIDは一旦「*」として扱います。
+                </p>
             </div>
 
-            {/* 履歴から作成モーダル */}
-            <HistoryModal
-                isOpen={isTemplateModalOpen}
-                onClose={() => setIsTemplateModalOpen(false)}
-                title="イベント履歴（最新20件）"
-                historyLoading={historyLoading}
-                historyError={historyError}
-                historyEvents={historyEvents}
-                onRefresh={fetchHistory}
-                onSelectEvent={loadEventAsTemplate}
-                mode="template"
-                canEditEvent={canEditEvent}
-                computeStatus={computeStatus}
-            />
-
-            {/* 作成済みイベントを編集モーダル */}
-            <HistoryModal
-                isOpen={isEditModalOpen}
-                onClose={() => setIsEditModalOpen(false)}
-                title="作成済みイベントを編集"
-                historyLoading={historyLoading}
-                historyError={historyError}
-                historyEvents={historyEvents}
-                onRefresh={fetchHistory}
-                onSelectEvent={loadEventIntoForm}
-                mode="edit"
-                canEditEvent={canEditEvent}
-                computeStatus={computeStatus}
-            />
-
-            {/* イベント作成フォームモーダル */}
             <CreateFormModal
-                isOpen={isCreateFormModalOpen}
-                onClose={() => setIsCreateFormModalOpen(false)}
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
                 formData={formData}
                 onInputChange={handleInputChange}
                 setInOutDoor={setInOutDoor}
@@ -465,7 +348,7 @@ export default function CreateEventPage() {
                 removeImage={removeImage}
                 time={time}
                 setTime={setTime}
-                onSubmit={handleSubmit}
+                onSubmit={onSubmit}
                 isEditMode={isEditMode}
                 resetToCreateMode={resetToCreateMode}
                 debugOpen={debugOpen}
@@ -478,6 +361,34 @@ export default function CreateEventPage() {
                 historyEvents={historyEvents}
                 editingId={editingId}
                 fetchHistory={fetchHistory}
+            />
+
+            <HistoryModal
+                isOpen={isTemplateModalOpen}
+                onClose={() => setIsTemplateModalOpen(false)}
+                title="履歴から作成"
+                historyLoading={historyLoading}
+                historyError={historyError}
+                historyEvents={historyEvents}
+                onRefresh={fetchHistory}
+                onSelectEvent={onSelectTemplate}
+                mode="template"
+                canEditEvent={canEditEvent}
+                computeStatus={computeStatus}
+            />
+
+            <HistoryModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                title="未完了の作成履歴を編集"
+                historyLoading={historyLoading}
+                historyError={historyError}
+                historyEvents={historyEvents}
+                onRefresh={fetchHistory}
+                onSelectEvent={onSelectEdit}
+                mode="edit"
+                canEditEvent={canEditEvent}
+                computeStatus={computeStatus}
             />
         </div>
     );
