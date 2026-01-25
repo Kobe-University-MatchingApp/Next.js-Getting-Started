@@ -131,7 +131,7 @@ export default function HomePage() {
               activeFilter === 'faculty' ? 'byFaculty' : 'byUpcoming'].length === 0 && (
             <div className="text-center py-10">
               <p className="text-gray-500 text-sm mb-2">該当するイベントはありませんでした。</p>
-              <br></br>
+              <br />
               <p className="text-gray-600 text-sm mb-4">イベントを作成してみませんか？</p>
               <Link
                 href="/create"
