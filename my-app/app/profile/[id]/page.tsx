@@ -1,10 +1,17 @@
 // プロフィールページのコンポーネント
 
-import { getProfile, getProfileById } from '@/lib/profile';
+import { getProfileById } from '@/lib/profile';
 import { notFound } from 'next/navigation';
+import { createClient } from '@/utils/supabase/server';
+import Link from 'next/link';
 
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
+    const supabase = await createClient();
+    
+    // 現在のユーザーを取得して、本人かどうか確認
+    const { data: { user } } = await supabase.auth.getUser();
+    const isOwnProfile = user?.id === id;
 
     // プロフィールデータを取得
     const profile = await getProfileById(id);
@@ -25,8 +32,16 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     return (
         <div className="py-3 space-y-3 min-h-screen pb-20">
             {/* ヘッダー */}
-            <div className="bg-white border-b border-gray-200 p-4 mx-0">
+            <div className="bg-white border-b border-gray-200 p-4 mx-0 flex justify-between items-center">
                 <h1 className="text-xl font-bold text-gray-900">プロフィール</h1>
+                {isOwnProfile && (
+                     <Link
+                        href={`/profile/${id}/edit`}
+                        className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full font-medium transition-colors flex items-center gap-1"
+                    >
+                        ✏️ 編集
+                    </Link>
+                )}
             </div>
 
             {/* プロフィール画像 */}
