@@ -1,5 +1,13 @@
+<<<<<<< Updated upstream
 import { getProfileById } from '@/lib/profile';
 import { notFound } from 'next/navigation';
+=======
+// プロフィールページのコンポーネント
+
+import { getProfileById } from '@/lib/profile';
+import { notFound } from 'next/navigation';
+import { createClient } from '@/utils/supabase/server';
+>>>>>>> Stashed changes
 import Link from 'next/link';
 
 // キャッシュを無効化し、常に最新のデータを取得する
@@ -7,6 +15,16 @@ export const dynamic = 'force-dynamic';
 
 export default async function ProfileDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
+<<<<<<< Updated upstream
+=======
+    const supabase = await createClient();
+    
+    // 現在のユーザーを取得して、本人かどうか確認
+    const { data: { user } } = await supabase.auth.getUser();
+    const isOwnProfile = user?.id === id;
+
+    // プロフィールデータを取得
+>>>>>>> Stashed changes
     const profile = await getProfileById(id);
 
     if (!profile) {
@@ -22,7 +40,24 @@ export default async function ProfileDetailPage({ params }: { params: Promise<{ 
     };
 
     return (
+<<<<<<< Updated upstream
         <div className="space-y-3 py-3 pb-20">
+=======
+        <div className="py-3 space-y-3 min-h-screen pb-20">
+            {/* ヘッダー */}
+            <div className="bg-white border-b border-gray-200 p-4 mx-0 flex justify-between items-center">
+                <h1 className="text-xl font-bold text-gray-900">プロフィール</h1>
+                {isOwnProfile && (
+                     <Link
+                        href={`/profile/${id}/edit`}
+                        className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full font-medium transition-colors flex items-center gap-1"
+                    >
+                        ✏️ 編集
+                    </Link>
+                )}
+            </div>
+
+>>>>>>> Stashed changes
             {/* プロフィール画像 */}
             <div className="relative bg-white rounded-lg shadow-sm overflow-hidden mx-2">
                 <div className="relative h-56">

@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+<<<<<<< Updated upstream
 import BottomNav from "./components/BottomNav";
+=======
+import BottomNav from "./_components/BottomNav";
+import { ModalProvider } from "./_contexts/ModalContext";
+import { UserProvider } from "./_contexts/UserContext";
+>>>>>>> Stashed changes
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,12 +37,25 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased mobile-layout`}
       >
+<<<<<<< Updated upstream
         <div className="mobile-container">
           <main className="main-content pb-16">
             {children}
           </main>
           <BottomNav />
         </div>
+=======
+        <UserProvider>
+          <ModalProvider>
+            <div className="mobile-container">
+              <main className="main-content pb-16">
+                {children}
+              </main>
+              <BottomNav />
+            </div>
+          </ModalProvider>
+        </UserProvider>
+>>>>>>> Stashed changes
       </body>
     </html>
   );
