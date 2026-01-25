@@ -17,7 +17,7 @@ export default function HomePage() {
   const [userName, setUserName] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [bookedEvents, setBookedEvents] = useState<Event[]>([]);
-  const [isBookmarkModalOpen, setIsBookmarkModalOpen] = useState(false);
+  const [isBookedEventsModalOpen, setIsBookedEventsModalOpen] = useState(false);
 
   // カテゴリ分けされたデータ
   const [events, setEvents] = useState({
