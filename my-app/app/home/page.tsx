@@ -17,6 +17,7 @@ export default function HomePage() {
   const [userName, setUserName] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [bookedEvents, setBookedEvents] = useState<Event[]>([]);
+  const [isBookmarkModalOpen, setIsBookmarkModalOpen] = useState(false);
 
   // カテゴリ分けされたデータ
   const [events, setEvents] = useState({
@@ -39,7 +40,7 @@ export default function HomePage() {
   const FilterButton = ({ type, label }: { type: FilterType; label: string }) => (
     <button
       onClick={() => setActiveFilter(type)}
-      className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${activeFilter === type
+      className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${activeFilter === type
         ? 'bg-purple-600 text-white shadow-md'
         : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
         }`}
@@ -75,13 +76,19 @@ export default function HomePage() {
       <header className="bg-white px-4 pt-12 pb-4 shadow-sm sticky top-0 z-20">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-xl font-bold text-gray-800">こんにちは、{userName}さん</h1>
-          <Link href="/profile" className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden border border-gray-100 block">
-            <img src="https://i.pravatar.cc/100" alt="profile" className="w-full h-full object-cover" />
-          </Link>
+          <button
+            onClick={() => setIsBookmarkModalOpen(true)}
+            className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center border border-purple-200 hover:bg-purple-200 transition-all"
+            aria-label="予約済みイベント"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+            </svg>
+          </button>
         </div>
 
-        {/* --- 絞り込みボタン（横スクロール） --- */}
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+        {/* --- 絞り込みボタン（2行表示対応） --- */}
+        <div className="flex flex-wrap justify-center gap-2 pb-2">
           <FilterButton type="all" label="すべて" />
           <FilterButton type="tags" label="🎯 興味タグ" />
           <FilterButton type="history" label="📚 過去の履歴" />
@@ -123,15 +130,42 @@ export default function HomePage() {
 
       </div>
 
-      {/* 予約済みイベント */}
-      <div className="bg-white rounded-lg shadow-sm p-4 mx-2">
-        <h2 className="text-lg font-semibold text-gray-800 mb-3">予約済みイベント</h2>
-        <div className="space-y-2">
-          {bookedEvents.map((event) => (
-            <EventCard key={event.id} event={event} />
-          ))}
+      {/* 予約済みイベントモーダル */}
+      {isBookmarkModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-end">
+          <div className="bg-white w-full rounded-t-2xl min-h-[50vh] max-h-[95vh] overflow-y-auto">
+            {/* モーダルヘッダー */}
+            <div className="sticky top-0 bg-white rounded-t-2xl border-b border-gray-200 p-4 flex items-center justify-between z-10">
+              <div>
+                <h2 className="text-lg font-bold text-gray-800">予約済みイベント</h2>
+              </div>
+              <button
+                onClick={() => setIsBookmarkModalOpen(false)}
+                className="p-1 hover:bg-gray-100 rounded-full"
+              >
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* モーダルコンテンツ */}
+            <div className="p-4 space-y-4">
+              {bookedEvents.length === 0 ? (
+                <div className="text-center py-10 text-gray-500">
+                  予約済みのイベントはありません
+                </div>
+              ) : (
+                <>
+                  {bookedEvents.map((event) => (
+                    <EventCard key={event.id} event={event} />
+                  ))}
+                </>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
