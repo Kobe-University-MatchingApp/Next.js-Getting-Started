@@ -7,6 +7,9 @@ import BottomNav from "./components/BottomNav";
 import BottomNav from "./_components/BottomNav";
 import { ModalProvider } from "./_contexts/ModalContext";
 import { UserProvider } from "./_contexts/UserContext";
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 const geistSans = Geist({
@@ -38,6 +41,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased mobile-layout`}
       >
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         <div className="mobile-container">
           <main className="main-content pb-16">
             {children}
@@ -45,6 +49,8 @@ export default function RootLayout({
           <BottomNav />
         </div>
 =======
+=======
+>>>>>>> Stashed changes
         <UserProvider>
           <ModalProvider>
             <div className="mobile-container">
@@ -55,6 +61,9 @@ export default function RootLayout({
             </div>
           </ModalProvider>
         </UserProvider>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
       </body>
     </html>

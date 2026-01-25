@@ -7,6 +7,9 @@ import { notFound } from 'next/navigation';
 import { getProfileById } from '@/lib/profile';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 import Link from 'next/link';
 
@@ -16,7 +19,10 @@ export const dynamic = 'force-dynamic';
 export default async function ProfileDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
     const supabase = await createClient();
     
     // 現在のユーザーを取得して、本人かどうか確認
