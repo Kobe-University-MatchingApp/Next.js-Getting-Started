@@ -8,6 +8,9 @@ import BottomNav from "./_components/BottomNav";
 import { ModalProvider } from "./_contexts/ModalContext";
 import { UserProvider } from "./_contexts/UserContext";
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -42,6 +45,7 @@ export default function RootLayout({
       >
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         <div className="mobile-container">
           <main className="main-content pb-16">
             {children}
@@ -49,6 +53,8 @@ export default function RootLayout({
           <BottomNav />
         </div>
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
         <UserProvider>
@@ -62,6 +68,9 @@ export default function RootLayout({
           </ModalProvider>
         </UserProvider>
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes

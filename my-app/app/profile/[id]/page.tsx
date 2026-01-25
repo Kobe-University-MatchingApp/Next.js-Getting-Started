@@ -8,6 +8,9 @@ import { getProfileById } from '@/lib/profile';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -20,7 +23,10 @@ export default async function ProfileDetailPage({ params }: { params: Promise<{ 
     const { id } = await params;
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
     const supabase = await createClient();
