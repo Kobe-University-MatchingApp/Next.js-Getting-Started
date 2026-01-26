@@ -21,6 +21,8 @@ export default function HomePage() {
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [bookedEvents, setBookedEvents] = useState<Event[]>([]);
   const [isBookmarkModalOpen, setIsBookmarkModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // カテゴリ分けされたデータ
   const [events, setEvents] = useState({
@@ -176,9 +178,7 @@ export default function HomePage() {
 
         {/* データが何もない場合の表示 */}
         {activeFilter !== 'all' &&
-          events[activeFilter === 'tags' ? 'byTags' :
-            activeFilter === 'history' ? 'byHistory' :
-              activeFilter === 'faculty' ? 'byFaculty' : 'byUpcoming'].length === 0 && (
+          (activeFilter === 'languages' ? events.byLanguages : events.byTags).length === 0 && (
             <div className="text-center py-10">
               <p className="text-gray-500 text-sm mb-2">該当するイベントはありませんでした。</p>
               <br />
