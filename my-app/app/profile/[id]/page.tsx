@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
 import RegisteredEvents from './_components/RegisteredEvents';
+import CompletedEvents from './_components/CompletedEvents';
 
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -116,6 +117,9 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                     ))}
                 </div>
             </div>
+
+            {/* 参加したイベント（本人のみ表示） */}
+            {isOwnProfile && <CompletedEvents />}
 
             {/* 学習スタイル */}
             {profile.studyStyle && profile.studyStyle.length > 0 && (

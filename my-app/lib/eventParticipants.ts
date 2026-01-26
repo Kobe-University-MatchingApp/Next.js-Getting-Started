@@ -168,9 +168,21 @@ export async function getUserRegisteredEvents(): Promise<UserRegisteredEvent[]> 
             return [];
         }
 
-        // データを変換
+        // データを変換し、未終了のイベントのみフィルタ
+        const now = Date.now();
         return data
-            .filter(item => item.events) // eventsが存在するもののみ
+            .filter(item => {
+                if (!item.events) return false;
+                const event = item.events as any;
+                const dateText = event.date;
+                if (!dateText) return true; // 日付がない場合は表示
+
+                const isoCandidate = dateText.includes('T') ? dateText : dateText.replace(' ', 'T');
+                const eventDate = new Date(isoCandidate);
+
+                // 未終了のイベントのみ
+                return isNaN(eventDate.getTime()) || eventDate.getTime() >= now;
+            })
             .map(item => {
                 const event = item.events as any;
                 return {
@@ -202,6 +214,87 @@ export async function getUserRegisteredEvents(): Promise<UserRegisteredEvent[]> 
             });
     } catch (error) {
         console.error('参加予定イベント取得エラー:', error);
+        return [];
+    }
+}
+
+/**
+ * ユーザーの参加済みイベント一覧を取得（終了したイベント）
+ */
+export async function getUserCompletedEvents(): Promise<UserRegisteredEvent[]> {
+    const supabase = createClient();
+
+    try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
+            return [];
+        }
+
+        // 参加登録とイベント情報を結合して取得
+        const { data, error } = await supabase
+            .from('event_participants')
+            .select(`
+        id,
+        event_id,
+        status,
+        registered_at,
+        events (*)
+      `)
+            .eq('user_id', user.id)
+            .in('status', ['registered', 'attended']) // 参加済みまたは出席済み
+            .order('registered_at', { ascending: false });
+
+        if (error || !data) {
+            console.error('参加済みイベント取得エラー:', error);
+            return [];
+        }
+
+        // データを変換し、終了したイベントのみフィルタ
+        const now = Date.now();
+        return data
+            .filter(item => {
+                if (!item.events) return false;
+                const event = item.events as any;
+                const dateText = event.date;
+                if (!dateText) return false;
+
+                const isoCandidate = dateText.includes('T') ? dateText : dateText.replace(' ', 'T');
+                const eventDate = new Date(isoCandidate);
+
+                // 終了したイベントのみ
+                return !isNaN(eventDate.getTime()) && eventDate.getTime() < now;
+            })
+            .map(item => {
+                const event = item.events as any;
+                return {
+                    id: event.id,
+                    title: event.title,
+                    description: event.description,
+                    category: event.category,
+                    date: event.date,
+                    dayOfWeek: event.dayofweek,
+                    period: event.period,
+                    location: event.location,
+                    minParticipants: event.minparticipants,
+                    maxParticipants: event.maxparticipants,
+                    currentParticipants: event.currentparticipants,
+                    fee: event.fee,
+                    languages: event.languages || [],
+                    organizer: {
+                        id: event.organizer_id || '',
+                        name: event.organizer_name || '未設定',
+                        avatar: event.organizer_avatar || '',
+                    },
+                    images: event.images || [],
+                    tags: event.tags || [],
+                    inoutdoor: event.inoutdoor,
+                    registrationId: item.id,
+                    registrationStatus: item.status,
+                    registeredAt: item.registered_at,
+                };
+            });
+    } catch (error) {
+        console.error('参加済みイベント取得エラー:', error);
         return [];
     }
 }
