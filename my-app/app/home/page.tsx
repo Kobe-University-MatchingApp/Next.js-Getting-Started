@@ -58,7 +58,7 @@ export default function HomePage() {
         // プロフィール情報に基づいてイベントを取得
         const eventsData = await getHomeEvents(userProfile);
         console.log('取得したイベント:', eventsData);
-        
+
         if (isMounted) {
           setEvents(eventsData);
         }
@@ -134,7 +134,9 @@ export default function HomePage() {
       {/* --- ヘッダーエリア --- */}
       <header className="bg-white px-4 py-4 shadow-sm sticky top-0 z-20">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-xl font-bold text-gray-800">{userName}さんへのおすすめ</h1>
+          <h1 className="text-xl font-bold text-gray-800">
+            {userName}さんへの<br />おすすめ
+          </h1>
           <button
             onClick={() => setIsBookmarkModalOpen(true)}
             className="flex flex-col items-center gap-1 hover:opacity-80 transition-all"
