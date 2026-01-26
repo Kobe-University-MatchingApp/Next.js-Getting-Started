@@ -136,7 +136,7 @@ export default function HomePage() {
       <header className="bg-white px-4 py-4 shadow-sm sticky top-0 z-20">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-xl font-bold text-gray-800">
-            {userName}さんへの<br />おすすめ
+            {userName}さんへのおすすめ
           </h1>
           <button
             onClick={() => setIsBookmarkModalOpen(true)}
