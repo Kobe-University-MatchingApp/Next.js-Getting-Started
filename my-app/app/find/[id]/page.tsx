@@ -3,6 +3,7 @@
 import { supabase } from '@/lib/supabaseClient';
 import { transformSupabaseEventRow } from '@/lib/transformers/eventTransformer';
 import Link from 'next/link';
+import EventDetailClient from './_components/EventDetailClient';
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
 
@@ -116,26 +117,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
       </div>
 
       {/* 参加に進むボタン */}
-      <div className="fixed bottom-16 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-40">
-        <div className="max-w-2xl mx-auto flex gap-4 items-center">
-          <div className="flex flex-col pl-2">
-            <span className="text-xs text-gray-500">参加費</span>
-            <span className="text-2xl font-bold text-gray-900">¥{(event.fee ?? 0).toLocaleString()}</span>
-          </div>
-
-          <Link href={`/find/${event.id}/join`} className="flex-1">
-            <button
-              disabled={isFull}
-              className={`w-full font-bold py-4 px-6 rounded-full shadow-lg transition-all transform active:scale-[0.98] ${isFull
-                ? 'bg-gray-300 text-white cursor-not-allowed'
-                : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-xl hover:brightness-110'
-                }`}
-            >
-              {isFull ? 'キャンセル待ち' : '参加に進む →'}
-            </button>
-          </Link>
-        </div>
-      </div>
+      <EventDetailClient event={event} />
     </div>
   );
 }
