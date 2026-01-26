@@ -3,40 +3,98 @@
 // ホームのページコンポーネント
 
 import EventCard from '@/app/_components/EventCard';
-import { supabase } from '@/lib/supabaseClient';
 import { transformSupabaseEventRows } from '@/lib/transformers/eventTransformer';
 import { Event } from '@/types/event';
 import { useEffect, useState } from 'react';
-import { getHomeEvents, getCurrentUserName } from '@/lib/home_recommend';
+import { getHomeEvents, getCurrentUserProfile } from '@/lib/home_recommend';
+import { Profile } from '@/types/profile';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 // フィルターの種類を定義
-type FilterType = 'all' | 'tags' | 'history' | 'faculty' | 'upcoming';
+type FilterType = 'all' | 'languages' | 'tags';
 
 export default function HomePage() {
+  const router = useRouter();
   const [userName, setUserName] = useState('');
+  const [userImage, setUserImage] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [bookedEvents, setBookedEvents] = useState<Event[]>([]);
   const [isBookmarkModalOpen, setIsBookmarkModalOpen] = useState(false);
 
   // カテゴリ分けされたデータ
   const [events, setEvents] = useState({
+    byLanguages: [] as Event[],
     byTags: [] as Event[],
-    byHistory: [] as Event[],
-    byFaculty: [] as Event[],
-    byUpcoming: [] as Event[],
   });
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchEvents = async () => {
-      setUserName(getCurrentUserName());
-      const eventsData = await getHomeEvents();
-      setEvents(eventsData);
+      try {
+        // 現在ログインしているユーザーのプロフィールを取得
+        const userProfile = await getCurrentUserProfile();
+
+        if (!isMounted) return;
+
+        if (!userProfile) {
+          console.error('ユーザープロフィールが見つかりません。ログインページにリダイレクトします。');
+          setError('ログインが必要です');
+          setTimeout(() => router.push('/login'), 1000);
+          return;
+        }
+
+        console.log('ユーザープロフィール:', userProfile);
+
+        // ユーザー名と画像を設定
+        setUserName(userProfile.name);
+        if (userProfile.images && userProfile.images.length > 0) {
+          setUserImage(userProfile.images[0]);
+        }
+
+        // プロフィール情報に基づいてイベントを取得
+        const eventsData = await getHomeEvents(userProfile);
+        console.log('取得したイベント:', eventsData);
+        
+        if (isMounted) {
+          setEvents(eventsData);
+        }
+      } catch (error) {
+        console.error('Error fetching events:', error);
+        if (isMounted) {
+          setError('イベント取得に失敗しました');
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
     };
+
     fetchEvents();
+
+    // クリーンアップ：コンポーネントがアンマウントされたらisMountedをfalseにする
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  // フィルターボタンのコンポーネント
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center pb-24">
+        <div className="text-gray-500">読み込み中...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center pb-24">
+        <div className="text-red-500">{error}</div>
+      </div>
+    );
+  }
   const FilterButton = ({ type, label }: { type: FilterType; label: string }) => (
     <button
       onClick={() => setActiveFilter(type)}
@@ -96,10 +154,8 @@ export default function HomePage() {
         {/* --- 絞り込みボタン（2行表示対応） --- */}
         <div className="flex flex-wrap justify-center gap-2 pb-2">
           <FilterButton type="all" label="すべて" />
-          <FilterButton type="tags" label="🎯 興味タグ" />
-          <FilterButton type="history" label="📚 過去の履歴" />
-          <FilterButton type="faculty" label="🏫 学部のおすすめ" />
-          <FilterButton type="upcoming" label="🔥 開催間近" />
+          <FilterButton type="languages" label="🌍 言語が合う" />
+          <FilterButton type="tags" label="🎯 趣味が合う" />
         </div>
       </header>
 
@@ -109,20 +165,14 @@ export default function HomePage() {
         {/* 「すべて」が選択されている時は、順番通りに全セクション表示 */}
         {activeFilter === 'all' && (
           <>
-            <EventSection title="あなたの興味・関心" items={events.byTags} />
-            <EventSection title="過去の履歴からのおすすめ" items={events.byHistory} />
-            <EventSection title="同じ学部・学科で人気" items={events.byFaculty} />
-            <EventSection title="開催間近のイベント" items={events.byUpcoming} />
-
-            {/* どの条件にも合わなかったイベントを表示したい場合はここに追加 */}
+            <EventSection title="言語が一致するイベント" items={events.byLanguages} />
+            <EventSection title="趣味・興味が一致するイベント" items={events.byTags} />
           </>
         )}
 
         {/* 個別のフィルターが選択されている時 */}
-        {activeFilter === 'tags' && <EventSection title="興味タグにマッチ" items={events.byTags} />}
-        {activeFilter === 'history' && <EventSection title="過去の履歴に関連" items={events.byHistory} />}
-        {activeFilter === 'faculty' && <EventSection title="同じ学部・学科の人へ" items={events.byFaculty} />}
-        {activeFilter === 'upcoming' && <EventSection title="開催間近！参加者募集中" items={events.byUpcoming} />}
+        {activeFilter === 'languages' && <EventSection title="言語が一致するイベント" items={events.byLanguages} />}
+        {activeFilter === 'tags' && <EventSection title="趣味・興味が一致するイベント" items={events.byTags} />}
 
         {/* データが何もない場合の表示 */}
         {activeFilter !== 'all' &&

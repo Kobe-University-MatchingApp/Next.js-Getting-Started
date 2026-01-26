@@ -1,27 +1,21 @@
-import { Event } from '@/types/event'; // 型定義のパスは環境に合わせてください
-import { supabase } from '@/lib/supabaseClient';
+import { Event } from '@/types/event';
+import { Profile } from '@/types/profile';
 import { transformSupabaseEventRows } from '@/lib/transformers/eventTransformer';
+import { getProfileById } from '@/lib/profile';
+import { createClient } from '@/utils/supabase/client';
 
-
-// モックのユーザー情報
-const mockUser = {
-  id: 'current-user',
-  name: '田中 太郎',
-  faculty: '国際学部',
-  interests: ['言語交換', 'カフェ', '英語'], // 基準1: 登録タグ
-  historyCategories: ['言語交換'],           // 基準2: 過去参加ジャンル
-};
-
-// 4つのカテゴリに分類されたデータを返す型
+// 2つのカテゴリに分類されたデータを返す型
 type CategorizedEvents = {
+  byLanguages: Event[];
   byTags: Event[];
-  byHistory: Event[];
-  byFaculty: Event[];
-  byUpcoming: Event[];
 };
 
-export async function getHomeEvents(): Promise<CategorizedEvents> {
-  const today = new Date('2025-12-01'); // テスト用の基準日
+/**
+ * ホーム画面用のおすすめイベントを取得
+ * プロフィール情報に基づいて2つの基準でフィルタリングします
+ */
+export async function getHomeEvents(userProfile: Profile): Promise<CategorizedEvents> {
+  const supabase = createClient();
 
   // Supabaseからイベントデータを取得
   const { data: eventsData, error } = await supabase
@@ -30,39 +24,79 @@ export async function getHomeEvents(): Promise<CategorizedEvents> {
 
   if (error) {
     console.error('Error fetching events:', error);
-    return { byTags: [], byHistory: [], byFaculty: [], byUpcoming: [] };
+    return { byLanguages: [], byTags: [] };
   }
 
+  console.log('Supabaseから取得したイベント数:', eventsData?.length);
+  console.log('イベントデータ:', eventsData);
+
   const sampleEvents = transformSupabaseEventRows(eventsData || []);
-  const byTags = sampleEvents.filter(event => 
-    event.tags?.some(tag => mockUser.interests.includes(tag))
-  );
+  console.log('変換後のイベント数:', sampleEvents.length);
+  console.log('変換後のイベント:', sampleEvents);
 
-  // 2. 過去参加したのと似たイベント (カテゴリ一致)
-  const byHistory = sampleEvents.filter(event => 
-    mockUser.historyCategories.includes(event.category) &&
-    !byTags.includes(event) // (オプション) 上ですでに出たものは重複させない場合
-  );
+  // 1. イベントの言語とプロフィールの言語が一致するイベント
+  const userLanguages = [
+    userProfile.nativeLanguage,
+    ...(userProfile.learningLanguages || [])
+  ];
+  
+  console.log('ユーザーの言語:', userLanguages);
+  console.log('ユーザーの興味:', userProfile.interests);
 
-  // 3. 同じ学部/研究科に関連 (ここではタグや説明文で判定)
-  const byFaculty = sampleEvents.filter(event => 
-    (event.tags?.includes('国際') || event.description.includes('国際')) &&
-    !byTags.includes(event) && !byHistory.includes(event)
+  const byLanguages = sampleEvents.filter(event =>
+    event.languages?.some(lang => userLanguages.includes(lang))
   );
+  
+  console.log('言語でフィルタリングしたイベント:', byLanguages);
+  console.log('言語でフィルタリングしたイベントのID:', byLanguages.map(e => e.id));
 
-  // 4. 開催日が近いのに人が少ない (7日以内 & 定員50%以下)
-  const byUpcoming = sampleEvents.filter(event => {
-    const eventDate = new Date(event.date);
-    const daysDiff = (eventDate.getTime() - today.getTime()) / (1000 * 3600 * 24);
-    const fillRate = event.currentParticipants / (event.maxParticipants || 1);
+  // 2. イベントのタグとプロフィールの興味が一致するイベント
+  // 注：言語にマッチしているイベントも含める（同じイベントが両セクションに表示される可能性あり）
+  const byTags = sampleEvents.filter(event => {
+    const hasMatchingTag = event.tags?.some(tag => userProfile.interests.includes(tag));
     
-    return daysDiff >= 0 && daysDiff <= 7 && fillRate < 0.5 &&
-           !byTags.includes(event) && !byHistory.includes(event) && !byFaculty.includes(event);
+    console.log(`イベント "${event.title}" (ID: ${event.id}) - タグ: ${event.tags}, マッチしているタグ: ${hasMatchingTag}`);
+    
+    if (hasMatchingTag) {
+      console.log(`✓ このイベントはタグ条件に追加されます`);
+    }
+    
+    return hasMatchingTag;
   });
+  
+  console.log('タグでフィルタリングしたイベント:', byTags);
+  console.log('タグでフィルタリングしたイベントのID:', byTags.map(e => e.id));
 
-  return { byTags, byHistory, byFaculty, byUpcoming };
+  return { byLanguages, byTags };
 }
 
-export function getCurrentUserName() {
-  return mockUser.name;
+/**
+ * ユーザーの認証セッションから現在のユーザーIDを取得します
+ */
+export async function getCurrentUser() {
+  const supabase = createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    console.error('Error getting current user:', error);
+    return null;
+  }
+
+  return user;
+}
+
+/**
+ * 現在ログインしているユーザーのプロフィールを取得
+ */
+export async function getCurrentUserProfile(): Promise<Profile | null> {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return null;
+  }
+
+  // user.idでプロフィールを取得
+  const profile = await getProfileById(user.id);
+
+  return profile;
 }
