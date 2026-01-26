@@ -8,11 +8,31 @@ import { createClient } from '@/utils/supabase/client';
 type CategorizedEvents = {
   byLanguages: Event[];
   byTags: Event[];
+  upcoming: Event[];
 };
 
 /**
+ * 現在から5日以内のイベントを取得
+ */
+function getUpcomingEventsWithin5Days(events: Event[]): Event[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const fiveDaysLater = new Date(today);
+  fiveDaysLater.setDate(fiveDaysLater.getDate() + 5);
+  
+  return events
+    .filter(event => {
+      const eventDate = new Date(event.date);
+      eventDate.setHours(0, 0, 0, 0);
+      return eventDate >= today && eventDate <= fiveDaysLater;
+    })
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+}
+
+/**
  * ホーム画面用のおすすめイベントを取得
- * プロフィール情報に基づいて2つの基準でフィルタリングします
+ * プロフィール情報に基づいて3つの基準でフィルタリングします
  */
 export async function getHomeEvents(userProfile: Profile): Promise<CategorizedEvents> {
   const supabase = createClient();
@@ -24,7 +44,7 @@ export async function getHomeEvents(userProfile: Profile): Promise<CategorizedEv
 
   if (error) {
     console.error('Error fetching events:', error);
-    return { byLanguages: [], byTags: [] };
+    return { byLanguages: [], byTags: [], upcoming: [] };
   }
 
   console.log('Supabaseから取得したイベント数:', eventsData?.length);
@@ -67,7 +87,12 @@ export async function getHomeEvents(userProfile: Profile): Promise<CategorizedEv
   console.log('タグでフィルタリングしたイベント:', byTags);
   console.log('タグでフィルタリングしたイベントのID:', byTags.map(e => e.id));
 
-  return { byLanguages, byTags };
+  // 3. 5日以内のすべてのイベント
+  const upcoming = getUpcomingEventsWithin5Days(sampleEvents);
+  console.log('5日以内のイベント:', upcoming);
+  console.log('5日以内のイベントのID:', upcoming.map(e => e.id));
+
+  return { byLanguages, byTags, upcoming };
 }
 
 /**
