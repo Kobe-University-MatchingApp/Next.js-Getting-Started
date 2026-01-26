@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 // フィルターの種類を定義
-type FilterType = 'all' | 'languages' | 'tags';
+type FilterType = 'all' | 'languages' | 'tags' | 'upcoming';
 
 export default function HomePage() {
   const router = useRouter();
@@ -28,6 +28,7 @@ export default function HomePage() {
   const [events, setEvents] = useState({
     byLanguages: [] as Event[],
     byTags: [] as Event[],
+    upcoming: [] as Event[],
   });
 
   useEffect(() => {
@@ -156,6 +157,7 @@ export default function HomePage() {
         {/* --- 絞り込みボタン（2行表示対応） --- */}
         <div className="flex flex-wrap justify-center gap-2 pb-2">
           <FilterButton type="all" label="すべて" />
+          <FilterButton type="upcoming" label="✨ 近日中" />
           <FilterButton type="languages" label="🌍 言語が合う" />
           <FilterButton type="tags" label="🎯 趣味が合う" />
         </div>
@@ -167,14 +169,16 @@ export default function HomePage() {
         {/* 「すべて」が選択されている時は、順番通りに全セクション表示 */}
         {activeFilter === 'all' && (
           <>
-            <EventSection title="言語が一致するイベント" items={events.byLanguages} />
-            <EventSection title="趣味・興味が一致するイベント" items={events.byTags} />
+            <EventSection title="✨ 5日以内のおすすめイベント" items={events.upcoming} />
+            <EventSection title="🌍 言語が一致するイベント" items={events.byLanguages} />
+            <EventSection title="🎯 趣味・興味が一致するイベント" items={events.byTags} />
           </>
         )}
 
         {/* 個別のフィルターが選択されている時 */}
-        {activeFilter === 'languages' && <EventSection title="言語が一致するイベント" items={events.byLanguages} />}
-        {activeFilter === 'tags' && <EventSection title="趣味・興味が一致するイベント" items={events.byTags} />}
+        {activeFilter === 'upcoming' && <EventSection title="✨ 5日以内のおすすめイベント" items={events.upcoming} />}
+        {activeFilter === 'languages' && <EventSection title="🌍 言語が一致するイベント" items={events.byLanguages} />}
+        {activeFilter === 'tags' && <EventSection title="🎯 趣味・興味が一致するイベント" items={events.byTags} />}
 
         {/* データが何もない場合の表示 */}
         {activeFilter !== 'all' &&
