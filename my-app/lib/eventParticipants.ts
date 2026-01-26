@@ -85,7 +85,7 @@ export async function cancelEventRegistration(eventId: string): Promise<{ succes
             })
             .eq('event_id', eventId)
             .eq('user_id', user.id)
-            .eq('status', 'registered'); // 登録済みのもののみキャンセル可能
+            .in('status', ['registered', 'waitlist']); // 登録済み・ウェイティングリストのもののみキャンセル可能
 
         if (updateError) {
             console.error('キャンセルエラー:', updateError);
