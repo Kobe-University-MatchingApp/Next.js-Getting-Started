@@ -10,6 +10,7 @@ import ActiveFilters from './_components/ActiveFilters';
 import { useModal } from '@/app/_contexts/ModalContext';
 import { useEventFilters } from './_hooks/useEventFilters';
 import { useScrollVisibility } from '@/lib/hooks/useScrollVisibility';
+import Link from 'next/link';
 
 // コンポーネントのプロパティ型定義
 interface FindEventsClientProps {
@@ -118,11 +119,13 @@ export default function FindEventsClient({ initialEvents }: FindEventsClientProp
             )}
 
             {/* イベント一覧 */}
-            <div className="space-y-0 mx-0 pb-20">
-                {filteredEvents.map((event) => (
-                    <EventCard key={event.id} event={event} />
-                ))}
-            </div>
+            {filteredEvents.length > 0 && (
+                <div className="space-y-0 mx-0 pb-20">
+                    {filteredEvents.map((event) => (
+                        <EventCard key={event.id} event={event} />
+                    ))}
+                </div>
+            )}
 
             {/* 検索結果なし */}
             {filteredEvents.length === 0 && (
@@ -130,7 +133,14 @@ export default function FindEventsClient({ initialEvents }: FindEventsClientProp
                     <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <p className="text-gray-500 text-sm font-medium">イベントが見つかりません</p>
+                    <p className="text-gray-500 text-sm font-medium mb-2">イベントが見つかりません</p>
+                    <p className="text-gray-600 text-sm mb-4">イベントを作成してみませんか？</p>
+                    <Link
+                        href="/create"
+                        className="inline-block px-6 py-2.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
+                    >
+                        イベントを作成する
+                    </Link>
                 </div>
             )}
         </div>
