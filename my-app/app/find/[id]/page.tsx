@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { transformSupabaseEventRow } from '@/lib/transformers/eventTransformer';
 import Link from 'next/link';
 import EventDetailClient from './_components/EventDetailClient';
+import { isEventCompleted } from '@/lib/utils/eventStatus';
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
 
@@ -21,6 +22,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
   // データを変換
   const event = transformSupabaseEventRow(data);
+
+  // イベントが終了しているかどうかを判定
+  const isCompleted = isEventCompleted(event.date);
 
   // 参加者が定員に達しているかどうかを判定
   const isFull = event.currentParticipants >= (event.maxParticipants || 0);
@@ -46,7 +50,17 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
           {/* タイトル・カテゴリ */}
           <div className="flex justify-between items-start gap-4">
-            <h1 className="text-2xl font-bold text-gray-900 leading-tight">{event.title}</h1>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <h1 className={`text-2xl font-bold leading-tight ${isCompleted ? 'text-gray-500' : 'text-gray-900'
+                  }`}>{event.title}</h1>
+                {isCompleted && (
+                  <span className="px-2 py-1 bg-gray-400 text-white rounded text-sm font-bold">
+                    終了
+                  </span>
+                )}
+              </div>
+            </div>
             <span className="shrink-0 bg-purple-100 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">
               {event.category}
             </span>
@@ -117,7 +131,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
       </div>
 
       {/* 参加に進むボタン */}
-      <EventDetailClient event={event} />
+      <EventDetailClient event={event} isCompleted={isCompleted} />
     </div>
   );
 }

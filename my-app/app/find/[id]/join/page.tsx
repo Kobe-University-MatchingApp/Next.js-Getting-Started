@@ -9,6 +9,7 @@ import { Event } from '@/types/event';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { registerForEvent } from '@/lib/eventParticipants';
+import { isEventCompleted } from '@/lib/utils/eventStatus';
 
 // 参加確認ページコンポーネント
 export default function JoinConfirmPage({ params }: { params: Promise<{ id: string }> }) {
@@ -38,7 +39,16 @@ export default function JoinConfirmPage({ params }: { params: Promise<{ id: stri
           return;
         }
 
-        setEvent(transformSupabaseEventRow(data));
+        const transformedEvent = transformSupabaseEventRow(data);
+
+        // 終了イベントのチェック
+        if (isEventCompleted(transformedEvent.date)) {
+          setError('このイベントは終了しています');
+          setLoading(false);
+          return;
+        }
+
+        setEvent(transformedEvent);
       } catch (err) {
         setError('エラーが発生しました');
       } finally {

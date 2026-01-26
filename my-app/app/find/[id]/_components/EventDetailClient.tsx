@@ -8,9 +8,10 @@ import { useRouter } from 'next/navigation';
 
 interface EventDetailClientProps {
     event: Event;
+    isCompleted?: boolean;
 }
 
-export default function EventDetailClient({ event }: EventDetailClientProps) {
+export default function EventDetailClient({ event, isCompleted = false }: EventDetailClientProps) {
     const router = useRouter();
     const [participationStatus, setParticipationStatus] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -53,6 +54,15 @@ export default function EventDetailClient({ event }: EventDetailClientProps) {
                 text: '読み込み中...',
                 disabled: true,
                 className: 'bg-gray-300 text-white cursor-wait',
+                onClick: undefined,
+            };
+        }
+
+        if (isCompleted) {
+            return {
+                text: 'このイベントは終了しました',
+                disabled: true,
+                className: 'bg-gray-300 text-gray-500 cursor-not-allowed',
                 onClick: undefined,
             };
         }

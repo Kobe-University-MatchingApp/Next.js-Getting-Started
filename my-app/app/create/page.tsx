@@ -7,6 +7,7 @@ import { EVENT_CATEGORIES, AVAILABLE_LANGUAGES } from '@/lib/constants';
 import { useModal } from '@/app/_contexts/ModalContext';
 import HistoryModal from './_components/HistoryModal';
 import CreateFormModal from './_components/CreateFormModal';
+import { getEventStatus } from '@/lib/utils/eventStatus';
 
 const categories: EventCategory[] = EVENT_CATEGORIES;
 
@@ -95,15 +96,7 @@ export default function CreateEventPage() {
 
     const isEditMode = editingId !== null;
 
-    const computeStatus = (dateText: string | null | undefined): 'hold' | 'completed' => {
-        if (!dateText) return 'hold';
-        const isoCandidate = dateText.includes('T') ? dateText : dateText.replace(' ', 'T');
-        const d = new Date(isoCandidate);
-        if (Number.isNaN(d.getTime())) return 'hold';
-        return d.getTime() < Date.now() ? 'completed' : 'hold';
-    };
-
-    const canEditEvent = (row: any) => computeStatus(row?.date) !== 'completed';
+    const canEditEvent = (row: any) => getEventStatus(row?.date) !== 'completed';
 
     const resetToCreateMode = () => {
         setEditingId(null);
@@ -426,7 +419,7 @@ export default function CreateEventPage() {
                 onSelectEvent={loadEventAsTemplate}
                 mode="template"
                 canEditEvent={canEditEvent}
-                computeStatus={computeStatus}
+                computeStatus={getEventStatus}
             />
 
             {/* 作成済みイベントを編集モーダル */}
@@ -441,7 +434,7 @@ export default function CreateEventPage() {
                 onSelectEvent={loadEventIntoForm}
                 mode="edit"
                 canEditEvent={canEditEvent}
-                computeStatus={computeStatus}
+                computeStatus={getEventStatus}
             />
 
             {/* イベント作成フォームモーダル */}

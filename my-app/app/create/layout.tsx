@@ -1,8 +1,3 @@
-// NOTE(DB/Supabase placeholder):
-// This route segment can later host providers (auth/session) required for Supabase.
-// Planned DB targets (Supabase Postgres): schema "create_event", table "created_data".
-// For now, we only reserve the position here to avoid touching other folders.
-
 export default function CreateEventLayout({
     children,
 }: {
