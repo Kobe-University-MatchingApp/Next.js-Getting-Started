@@ -101,6 +101,20 @@ export const LANGUAGE_LEVELS = [
 ] as const;
 
 /**
+ * 交流目的のプリセット
+ */
+export const EXCHANGE_GOALS = [
+    '言語交換',
+    '異文化交流',
+    '友達作り',
+    '勉強仲間',
+    '趣味の共有',
+    'キャリア相談',
+    '旅行情報交換',
+    '料理交流',
+] as const;
+
+/**
  * ユーティリティ関数：曜日IDからラベルを取得
  */
 export function getDayLabel(dayId: string): string {
