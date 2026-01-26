@@ -48,3 +48,30 @@ export interface EventFormData {
     tags?: string[];
     inoutdoor?: 'in' | 'out';
 }
+
+// イベント参加ステータス
+export type ParticipantStatus = 'registered' | 'cancelled' | 'waitlist' | 'attended';
+
+// イベント参加記録
+export interface EventParticipant {
+    id: string;
+    eventId: string;
+    userId: string;
+    status: ParticipantStatus;
+    registeredAt: string;
+    cancelledAt?: string;
+    notes?: string;
+}
+
+// イベント参加者詳細（プロフィール情報含む）
+export interface EventParticipantDetail extends EventParticipant {
+    participantName: string;
+    participantAvatar: string;
+}
+
+// ユーザーの参加予定イベント
+export interface UserRegisteredEvent extends Event {
+    registrationId: string;
+    registrationStatus: ParticipantStatus;
+    registeredAt: string;
+}

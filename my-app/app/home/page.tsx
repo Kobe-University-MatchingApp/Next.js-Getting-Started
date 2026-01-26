@@ -19,8 +19,6 @@ export default function HomePage() {
   const [userName, setUserName] = useState('');
   const [userImage, setUserImage] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
-  const [bookedEvents, setBookedEvents] = useState<Event[]>([]);
-  const [isBookmarkModalOpen, setIsBookmarkModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -138,22 +136,6 @@ export default function HomePage() {
           <h1 className="text-xl font-bold text-gray-800">
             {userName}さんへのおすすめ
           </h1>
-          <button
-            onClick={() => setIsBookmarkModalOpen(true)}
-            className="flex flex-col items-center gap-1 hover:opacity-80 transition-all"
-            aria-label="予約済みイベント"
-          >
-            <div className="relative w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center border border-purple-200">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-              </svg>
-              {/* 通知バッジ */}
-              <span className="absolute -top-1 -right-2 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                3
-              </span>
-            </div>
-            <span className="text-xs text-gray-600">予約確認</span>
-          </button>
         </div>
 
         {/* --- 絞り込みボタン（2行表示対応） --- */}
@@ -199,43 +181,6 @@ export default function HomePage() {
           )}
 
       </div>
-
-      {/* 予約済みイベントモーダル */}
-      {isBookmarkModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-[100] flex items-end">
-          <div className="bg-white w-full rounded-t-2xl min-h-[50vh] max-h-[95vh] overflow-y-auto">
-            {/* モーダルヘッダー */}
-            <div className="sticky top-0 bg-white rounded-t-2xl border-b border-gray-200 p-4 flex items-center justify-between z-10">
-              <div>
-                <h2 className="text-lg font-bold text-gray-800">予約済みイベント</h2>
-              </div>
-              <button
-                onClick={() => setIsBookmarkModalOpen(false)}
-                className="p-1 hover:bg-gray-100 rounded-full"
-              >
-                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* モーダルコンテンツ */}
-            <div className="p-4 space-y-4">
-              {bookedEvents.length === 0 ? (
-                <div className="text-center py-10 text-gray-500">
-                  予約済みのイベントはありません
-                </div>
-              ) : (
-                <>
-                  {bookedEvents.map((event) => (
-                    <EventCard key={event.id} event={event} />
-                  ))}
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

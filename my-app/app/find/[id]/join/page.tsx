@@ -2,12 +2,13 @@
 
 'use client';
 
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { transformSupabaseEventRow } from '@/lib/transformers/eventTransformer';
 import { Event } from '@/types/event';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { registerForEvent } from '@/lib/eventParticipants';
 
 // 参加確認ページコンポーネント
 export default function JoinConfirmPage({ params }: { params: Promise<{ id: string }> }) {
@@ -26,7 +27,7 @@ export default function JoinConfirmPage({ params }: { params: Promise<{ id: stri
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // イベントデータの取得
-  useState(() => {
+  useEffect(() => {
     const fetchEvent = async () => {
       try {
         const { data, error } = await supabase.from('events').select('*').eq('id', id).single();
@@ -46,7 +47,7 @@ export default function JoinConfirmPage({ params }: { params: Promise<{ id: stri
     };
 
     fetchEvent();
-  });
+  }, [id]);
 
   // ローディング中
   if (loading) {
@@ -76,13 +77,17 @@ export default function JoinConfirmPage({ params }: { params: Promise<{ id: stri
 
     setIsSubmitting(true);
 
-    // ここでAPI通信などを行う想定（今回は擬似的に1.5秒待機）
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // 実際の参加登録処理
+    const result = await registerForEvent(event.id);
 
-    alert(`「${event.title}」への参加が確定しました！`);
-
-    // 完了後の遷移先（マイページやホームなど）
-    router.push('/home');
+    if (result.success) {
+      alert(`「${event.title}」への参加が確定しました！`);
+      // ホームページに遷移
+      router.push('/home');
+    } else {
+      alert(result.error || '参加登録に失敗しました');
+      setIsSubmitting(false);
+    }
   };
 
   return (
