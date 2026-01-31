@@ -41,7 +41,6 @@ export default function CreateEventPage() {
     const [tagInput, setTagInput] = useState('');
 
     const [images, setImages] = useState<string[]>([]);
-    const [imageInput, setImageInput] = useState('');
 
     const [time, setTime] = useState('');
 
@@ -79,7 +78,6 @@ export default function CreateEventPage() {
             setTime(tPart || '');
             setSelectedLanguages(Array.isArray(row?.languages) ? row.languages : []);
             setImages(Array.isArray(row?.images) ? row.images : []);
-            setImageInput('');
             setTagInput('');
             setIsTemplateModalOpen(false);
             setIsCreateFormModalOpen(true);
@@ -119,7 +117,6 @@ export default function CreateEventPage() {
         });
         setSelectedLanguages([]);
         setImages([]);
-        setImageInput('');
         setTagInput('');
         setTime('');
     };
@@ -257,27 +254,10 @@ export default function CreateEventPage() {
         }));
     };
 
-    const addImage = () => {
-        const next = imageInput.trim();
-        if (next && !images.includes(next)) {
-            setImages((prev) => [...prev, next]);
-            setImageInput('');
-        }
-    };
-
-    const removeImage = (url: string) => {
-        setImages((prev) => prev.filter((img) => img !== url));
-    };
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const pendingImage = imageInput.trim();
-        const mergedImages = pendingImage && !images.includes(pendingImage)
-            ? [...images, pendingImage]
-            : images;
-
-        const normalizedImages = mergedImages
+        const normalizedImages = images
             .map((u) => u.trim())
             .filter((u) => u.length > 0);
 
@@ -473,10 +453,7 @@ export default function CreateEventPage() {
                 addTag={addTag}
                 removeTag={removeTag}
                 images={images}
-                imageInput={imageInput}
-                setImageInput={setImageInput}
-                addImage={addImage}
-                removeImage={removeImage}
+                setImages={setImages}
                 time={time}
                 setTime={setTime}
                 onSubmit={handleSubmit}

@@ -20,10 +20,7 @@ interface CreateFormModalProps {
     addTag: () => void;
     removeTag: (tag: string) => void;
     images: string[];
-    imageInput: string;
-    setImageInput: React.Dispatch<React.SetStateAction<string>>;
-    addImage: () => void;
-    removeImage: (url: string) => void;
+    setImages: React.Dispatch<React.SetStateAction<string[]>>;
     time: string;
     setTime: React.Dispatch<React.SetStateAction<string>>;
     onSubmit: (e: React.FormEvent) => void;
@@ -55,10 +52,7 @@ export default function CreateFormModal({
     addTag,
     removeTag,
     images,
-    imageInput,
-    setImageInput,
-    addImage,
-    removeImage,
+    setImages,
     time,
     setTime,
     onSubmit,
@@ -76,6 +70,22 @@ export default function CreateFormModal({
     fetchHistory,
 }: CreateFormModalProps) {
     if (!isOpen) return null;
+
+    // 画像選択時のハンドラ
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const imageUrl = reader.result as string;
+                setImages(prev => {
+                    if (prev.includes(imageUrl)) return prev;
+                    return [...prev, imageUrl];
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
@@ -343,47 +353,37 @@ export default function CreateFormModal({
                         />
                     </div>
 
-                    {/* 画像URL */}
+                    {/* 画像 */}
                     <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                            画像URL（任意・複数可）
+                            イベント画像（任意・複数可）
                         </label>
-                        <div className="flex gap-1.5 mb-2">
-                            <input
-                                type="url"
-                                value={imageInput}
-                                onChange={(e) => setImageInput(e.target.value)}
-                                onKeyDown={(e) =>
-                                    e.key === 'Enter' && (e.preventDefault(), addImage())
-                                }
-                                placeholder="https://example.com/image.jpg"
-                                className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
-                            />
-                            <button
-                                type="button"
-                                onClick={addImage}
-                                className="px-4 py-1.5 bg-purple-500 text-white rounded-lg text-xs font-medium"
-                            >
-                                追加
-                            </button>
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                            {images.map((url) => (
-                                <span
-                                    key={url}
-                                    className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-[10px] flex items-center gap-1 max-w-full"
-                                >
-                                    <span className="truncate max-w-[140px]">{url}</span>
-                                    <button
-                                        type="button"
-                                        onClick={() => removeImage(url)}
-                                        className="text-gray-500 hover:text-gray-700"
-                                    >
-                                        ×
-                                    </button>
-                                </span>
-                            ))}
-                        </div>
+                        
+                        {/* ファイルアップロード */}
+                        <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={handleImageChange}
+                            className="block w-full text-sm text-gray-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 mb-3"
+                        />
+
+                        {/* 選択された画像 */}
+                        {images.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                                {images.map((url, idx) => (
+                                    <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-300 shadow-sm">
+                                        <img src={url} alt={`event-${idx}`} className="w-full h-full object-cover" />
+                                        <button
+                                            type="button"
+                                            onClick={() => setImages(prev => prev.filter((_, i) => i !== idx))}
+                                            className="absolute top-0 right-0 bg-red-500 text-white rounded-bl px-1 py-0.5 hover:bg-red-600 text-xs font-bold"
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     {/* タグ */}
