@@ -5,6 +5,8 @@ import { EventCategory, EventFormData } from '@/types/event';
 import { supabase } from '@/lib/supabaseClient';
 import { EVENT_CATEGORIES, AVAILABLE_LANGUAGES } from '@/lib/constants';
 import { useModal } from '@/app/_contexts/ModalContext';
+import { getCurrentUser, getCurrentUserProfile } from '@/lib/home_recommend';
+import { getProfileById } from '@/lib/profile';
 import HistoryModal from './_components/HistoryModal';
 import CreateFormModal from './_components/CreateFormModal';
 import { getEventStatus } from '@/lib/utils/eventStatus';
@@ -294,12 +296,32 @@ export default function CreateEventPage() {
             return;
         }
 
+        // 現在のユーザー情報を取得
+        const currentUser = await getCurrentUser();
+        if (!currentUser) {
+            alert('ユーザー情報の取得に失敗しました。ログインしてください。');
+            return;
+        }
+
+        const userProfile = await getProfileById(currentUser.id);
+        if (!userProfile) {
+            alert('ユーザープロフィールの取得に失敗しました。');
+            return;
+        }
+
         const dateTimeText = submitData.date
             ? `${submitData.date}${submitData.time ? ` ${submitData.time}` : ''}`
             : '';
 
         const dayOfWeek = submitData.dayOfWeek ?? 'mon';
         const period = submitData.period ?? 1;
+
+        // organizer情報を取得
+        const organizerData = {
+            organizer_id: currentUser.id,
+            organizer_name: userProfile.name,
+            organizer_avatar: userProfile.images && userProfile.images.length > 0 ? userProfile.images[0] : '',
+        };
 
         if (isEditMode) {
             const { error } = await supabase
@@ -320,6 +342,7 @@ export default function CreateEventPage() {
                     tags: submitData.tags,
                     images: submitData.images,
                     inoutdoor: submitData.inoutdoor ?? 'in',
+                    ...organizerData,
                 })
                 .eq('id', editingId as string);
 
@@ -354,12 +377,10 @@ export default function CreateEventPage() {
                 currentparticipants: 0,
                 fee: submitData.fee ?? 0,
                 languages: submitData.languages,
-                organizer_id: null,
-                organizer_name: '未設定',
-                organizer_avatar: '',
                 tags: submitData.tags,
                 images: submitData.images,
                 inoutdoor: submitData.inoutdoor ?? 'in',
+                ...organizerData,
             });
 
         if (error) {
