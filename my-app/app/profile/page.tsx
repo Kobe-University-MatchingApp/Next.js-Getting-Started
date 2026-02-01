@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
+import { getProfileById } from '@/lib/profile';
 
 export default async function ProfileIndexPage() {
     const supabase = await createClient();
@@ -11,7 +12,12 @@ export default async function ProfileIndexPage() {
         // ログインしていなければログイン画面へ
         redirect('/login');
     }
+
+    // プロフィール情報を取得して、shortIdを得る
+    const profile = await getProfileById(user.id);
     
     // ログインしていれば自分のプロフィールページへリダイレクト
-    redirect(`/profile/${user.id}`);
+    // shortIdがあればそれを使い、なければUUIDを使う（フォールバック）
+    const targetId = profile?.shortId || user.id;
+    redirect(`/profile/${targetId}`);
 }

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import BottomNav from "./_components/BottomNav";
 import { ModalProvider } from "./_contexts/ModalContext";
+import { UserProvider } from "./_contexts/UserContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,14 +33,16 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased mobile-layout`}
       >
-        <ModalProvider>
-          <div className="mobile-container">
-            <main className="main-content pb-16">
-              {children}
-            </main>
-            <BottomNav />
-          </div>
-        </ModalProvider>
+        <UserProvider>
+          <ModalProvider>
+            <div className="mobile-container">
+              <main className="main-content pb-16">
+                {children}
+              </main>
+              <BottomNav />
+            </div>
+          </ModalProvider>
+        </UserProvider>
       </body>
     </html>
   );

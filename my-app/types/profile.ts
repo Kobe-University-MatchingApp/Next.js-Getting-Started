@@ -1,6 +1,7 @@
 // ユーザープロフィールに関する型定義
 export interface Profile {
     id: string;
+    shortId?: string; // URL表示用の短いID
     name: string;
     age: number;
     location: string;
