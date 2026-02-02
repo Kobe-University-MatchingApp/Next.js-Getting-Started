@@ -98,6 +98,9 @@ export default async function EditProfilePage({ params }: { params: Promise<{ id
             }
         }
 
+        // profile.id は常にUUIDなので、これを使用する（idはshortIdの可能性がある）
+        const profileUuid = profile?.id;
+        
         const { data: updateData, error } = await supabase
             .from('profiles')
             .update({
@@ -113,7 +116,7 @@ export default async function EditProfilePage({ params }: { params: Promise<{ id
                 language_level: languageLevel,
                 exchange_goals: exchangeGoals,
             })
-            .eq('id', id)
+            .eq('id', profileUuid)
             .select(); // 更新されたデータを取得して確認
 
         if (error) {
