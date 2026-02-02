@@ -5,6 +5,7 @@ import { transformSupabaseEventRow } from '@/lib/transformers/eventTransformer';
 import Link from 'next/link';
 import EventDetailClient from './_components/EventDetailClient';
 import { isEventCompleted } from '@/lib/utils/eventStatus';
+import { getEventParticipantsWithProfile } from '@/lib/eventParticipants';
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
 
@@ -28,6 +29,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
   // 参加者が定員に達しているかどうかを判定
   const isFull = event.currentParticipants >= (event.maxParticipants || 0);
+
+  // 参加者プロフィール情報を取得
+  const participants = await getEventParticipantsWithProfile(id);
 
   return (
     <div className="max-w-2xl mx-auto bg-white min-h-screen pb-48 shadow-xl">
@@ -112,14 +116,26 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
           <h2 className="text-sm font-bold text-gray-400 mb-3">参加予定のメンバー</h2>
           <div className="flex items-center justify-between bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
             <div className="flex -space-x-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-gray-200 overflow-hidden">
-                  <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="user" />
+              {participants.slice(0, 5).map((participant) => (
+                <div key={participant.id} className="w-10 h-10 rounded-full border-2 border-white bg-gray-200 overflow-hidden flex-shrink-0" title={participant.participantName}>
+                  {participant.participantAvatar ? (
+                    <img 
+                      src={participant.participantAvatar} 
+                      alt={participant.participantName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-xs font-bold">
+                      {participant.participantName.charAt(0)}
+                    </div>
+                  )}
                 </div>
               ))}
-              <div className="w-10 h-10 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-xs text-gray-500 font-bold">
-                +{Math.max(0, event.currentParticipants - 5)}
-              </div>
+              {participants.length > 5 && (
+                <div className="w-10 h-10 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-xs text-gray-500 font-bold flex-shrink-0">
+                  +{participants.length - 5}
+                </div>
+              )}
             </div>
             <div className="text-right">
               <p className="text-xs text-gray-400">現在の参加者</p>
