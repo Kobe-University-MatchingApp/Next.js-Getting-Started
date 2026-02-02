@@ -4,12 +4,14 @@
 
 import { usePathname } from 'next/navigation';
 import { useModal } from '@/app/_contexts/ModalContext';
+import { useUser } from '@/app/_contexts/UserContext';
 import NavItem from './NavItem';
 import { PlusIcon, HomeIcon, SearchIcon, UserIcon } from './icons/NavIcons';
 
 export default function BottomNav() {
     const pathname = usePathname();
     const { isModalOpen } = useModal();
+    const { profile } = useUser();
 
     const isActive = (path: string) => {
         if (path === '/') {
@@ -22,7 +24,20 @@ export default function BottomNav() {
         { href: '/create', icon: <PlusIcon className="w-6 h-6 mb-1" />, label: '作る' },
         { href: '/home', icon: <HomeIcon className="w-6 h-6 mb-1" />, label: 'ホーム' },
         { href: '/find', icon: <SearchIcon className="w-6 h-6 mb-1" />, label: '探す' },
-        { href: '/profile', icon: <UserIcon className="w-6 h-6 mb-1" />, label: 'プロフィール' },
+        { 
+            // プロフィールへのリンクをshortIdベースに変更（未ロード時はとりあえず/profileへ）
+            href: profile?.shortId ? `/profile/${profile.shortId}` : '/profile', 
+            icon: profile?.images?.[0] ? (
+                <img 
+                    src={profile.images[0]} 
+                    alt="My Profile" 
+                    className="w-6 h-6 mb-1 rounded-full object-cover" 
+                />
+            ) : (
+                <UserIcon className="w-6 h-6 mb-1" />
+            ), 
+            label: 'プロフィール' 
+        },
     ];
 
     return (
