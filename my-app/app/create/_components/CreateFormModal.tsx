@@ -405,27 +405,27 @@ export default function CreateFormModal({
                                 </div>
                             </div>
                         </div>
-                    </form>
-                </div>
 
-                {/* 送信ボタンエリア - 固定 */}
-                <div className="flex-shrink-0 bg-white dark:bg-gray-900 p-4 pb-6 border-t border-gray-200 dark:border-gray-700 safe-area-bottom">
-                    <div className="flex flex-row gap-3">
-                        {saveDraft && (
-                            <button type="button" onClick={saveDraft} className="flex-1 px-4 py-3 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white rounded-lg font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2">
-                                <SaveIcon /> 下書き保存
-                            </button>
-                        )}
-                        <button type="submit" form="create-event-form" disabled={selectedLanguages.length === 0} className={`${saveDraft ? 'flex-[2]' : 'flex-1 w-full'} px-4 py-3.5 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-bold text-sm shadow-lg transition-all flex items-center justify-center gap-2`}>
-                            {isEditMode ? (
-                                <><EditIcon /> イベントを更新</>
-                            ) : isGuest ? (
-                                <><UserIconSmall /> ゲストとして作成</>
-                            ) : (
-                                <><PartyIcon /> イベントを作成</>
-                            )}
-                        </button>
-                    </div>
+                        {/* 送信ボタンエリア - フォーム内に配置 */}
+                        <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div className="flex flex-col gap-2 w-full">
+                                <button type="submit" disabled={selectedLanguages.length === 0} className="w-full px-3 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-bold text-sm shadow-lg transition-all flex items-center justify-center gap-1.5">
+                                    {isEditMode ? (
+                                        <><EditIcon /> 更新する</>
+                                    ) : isGuest ? (
+                                        <><UserIconSmall /> ゲストとして作成</>
+                                    ) : (
+                                        <><PartyIcon /> イベントを作成</>
+                                    )}
+                                </button>
+                                {saveDraft && (
+                                    <button type="button" onClick={saveDraft} className="w-full px-3 py-2.5 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white rounded-lg font-bold text-xs shadow-md transition-all flex items-center justify-center gap-1.5">
+                                        <SaveIcon /> 下書き保存
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
