@@ -26,9 +26,11 @@ export default function CreateProfilePage() {
     // JSONデータのパース
     const interestsJson = formData.get('interestsJson') as string;
     const learningLanguagesJson = formData.get('learningLanguagesJson') as string;
+    const exchangeGoalsJson = formData.get('exchangeGoalsJson') as string;
     
     const interests = interestsJson ? JSON.parse(interestsJson) : [];
     const learningLanguagesRaw = learningLanguagesJson ? JSON.parse(learningLanguagesJson) : [];
+    const exchangeGoals = exchangeGoalsJson ? JSON.parse(exchangeGoalsJson) : [];
 
     // DB形式への変換
     const learningLanguages = learningLanguagesRaw.map((item: any) => item.language);
@@ -81,6 +83,7 @@ export default function CreateProfilePage() {
         interests: interests,
         learning_languages: learningLanguages,
         language_level: languageLevel,
+        exchange_goals: exchangeGoals,
       })
       .select()
       .single();
