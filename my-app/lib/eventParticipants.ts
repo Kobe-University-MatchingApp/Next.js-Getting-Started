@@ -324,3 +324,70 @@ export async function getEventParticipants(eventId: string) {
         return [];
     }
 }
+
+/**
+ * イベントの参加者詳細情報（プロフィール付き）を取得
+ * 参加が確定した人のプロフィール画像を取得
+ */
+export async function getEventParticipantsWithProfile(eventId: string) {
+    const supabase = createClient();
+
+    try {
+        // 参加者情報を取得（プロフィール情報は直結合できないため、別途取得）
+        const { data, error } = await supabase
+            .from('event_participants')
+            .select('id, event_id, user_id, status, registered_at, cancelled_at, notes')
+            .eq('event_id', eventId)
+            .eq('status', 'registered')
+            .order('registered_at', { ascending: true });
+
+        if (error) {
+            console.error('参加者情報取得エラー:', error);
+            return [];
+        }
+
+        if (!data || data.length === 0) return [];
+
+        // ユーザーIDのリストを取得してプロフィール情報を一括取得
+        const userIds = data.map(p => p.user_id).filter(Boolean);
+        
+        if (userIds.length === 0) return [];
+
+        // プロフィール情報を一括取得
+        const { data: profilesData, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, name, images')
+            .in('id', userIds);
+
+        if (profilesError) {
+            console.error('プロフィール情報一括取得エラー:', profilesError);
+        }
+
+        // プロフィール情報をMapにして高速検索
+        const profilesMap = new Map(
+            (profilesData || []).map(p => [p.id, p])
+        );
+
+        // 参加者情報にプロフィール情報をマージ
+        const participantsWithProfiles = data.map(participant => {
+            const profile = profilesMap.get(participant.user_id);
+            
+            return {
+                id: participant.id,
+                eventId: participant.event_id,
+                userId: participant.user_id,
+                status: participant.status,
+                registeredAt: participant.registered_at,
+                cancelledAt: participant.cancelled_at,
+                notes: participant.notes,
+                participantName: profile?.name || '不明',
+                participantAvatar: profile?.images?.[0] || '',
+            };
+        });
+
+        return participantsWithProfiles;
+    } catch (error) {
+        console.error('参加者詳細情報取得エラー:', error);
+        return [];
+    }
+}
