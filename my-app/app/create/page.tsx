@@ -45,7 +45,7 @@ export default function CreateEventPage() {
     const [tagInput, setTagInput] = useState('');
 
     const [images, setImages] = useState<string[]>([]);
-    const [imageInput, setImageInput] = useState('');
+
     const [time, setTime] = useState('');
 
     const [isEditMode, setIsEditMode] = useState(false);
@@ -70,8 +70,77 @@ export default function CreateEventPage() {
     const [debugOpen, setDebugOpen] = useState(false);
     const [lastDebug, setLastDebug] = useState<any>(null);
 
-    // 成功メッセージ
-    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const loadEventAsTemplate = (row: any) => {
+        try {
+            const dateText: string = String(row?.date ?? '');
+            const [dPart, tPart] = dateText.split(' ');
+
+            // IMPORTANT: template mode must NOT set editingId.
+            setEditingId(null);
+
+            setFormData((prev) => ({
+                ...prev,
+                title: String(row?.title ?? ''),
+                description: String(row?.description ?? ''),
+                category: (row?.category ?? '言語交換') as EventCategory,
+                date: dPart || '',
+                location: String(row?.location ?? ''),
+                minParticipants: Number(row?.minparticipants ?? 2),
+                maxParticipants: Number(row?.maxparticipants ?? 10),
+                fee: typeof row?.fee === 'number' ? row.fee : 0,
+                tags: Array.isArray(row?.tags) ? row.tags : [],
+                inoutdoor: (row?.inoutdoor === 'out' ? 'out' : 'in') as any,
+            }));
+
+            setTime(tPart || '');
+            setSelectedLanguages(Array.isArray(row?.languages) ? row.languages : []);
+            setImages(Array.isArray(row?.images) ? row.images : []);
+            setTagInput('');
+            setIsTemplateModalOpen(false);
+            setIsCreateFormModalOpen(true);
+        } catch (e: any) {
+            const errInfo = {
+                at: new Date().toISOString(),
+                where: 'loadEventAsTemplate',
+                message: e?.message ?? String(e),
+                row,
+            };
+            setLastDebug(errInfo);
+            console.error('[create/history] loadEventAsTemplate error', errInfo);
+            alert(`TypeError: ${errInfo.message}`);
+        }
+    };
+
+    const isEditMode = editingId !== null;
+
+    const canEditEvent = (row: any) => getEventStatus(row?.date) !== 'completed';
+
+    const resetToCreateMode = () => {
+        setEditingId(null);
+        setFormData({
+            title: '',
+            description: '',
+            category: '言語交換',
+            date: '',
+            dayOfWeek: 'mon',
+            period: 1,
+            location: '',
+            minParticipants: 2,
+            maxParticipants: 10,
+            fee: 0,
+            languages: [],
+            tags: [],
+            inoutdoor: 'in',
+        });
+        setSelectedLanguages([]);
+        setImages([]);
+        setTagInput('');
+        setTime('');
+    };
+
+    const fetchHistory = async () => {
+        setHistoryLoading(true);
+        setHistoryError(null);
 
     // ユーザー認証とprofile情報取得
     useEffect(() => {
@@ -159,29 +228,12 @@ export default function CreateEventPage() {
         }));
     };
 
-    const addImage = () => {
-        const next = imageInput.trim();
-        if (next && !images.includes(next)) {
-            setImages((prev) => [...prev, next]);
-            setImageInput('');
-        }
-    };
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
 
-    const removeImage = (url: string) => {
-        setImages((prev) => prev.filter((img) => img !== url));
-    };
-
-    const resetToCreateMode = () => {
-        setIsEditMode(false);
-        setEditingId(null);
-        setFormData(emptyForm);
-        setSelectedLanguages([]);
-        setImages([]);
-        setTime('');
-        setTagInput('');
-        setImageInput('');
-        setGuestName('');
-    };
+        const normalizedImages = images
+            .map((u) => u.trim())
+            .filter((u) => u.length > 0);
 
     // 下書き保存
     const saveDraft = () => {
@@ -632,10 +684,7 @@ export default function CreateEventPage() {
                 addTag={addTag}
                 removeTag={removeTag}
                 images={images}
-                imageInput={imageInput}
-                setImageInput={setImageInput}
-                addImage={addImage}
-                removeImage={removeImage}
+                setImages={setImages}
                 time={time}
                 setTime={setTime}
                 onSubmit={onSubmit}

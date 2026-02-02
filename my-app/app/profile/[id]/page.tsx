@@ -1,7 +1,7 @@
 // プロフィールページのコンポーネント
 
-import { getProfileById } from '@/lib/profile';
-import { notFound } from 'next/navigation';
+import { getProfileById, getProfileByShortId } from '@/lib/profile';
+import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
 import Link from 'next/link';
 import RegisteredEvents from './_components/RegisteredEvents';
@@ -9,19 +9,32 @@ import CompletedEvents from './_components/CompletedEvents';
 
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
+    // UUID形式かどうかの簡易チェック (8-4-4-4-12)
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
     const supabase = await createClient();
 
-    // 現在のユーザーを取得して、本人かどうか確認
-    const { data: { user } } = await supabase.auth.getUser();
-    const isOwnProfile = user?.id === id;
-
     // プロフィールデータを取得
-    const profile = await getProfileById(id);
+    // まずshortIdで検索し、ダメならUUIDとして検索
+    let profile = await getProfileByShortId(id);
+    if (!profile && isUuid) {
+        profile = await getProfileById(id);
+        
+        // UUIDでアクセスしており、かつそのユーザーにショートIDがある場合は、
+        // URLを綺麗なショートID版に正規化するためリダイレクトする
+        if (profile?.shortId) {
+            redirect(`/profile/${profile.shortId}`);
+        }
+    }
 
     // プロフィールが存在しない場合の処理
     if (!profile) {
         return notFound();
     }
+
+    // 現在のユーザーを取得して、本人かどうか確認
+    const { data: { user } } = await supabase.auth.getUser();
+    const isOwnProfile = user?.id === profile.id; // profile.idは常にUUIDが入っているためこれでOK
 
     // レベル表示用のテキストマッピング
     const levelText: Record<string, string> = {
@@ -38,7 +51,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                 <h1 className="text-xl font-bold text-gray-900">プロフィール</h1>
                 {isOwnProfile && (
                     <Link
-                        href={`/profile/${id}/edit`}
+                        // 編集ページへはUUIDでもshortIdでも行けるようにするが、ここではshortIdを使う
+                        href={`/profile/${profile.shortId || profile.id}/edit`}
                         className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full font-medium transition-colors flex items-center gap-1"
                     >
                         ✏️ 編集

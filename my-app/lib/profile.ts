@@ -1,5 +1,30 @@
 import { supabase } from '@/lib/supabaseClient';
 import { Profile } from '@/types/profile';
+import { generateShortId } from '@/lib/utils/id_generator';
+
+// DBデータをProfile型に変換するヘルパー関数
+function mapToProfile(data: any): Profile {
+    return {
+        id: data.id,
+        shortId: data.short_id,
+        name: data.name,
+        age: data.age,
+        location: data.location,
+        occupation: data.occupation,
+        bio: data.bio,
+        interests: data.interests || [],
+        images: data.images || [],
+        nativeLanguage: data.native_language,
+        learningLanguages: data.learning_languages || [],
+        languageLevel: data.language_level as Profile['languageLevel'],
+        exchangeGoals: data.exchange_goals || [],
+        studyStyle: data.study_style || [],
+        availability: data.availability || [],
+        nationality: data.nationality || undefined,
+        education: data.education || undefined,
+    };
+}
+
 
 export async function getProfile(name: String): Promise<Profile | null> {
 
@@ -21,28 +46,7 @@ export async function getProfile(name: String): Promise<Profile | null> {
         return null;
     }
 
-    // DBのデータをTypeScriptの型に合わせて変換
-    const profile: Profile = {
-        id: data.id,
-        name: data.name,
-        age: data.age,
-        location: data.location,
-        occupation: data.occupation,
-        bio: data.bio,
-        interests: data.interests || [],
-        images: data.images || [],
-        nativeLanguage: data.native_language,
-        learningLanguages: data.learning_languages || [],
-        // JSON型を適切な型として扱うためのキャスト
-        languageLevel: data.language_level as Profile['languageLevel'],
-        exchangeGoals: data.exchange_goals || [],
-        studyStyle: data.study_style || [],
-        availability: data.availability || [],
-        nationality: data.nationality || undefined,
-        education: data.education || undefined,
-    };
-
-    return profile;
+    return mapToProfile(data);
 }
 
 export async function getProfileById(id: string): Promise<Profile | null> {
@@ -57,24 +61,34 @@ export async function getProfileById(id: string): Promise<Profile | null> {
         return null;
     }
 
-    const profile: Profile = {
-        id: data.id,
-        name: data.name,
-        age: data.age,
-        location: data.location,
-        occupation: data.occupation,
-        bio: data.bio,
-        interests: data.interests || [],
-        images: data.images || [],
-        nativeLanguage: data.native_language,
-        learningLanguages: data.learning_languages || [],
-        languageLevel: data.language_level as Profile['languageLevel'],
-        exchangeGoals: data.exchange_goals || [],
-        studyStyle: data.study_style || [],
-        availability: data.availability || [],
-        nationality: data.nationality || undefined,
-        education: data.education || undefined,
-    };
+    // short_idがない場合は自動生成して保存する（自己修復）
+    if (!data.short_id) {
+        const newShortId = generateShortId();
+        await supabase
+            .from('profiles')
+            .update({ short_id: newShortId })
+            .eq('id', id);
+        data.short_id = newShortId;
+    }
 
-    return profile;
+    return mapToProfile(data);
+}
+
+export async function getProfileByShortId(shortId: string): Promise<Profile | null> {
+    const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('short_id', shortId)
+        .maybeSingle();
+
+    if (error) {
+        console.error('Error fetching profile by short_id:', error);
+        return null;
+    }
+
+    if (!data) {
+        return null;
+    }
+
+    return mapToProfile(data);
 }

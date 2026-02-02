@@ -1,12 +1,26 @@
 import { createClient } from '@/utils/supabase/server';
-import { getProfileById } from '@/lib/profile';
+import { getProfileById, getProfileByShortId } from '@/lib/profile';
 import { notFound, redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import ProfileForm from '../../_components/ProfileForm';
 
 export default async function EditProfilePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
+    
+    // UUID形式かどうかの簡易チェック
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
     const supabase = await createClient();
+     
+    // プロフィールデータを取得
+    let profile = await getProfileByShortId(id);
+    if (!profile && isUuid) {
+        profile = await getProfileById(id);
+    }
+
+    if (!profile) {
+        return notFound();
+    }
     
     // 認証チェック
     const { data: { user } } = await supabase.auth.getUser();
@@ -15,14 +29,10 @@ export default async function EditProfilePage({ params }: { params: Promise<{ id
     }
     
     // 本人確認（自分のプロフィール以外は編集できない）
-    if (user.id !== id) {
+    // profile.id は常にUUIDなので、user.idと比較できる
+    if (user.id !== profile.id) {
+        // IDが違う場合はプロフィールページへ戻す（URLはパラメータのまま）
         redirect(`/profile/${id}`);
-    }
-
-    const profile = await getProfileById(id);
-
-    if (!profile) {
-        return notFound();
     }
 
     async function updateProfile(formData: FormData) {

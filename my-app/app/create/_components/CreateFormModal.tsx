@@ -62,10 +62,7 @@ interface CreateFormModalProps {
     addTag: () => void;
     removeTag: (tag: string) => void;
     images: string[];
-    imageInput: string;
-    setImageInput: React.Dispatch<React.SetStateAction<string>>;
-    addImage: () => void;
-    removeImage: (url: string) => void;
+    setImages: React.Dispatch<React.SetStateAction<string[]>>;
     time: string;
     setTime: React.Dispatch<React.SetStateAction<string>>;
     onSubmit: (e: React.FormEvent) => void;
@@ -101,10 +98,7 @@ export default function CreateFormModal({
     addTag,
     removeTag,
     images,
-    imageInput,
-    setImageInput,
-    addImage,
-    removeImage,
+    setImages,
     time,
     setTime,
     onSubmit,
@@ -127,7 +121,21 @@ export default function CreateFormModal({
 }: CreateFormModalProps) {
     if (!isOpen) return null;
 
-    const isGuest = !currentUser;
+    // 画像選択時のハンドラ
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const imageUrl = reader.result as string;
+                setImages(prev => {
+                    if (prev.includes(imageUrl)) return prev;
+                    return [...prev, imageUrl];
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center md:justify-center">
@@ -379,25 +387,38 @@ export default function CreateFormModal({
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">タグ</label>
-                                    <div className="flex gap-1.5 mb-2">
-                                        <input type="text" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())} placeholder="タグを入力" className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm" />
-                                        <button type="button" onClick={addTag} className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-xs font-medium transition-colors">追加</button>
+                    {/* 画像 */}
+                    <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                            イベント画像（任意・複数可）
+                        </label>
+                        
+                        {/* ファイルアップロード */}
+                        <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={handleImageChange}
+                            className="block w-full text-sm text-gray-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 mb-3"
+                        />
+
+                        {/* 選択された画像 */}
+                        {images.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                                {images.map((url, idx) => (
+                                    <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-300 shadow-sm">
+                                        <img src={url} alt={`event-${idx}`} className="w-full h-full object-cover" />
+                                        <button
+                                            type="button"
+                                            onClick={() => setImages(prev => prev.filter((_, i) => i !== idx))}
+                                            className="absolute top-0 right-0 bg-red-500 text-white rounded-bl px-1 py-0.5 hover:bg-red-600 text-xs font-bold"
+                                        >
+                                            ×
+                                        </button>
                                     </div>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {formData.tags?.map((tag) => (
-                                            <span key={tag} className="px-2 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded text-xs font-medium flex items-center gap-1">
-                                                {tag}
-                                                <button type="button" onClick={() => removeTag(tag)} className="text-purple-500 hover:text-red-500 transition-colors">×</button>
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
+                                ))}
                             </div>
-                        </div>
-                    </form>
-                </div>
+                        )}
+                    </div>
 
                 {/* 送信ボタンエリア - 固定 */}
                 <div className="flex-shrink-0 bg-white dark:bg-gray-900 p-4 pb-6 border-t border-gray-200 dark:border-gray-700 safe-area-bottom">
