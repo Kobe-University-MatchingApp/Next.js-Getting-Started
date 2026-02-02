@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import ProfileForm from '../_components/ProfileForm';
+import { generateShortId } from '@/lib/utils/id_generator';
 
 export default function CreateProfilePage() {
   async function createProfile(formData: FormData) {
@@ -43,6 +44,9 @@ export default function CreateProfilePage() {
     }
     const age = parseInt(ageStr);
 
+    // short_idを生成
+    const shortId = generateShortId();
+
     // 3. 画像アップロード処理
     let imageUrls: string[] = [];
     if (imageFile && imageFile.size > 0) {
@@ -65,7 +69,8 @@ export default function CreateProfilePage() {
     const { data, error } = await supabase
       .from('profiles')
       .insert({
-        id: user.id, // ユーザーIDをプロフィールのIDとして使用
+        id: user.id,
+        short_id: shortId,
         name,
         age,
         location,
@@ -86,7 +91,8 @@ export default function CreateProfilePage() {
     }
 
     if (data) {
-      redirect(`/profile/${data.id}`);
+      // short_idを使ってリダイレクト（data.short_idがなければ生成したshortIdを使う）
+      redirect(`/profile/${data.short_id || shortId}`);
     }
   }
 
