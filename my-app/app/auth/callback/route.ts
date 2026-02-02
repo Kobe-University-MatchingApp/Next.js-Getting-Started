@@ -33,15 +33,18 @@ export async function GET(request: Request) {
       // }
 
       // プロフィールが存在するか確認
+      // short_idも取得して、あればそれを使うようにする
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, short_id')
         .eq('id', user.id) // user.id と profile.id を一致させる設計に変更
         .single()
 
       if (profile) {
         // プロフィールがあれば、そのユーザーのプロフィールページへリダイレクト
-        return NextResponse.redirect(`${origin}/profile/${user.id}`)
+        // short_idがあればそれを優先的に使用
+        const targetId = profile.short_id || profile.id;
+        return NextResponse.redirect(`${origin}/profile/${targetId}`)
       } else {
         // プロフィールがなければ作成画面へ
         return NextResponse.redirect(`${origin}/profile/create`)
