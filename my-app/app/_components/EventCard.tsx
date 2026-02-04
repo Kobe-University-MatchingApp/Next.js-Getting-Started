@@ -60,13 +60,26 @@ export default function EventCard({ event }: EventCardProps) {
                 {/* 下部情報 */}
                 <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                     <div className="flex items-center gap-2">
-                        {event.organizer.avatar ? (
-                            <img src={event.organizer.avatar} alt={event.organizer.name} className="w-6 h-6 rounded-full" />
-                        ) : (
-                            <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-xs text-gray-600">
+                        {event.organizer.avatar && event.organizer.avatar.trim() !== '' ? (
+                            <img 
+                                src={event.organizer.avatar} 
+                                alt={event.organizer.name} 
+                                className="w-6 h-6 rounded-full object-cover" 
+                                onError={(e) => {
+                                    // 画像読み込みエラー時の処理
+                                    const img = e.target as HTMLImageElement;
+                                    img.style.display = 'none';
+                                    if (img.nextElementSibling) {
+                                        (img.nextElementSibling as HTMLElement).style.display = 'flex';
+                                    }
+                                }}
+                            />
+                        ) : null}
+                        {!event.organizer.avatar || event.organizer.avatar.trim() === '' ? (
+                            <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-xs text-gray-600 font-semibold">
                                 {event.organizer.name.charAt(0)}
                             </div>
-                        )}
+                        ) : null}
                         <span className="text-sm text-gray-600">{event.organizer.name}</span>
                     </div>
                     <div className="flex items-center gap-2">

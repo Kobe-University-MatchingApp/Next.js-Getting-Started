@@ -119,19 +119,25 @@ export default function CreateFormModal({
     guestName = '',
     setGuestName,
 }: CreateFormModalProps) {
-    // 画像入力のローカル状態
-    const [imageInput, setImageInput] = useState('');
+    // 画像プレビューのローカル状態
+    const [imagePreview, setImagePreview] = useState<string | null>(images.length > 0 ? images[0] : null);
 
-    const addImage = () => {
-        const url = imageInput.trim();
-        if (url && !images.includes(url)) {
-            setImages((prev) => [...prev, url]);
-            setImageInput('');
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64 = reader.result as string;
+                setImagePreview(base64);
+                setImages([base64]);
+            };
+            reader.readAsDataURL(file);
         }
     };
 
-    const removeImage = (url: string) => {
-        setImages((prev) => prev.filter((img) => img !== url));
+    const removeImage = () => {
+        setImages([]);
+        setImagePreview(null);
     };
 
     if (!isOpen) return null;
@@ -373,18 +379,34 @@ export default function CreateFormModal({
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">画像URL（任意・複数可）</label>
-                                    <div className="flex gap-1.5 mb-2">
-                                        <input type="url" value={imageInput} onChange={(e) => setImageInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addImage())} placeholder="https://example.com/image.jpg" className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm" />
-                                        <button type="button" onClick={addImage} className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-xs font-medium transition-colors">追加</button>
-                                    </div>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {images.map((url) => (
-                                            <span key={url} className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-[10px] flex items-center gap-1 max-w-full">
-                                                <span className="truncate max-w-[140px]">{url}</span>
-                                                <button type="button" onClick={() => removeImage(url)} className="text-gray-500 hover:text-red-500 transition-colors">×</button>
-                                            </span>
-                                        ))}
+                                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">イベント画像（任意）</label>
+                                    <div className="flex items-center gap-4">
+                                        <div className="relative w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600 flex-shrink-0">
+                                            {imagePreview ? (
+                                                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="flex items-center justify-center w-full h-full text-gray-400">
+                                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex-1">
+                                            <input 
+                                                type="file" 
+                                                accept="image/*" 
+                                                onChange={handleImageChange}
+                                                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-500 file:text-white hover:file:bg-purple-600 transition-colors"
+                                            />
+                                            {imagePreview && (
+                                                <button 
+                                                    type="button" 
+                                                    onClick={removeImage}
+                                                    className="mt-2 px-3 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors"
+                                                >
+                                                    画像を削除
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 

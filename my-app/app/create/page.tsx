@@ -28,11 +28,12 @@ const emptyForm: EventFormData = {
 const DRAFT_KEY = 'event_draft';
 
 export default function CreateEventPage() {
-    // ユーザー認証状態 - UUID, shortId, name を取得
+    // ユーザー認証状態 - UUID, shortId, name, avatar を取得
     const [currentUser, setCurrentUser] = useState<{ 
         id: string; 
         shortId: string | null; 
         name: string | null;
+        avatar: string | null;
     } | null>(null);
     const [authLoading, setAuthLoading] = useState(true);
 
@@ -80,17 +81,24 @@ export default function CreateEventPage() {
             try {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (user) {
-                    // profilesテーブルからshort_idとnameを取得
+                    // profilesテーブルからshort_id, name, imagesを取得
                     const { data: profile } = await supabase
                         .from('profiles')
-                        .select('short_id, name')
+                        .select('short_id, name, images')
                         .eq('id', user.id)
                         .single();
+                    
+                    // 画像配列から最初の画像を取得
+                    let avatarUrl: string | null = null;
+                    if (profile?.images && Array.isArray(profile.images) && profile.images.length > 0) {
+                        avatarUrl = profile.images[0];
+                    }
                     
                     setCurrentUser({
                         id: user.id,  // UUID
                         shortId: profile?.short_id ?? null,
                         name: profile?.name ?? null,
+                        avatar: avatarUrl,
                     });
                 } else {
                     setCurrentUser(null);
@@ -376,7 +384,7 @@ export default function CreateEventPage() {
             languages: selectedLanguages,
             organizer_id: organizerId,
             organizer_name: organizerName,
-            organizer_avatar: null,
+            organizer_avatar: isGuest ? null : (currentUser?.avatar ?? null),
             tags: formData.tags ?? [],
             images,
             inoutdoor: formData.inoutdoor ?? null,
