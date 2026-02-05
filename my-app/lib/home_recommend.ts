@@ -3,6 +3,7 @@ import { Profile } from '@/types/profile';
 import { transformSupabaseEventRows } from '@/lib/transformers/eventTransformer';
 import { getProfileById } from '@/lib/profile';
 import { createClient } from '@/utils/supabase/client';
+import { isEventCompleted } from '@/lib/utils/eventStatus';
 
 // 2つのカテゴリに分類されたデータを返す型
 type CategorizedEvents = {
@@ -17,10 +18,10 @@ type CategorizedEvents = {
 function getUpcomingEventsWithin5Days(events: Event[]): Event[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   const fiveDaysLater = new Date(today);
   fiveDaysLater.setDate(fiveDaysLater.getDate() + 5);
-  
+
   return events
     .filter(event => {
       const eventDate = new Date(event.date);
@@ -50,8 +51,12 @@ export async function getHomeEvents(userProfile: Profile): Promise<CategorizedEv
   console.log('Supabaseから取得したイベント数:', eventsData?.length);
   console.log('イベントデータ:', eventsData);
 
-  const sampleEvents = transformSupabaseEventRows(eventsData || []);
-  console.log('変換後のイベント数:', sampleEvents.length);
+  const allEvents = transformSupabaseEventRows(eventsData || []);
+
+  // 終了済みのイベントを除外
+  const sampleEvents = allEvents.filter(event => !isEventCompleted(event.date));
+  console.log('変換後のイベント数:', allEvents.length);
+  console.log('終了済み除外後のイベント数:', sampleEvents.length);
   console.log('変換後のイベント:', sampleEvents);
 
   // 1. イベントの言語とプロフィールの言語が一致するイベント
@@ -59,14 +64,14 @@ export async function getHomeEvents(userProfile: Profile): Promise<CategorizedEv
     userProfile.nativeLanguage,
     ...(userProfile.learningLanguages || [])
   ];
-  
+
   console.log('ユーザーの言語:', userLanguages);
   console.log('ユーザーの興味:', userProfile.interests);
 
   const byLanguages = sampleEvents.filter(event =>
     event.languages?.some(lang => userLanguages.includes(lang))
   );
-  
+
   console.log('言語でフィルタリングしたイベント:', byLanguages);
   console.log('言語でフィルタリングしたイベントのID:', byLanguages.map(e => e.id));
 
@@ -74,16 +79,16 @@ export async function getHomeEvents(userProfile: Profile): Promise<CategorizedEv
   // 注：言語にマッチしているイベントも含める（同じイベントが両セクションに表示される可能性あり）
   const byTags = sampleEvents.filter(event => {
     const hasMatchingTag = event.tags?.some(tag => userProfile.interests.includes(tag));
-    
+
     console.log(`イベント "${event.title}" (ID: ${event.id}) - タグ: ${event.tags}, マッチしているタグ: ${hasMatchingTag}`);
-    
+
     if (hasMatchingTag) {
       console.log(`✓ このイベントはタグ条件に追加されます`);
     }
-    
+
     return hasMatchingTag;
   });
-  
+
   console.log('タグでフィルタリングしたイベント:', byTags);
   console.log('タグでフィルタリングしたイベントのID:', byTags.map(e => e.id));
 

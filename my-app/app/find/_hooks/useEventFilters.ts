@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Event } from '@/types/event';
+import { isEventCompleted } from '@/lib/utils/eventStatus';
 
 // フィルターの状態を定義
 export interface EventFilters {
@@ -14,6 +15,7 @@ export interface EventFilters {
     languages: string[];
     maxFee: number | null;
     inoutdoor: string;
+    excludeCompleted: boolean;
 }
 
 // フィルターの初期状態
@@ -27,6 +29,7 @@ const initialFilters: EventFilters = {
     languages: [],
     maxFee: null,
     inoutdoor: '',
+    excludeCompleted: false,
 };
 
 // カスタムフックの定義
@@ -46,6 +49,7 @@ export function useEventFilters(events: Event[], searchQuery: string) {
             filters.languages.length > 0,
             filters.maxFee !== null,
             filters.inoutdoor,
+            filters.excludeCompleted,
         ].filter(Boolean).length;
     }, [filters]);
 
@@ -61,6 +65,7 @@ export function useEventFilters(events: Event[], searchQuery: string) {
             languages: [],
             maxFee: null,
             inoutdoor: '',
+            excludeCompleted: false,
         };
 
         setFilters({ ...filters, [key]: defaultValues[key] });
@@ -98,9 +103,11 @@ export function useEventFilters(events: Event[], searchQuery: string) {
 
             const matchesInOutDoor = !filters.inoutdoor || event.inoutdoor === filters.inoutdoor;
 
+            const matchesCompleted = !filters.excludeCompleted || !isEventCompleted(event.date);
+
             return matchesSearch && matchesCategory && matchesLocation && matchesDate &&
                 matchesTime && matchesMinParticipants && matchesMaxParticipants && matchesLanguages &&
-                matchesFee && matchesInOutDoor;
+                matchesFee && matchesInOutDoor && matchesCompleted;
         });
     }, [events, searchQuery, filters]);
 
