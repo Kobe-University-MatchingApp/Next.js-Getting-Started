@@ -2,6 +2,7 @@
 
 'use client';
 
+import { useEffect } from 'react';
 import { EventFilters } from './_hooks/useEventFilters';
 import { EVENT_CATEGORIES, AVAILABLE_LANGUAGES, AVAILABLE_LOCATIONS } from '@/lib/constants';
 
@@ -27,9 +28,27 @@ export default function FilterModal({
     // モーダルが閉じている場合は何もレンダリングしない
     if (!isOpen) return null;
 
+    // 背後のスクロールを防止
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+            return () => {
+                document.body.style.overflow = 'unset';
+            };
+        }
+    }, [isOpen]);
+
     // モーダルのレンダリング
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
+        <div
+            className="fixed inset-0 bg-black/50 z-50 flex items-end"
+            onClick={(e) => {
+                // 背景をクリックしても閉じないようにする
+                if (e.target === e.currentTarget) {
+                    e.stopPropagation();
+                }
+            }}
+        >
             <div className="bg-white w-full rounded-t-2xl max-h-[95vh] overflow-y-auto">
                 {/* モーダルヘッダー */}
                 <div className="sticky top-0 bg-white rounded-t-2xl border-b border-gray-200 p-4 flex items-center justify-between z-10">
@@ -48,6 +67,19 @@ export default function FilterModal({
 
                 {/* フィルターコンテンツ */}
                 <div className="p-4 space-y-4">
+                    {/* 終了済みを除く */}
+                    <div className="pb-2 border-b border-gray-200">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={filters.excludeCompleted}
+                                onChange={(e) => setFilters({ ...filters, excludeCompleted: e.target.checked })}
+                                className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+                            />
+                            <span className="text-sm font-medium text-gray-700">終了済みのイベントを除く</span>
+                        </label>
+                    </div>
+
                     {/* カテゴリー */}
                     <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">カテゴリー</label>
@@ -84,14 +116,31 @@ export default function FilterModal({
                         />
                     </div>
 
+                    {/* 開催時間範囲 */}
                     <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">開催時間</label>
-                        <input
-                            type="time"
-                            value={filters.time}
-                            onChange={(e) => setFilters({ ...filters, time: e.target.value })}
-                            className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
-                        />
+                        <div className="grid grid-cols-2 gap-2">
+                            <div>
+                                <input
+                                    type="time"
+                                    value={filters.timeFrom || ''}
+                                    onChange={(e) => setFilters({ ...filters, timeFrom: e.target.value })}
+                                    placeholder="開始時刻"
+                                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                                />
+                                <p className="text-xs text-gray-500 mt-0.5">開始時刻</p>
+                            </div>
+                            <div>
+                                <input
+                                    type="time"
+                                    value={filters.timeTo || ''}
+                                    onChange={(e) => setFilters({ ...filters, timeTo: e.target.value })}
+                                    placeholder="終了時刻"
+                                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                                />
+                                <p className="text-xs text-gray-500 mt-0.5">終了時刻</p>
+                            </div>
+                        </div>
                     </div>
 
                     {/* 場所 */}
@@ -187,6 +236,7 @@ export default function FilterModal({
                             ))}
                         </div>
                     </div>
+
                 </div>
 
                 {/* モーダルフッター */}

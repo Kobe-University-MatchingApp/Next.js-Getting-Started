@@ -29,9 +29,9 @@ const DRAFT_KEY = 'event_draft';
 
 export default function CreateEventPage() {
     // ユーザー認証状態 - UUID, shortId, name を取得
-    const [currentUser, setCurrentUser] = useState<{ 
-        id: string; 
-        shortId: string | null; 
+    const [currentUser, setCurrentUser] = useState<{
+        id: string;
+        shortId: string | null;
         name: string | null;
     } | null>(null);
     const [authLoading, setAuthLoading] = useState(true);
@@ -61,14 +61,10 @@ export default function CreateEventPage() {
 
     // ゲスト用臨時ユーザー名
     const [guestName, setGuestName] = useState('');
-    
+
     // ゲスト確認ポップアップ
     const [showGuestConfirm, setShowGuestConfirm] = useState(false);
     const [pendingSubmitEvent, setPendingSubmitEvent] = useState<React.FormEvent | null>(null);
-
-    // debug panel
-    const [debugOpen, setDebugOpen] = useState(false);
-    const [lastDebug, setLastDebug] = useState<any>(null);
 
     // 成功メッセージ
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -86,7 +82,7 @@ export default function CreateEventPage() {
                         .select('short_id, name')
                         .eq('id', user.id)
                         .single();
-                    
+
                     setCurrentUser({
                         id: user.id,  // UUID
                         shortId: profile?.short_id ?? null,
@@ -121,9 +117,9 @@ export default function CreateEventPage() {
             ...prev,
             [name]:
                 name === 'maxParticipants' ||
-                name === 'minParticipants' ||
-                name === 'fee' ||
-                name === 'period'
+                    name === 'minParticipants' ||
+                    name === 'fee' ||
+                    name === 'period'
                     ? Number(value)
                     : value,
         }));
@@ -248,10 +244,6 @@ export default function CreateEventPage() {
 
             if (error) throw error;
             setHistoryEvents(data ?? []);
-            setLastDebug({ 
-                odName: currentUser?.name,
-                rows: (data ?? []).length 
-            });
         } catch (err: any) {
             setHistoryError(err?.message ?? '履歴の取得に失敗しました');
         } finally {
@@ -353,10 +345,10 @@ export default function CreateEventPage() {
     const executeSubmit = async () => {
         // ゲストの場合は臨時ID生成
         const isGuest = !currentUser;
-        const organizerId = isGuest 
+        const organizerId = isGuest
             ? `guest_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
             : currentUser.id;  // UUID
-        const organizerName = isGuest 
+        const organizerName = isGuest
             ? guestName.trim() || '匿名ゲスト'
             : currentUser.name || '名前未設定';
 
@@ -505,9 +497,9 @@ export default function CreateEventPage() {
                                 イベント作成
                             </h1>
                             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                {authLoading 
-                                    ? '認証確認中...' 
-                                    : currentUser 
+                                {authLoading
+                                    ? '認証確認中...'
+                                    : currentUser
                                         ? `ログイン中: ${currentUser.name ?? '名前未設定'}`
                                         : 'ゲストモード（一部機能制限あり）'
                                 }
@@ -624,9 +616,6 @@ export default function CreateEventPage() {
                 onSubmit={onSubmit}
                 isEditMode={isEditMode}
                 resetToCreateMode={resetToCreateMode}
-                debugOpen={debugOpen}
-                setDebugOpen={setDebugOpen}
-                lastDebug={lastDebug}
                 isTemplateModalOpen={isTemplateModalOpen}
                 isEditModalOpen={isEditModalOpen}
                 historyLoading={historyLoading}
