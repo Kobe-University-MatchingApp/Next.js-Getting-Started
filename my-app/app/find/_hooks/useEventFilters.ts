@@ -9,7 +9,8 @@ export interface EventFilters {
     categories: string[];
     location: string;
     date: string;
-    time: string;
+    timeFrom: string;
+    timeTo: string;
     minParticipants: number | null;
     maxParticipants: number | null;
     languages: string[];
@@ -23,7 +24,8 @@ const initialFilters: EventFilters = {
     categories: [],
     location: '',
     date: '',
-    time: '',
+    timeFrom: '',
+    timeTo: '',
     minParticipants: null,
     maxParticipants: null,
     languages: [],
@@ -43,7 +45,7 @@ export function useEventFilters(events: Event[], searchQuery: string) {
             filters.categories.length > 0,
             filters.location,
             filters.date,
-            filters.time,
+            filters.timeFrom || filters.timeTo,
             filters.minParticipants,
             filters.maxParticipants,
             filters.languages.length > 0,
@@ -59,7 +61,8 @@ export function useEventFilters(events: Event[], searchQuery: string) {
             categories: [],
             location: '',
             date: '',
-            time: '',
+            timeFrom: '',
+            timeTo: '',
             minParticipants: null,
             maxParticipants: null,
             languages: [],
@@ -89,10 +92,21 @@ export function useEventFilters(events: Event[], searchQuery: string) {
             // 日付フィルター（event.dateは "YYYY-MM-DD HH:MM" 形式）
             const matchesDate = !filters.date || event.date.startsWith(filters.date);
 
-            // 時刻フィルター（event.dateから時刻部分を抽出）
-            const matchesTime = !filters.time || (() => {
+            // 時刻範囲フィルター（event.dateから時刻部分を抽出）
+            const matchesTime = (() => {
+                // フィルターが設定されていない場合は全てマッチ
+                if (!filters.timeFrom && !filters.timeTo) return true;
+
                 const eventTime = event.date.split(' ')[1];
-                return eventTime && eventTime.startsWith(filters.time);
+                if (!eventTime) return false;
+
+                // 開始時刻フィルター
+                if (filters.timeFrom && eventTime < filters.timeFrom) return false;
+
+                // 終了時刻フィルター
+                if (filters.timeTo && eventTime > filters.timeTo) return false;
+
+                return true;
             })();
 
             const matchesMinParticipants = !filters.minParticipants || event.maxParticipants >= filters.minParticipants;

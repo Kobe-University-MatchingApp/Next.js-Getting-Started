@@ -116,14 +116,31 @@ export default function FilterModal({
                         />
                     </div>
 
+                    {/* 開催時間範囲 */}
                     <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">開催時間</label>
-                        <input
-                            type="time"
-                            value={filters.time}
-                            onChange={(e) => setFilters({ ...filters, time: e.target.value })}
-                            className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
-                        />
+                        <div className="grid grid-cols-2 gap-2">
+                            <div>
+                                <input
+                                    type="time"
+                                    value={filters.timeFrom || ''}
+                                    onChange={(e) => setFilters({ ...filters, timeFrom: e.target.value })}
+                                    placeholder="開始時刻"
+                                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                                />
+                                <p className="text-xs text-gray-500 mt-0.5">開始時刻</p>
+                            </div>
+                            <div>
+                                <input
+                                    type="time"
+                                    value={filters.timeTo || ''}
+                                    onChange={(e) => setFilters({ ...filters, timeTo: e.target.value })}
+                                    placeholder="終了時刻"
+                                    className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+                                />
+                                <p className="text-xs text-gray-500 mt-0.5">終了時刻</p>
+                            </div>
+                        </div>
                     </div>
 
                     {/* 場所 */}
