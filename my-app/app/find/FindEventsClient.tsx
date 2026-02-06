@@ -3,15 +3,20 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { Event } from '@/types/event';
 import EventCard from '@/app/_components/EventCard';
-import FilterModal from './FilterModal';
 import ActiveFilters from './_components/ActiveFilters';
 import { useModal } from '@/app/_contexts/ModalContext';
 import { useEventFilters } from './_hooks/useEventFilters';
 import { useScrollVisibility } from '@/lib/hooks/useScrollVisibility';
 import { isEventCompleted } from '@/lib/utils/eventStatus';
 import Link from 'next/link';
+
+// FilterModal を動的インポート
+const FilterModal = dynamic(() => import('./FilterModal'), {
+    ssr: false,
+});
 
 // コンポーネントのプロパティ型定義
 interface FindEventsClientProps {
@@ -116,14 +121,16 @@ export default function FindEventsClient({ initialEvents }: FindEventsClientProp
             )}
 
             {/* 絞り込みモーダル */}
-            <FilterModal
-                isOpen={isFilterModalOpen}
-                onClose={() => setIsFilterModalOpen(false)}
-                filters={filters}
-                setFilters={setFilters}
-                clearAllFilters={clearAllFilters}
-                resultCount={filteredEvents.length}
-            />
+            {isFilterModalOpen && (
+                <FilterModal
+                    isOpen={isFilterModalOpen}
+                    onClose={() => setIsFilterModalOpen(false)}
+                    filters={filters}
+                    setFilters={setFilters}
+                    clearAllFilters={clearAllFilters}
+                    resultCount={filteredEvents.length}
+                />
+            )}
 
             {/* イベント件数 */}
             {(sortedEvents.length !== initialEvents.length || activeFilterCount > 0) && (

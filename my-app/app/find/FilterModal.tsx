@@ -25,9 +25,6 @@ export default function FilterModal({
     resultCount,
 }: FilterModalProps) {
 
-    // モーダルが閉じている場合は何もレンダリングしない
-    if (!isOpen) return null;
-
     // 背後のスクロールを防止
     useEffect(() => {
         if (isOpen) {
