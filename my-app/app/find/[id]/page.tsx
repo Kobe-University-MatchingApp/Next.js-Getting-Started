@@ -23,7 +23,30 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   }
 
   // データを変換
-  const event = transformSupabaseEventRow(data);
+  let event = transformSupabaseEventRow(data);
+
+  // organizer_avatar が null の場合、profiles テーブルから画像を取得
+  if ((!event.organizer.avatar || !event.organizer.avatar.trim()) && !event.organizer.id.startsWith('guest_')) {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('images')
+        .eq('id', event.organizer.id)
+        .single();
+
+      if (profile?.images && Array.isArray(profile.images) && profile.images.length > 0) {
+        event = {
+          ...event,
+          organizer: {
+            ...event.organizer,
+            avatar: profile.images[0],
+          },
+        };
+      }
+    } catch (err) {
+      logger.error(`Failed to fetch profile image for organizer ${event.organizer.id}:`, err);
+    }
+  }
 
   // イベントが終了しているかどうかを判定
   const isCompleted = isEventCompleted(event.date);

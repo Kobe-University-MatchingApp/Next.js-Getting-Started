@@ -49,7 +49,45 @@ export async function getHomeEvents(userProfile: Profile): Promise<CategorizedEv
     return { byLanguages: [], byTags: [], upcoming: [] };
   }
 
-  const allEvents = transformSupabaseEventRows(eventsData || []);
+  let allEvents = transformSupabaseEventRows(eventsData || []);
+
+  // organizer_avatar が null の場合、profiles テーブルから画像を取得
+  allEvents = await Promise.all(
+    allEvents.map(async (event) => {
+      // organizer_avatar が既に設定されている場合はスキップ
+      if (event.organizer.avatar && event.organizer.avatar.trim()) {
+        return event;
+      }
+
+      // organizer_id がゲストの場合（guest_で始まる）はスキップ
+      if (event.organizer.id.startsWith('guest_')) {
+        return event;
+      }
+
+      try {
+        // profiles テーブルから画像を取得
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('images')
+          .eq('id', event.organizer.id)
+          .single();
+
+        if (profile?.images && Array.isArray(profile.images) && profile.images.length > 0) {
+          return {
+            ...event,
+            organizer: {
+              ...event.organizer,
+              avatar: profile.images[0],
+            },
+          };
+        }
+      } catch (err) {
+        logger.error(`Failed to fetch profile image for organizer ${event.organizer.id}:`, err);
+      }
+
+      return event;
+    })
+  );
 
   // 終了済みのイベントを除外
   const sampleEvents = allEvents.filter(event => !isEventCompleted(event.date));

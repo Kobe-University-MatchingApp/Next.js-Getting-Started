@@ -69,7 +69,6 @@ export default function CreateNewEventPage() {
     const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState('');
     const [images, setImages] = useState<string[]>([]);
-    const [imageInput, setImageInput] = useState('');
     const [time, setTime] = useState('');
     const [guestName, setGuestName] = useState('');
     const [showGuestConfirm, setShowGuestConfirm] = useState(false);
@@ -179,12 +178,21 @@ export default function CreateNewEventPage() {
         }));
     };
 
-    const addImage = () => {
-        const url = imageInput.trim();
-        if (url && !images.includes(url)) {
-            setImages((prev) => [...prev, url]);
-            setImageInput('');
-        }
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files) return;
+
+        Array.from(files).forEach((file) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const dataUrl = reader.result as string;
+                setImages((prev) => [...prev, dataUrl]);
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // ファイルインプットをリセット
+        e.target.value = '';
     };
 
     const removeImage = (url: string) => {
@@ -214,6 +222,25 @@ export default function CreateNewEventPage() {
             ? guestName.trim() || '匿名ゲスト'
             : currentUser.name || '名前未設定';
 
+        // ログインユーザーの場合、プロフィール画像を取得
+        let organizerAvatar: string | null = null;
+        if (!isGuest && currentUser) {
+            try {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('images')
+                    .eq('id', currentUser.id)
+                    .single();
+                
+                if (profile?.images && Array.isArray(profile.images) && profile.images.length > 0) {
+                    organizerAvatar = profile.images[0];
+                }
+            } catch (err) {
+                logger.error('Error fetching profile image:', err);
+                // エラーが発生してもイベント作成は続行
+            }
+        }
+
         const payload = {
             id: `evt_${Date.now()}`,
             title: formData.title,
@@ -230,7 +257,7 @@ export default function CreateNewEventPage() {
             languages: selectedLanguages,
             organizer_id: organizerId,
             organizer_name: organizerName,
-            organizer_avatar: null,
+            organizer_avatar: organizerAvatar,
             tags: formData.tags ?? [],
             images,
             inoutdoor: formData.inoutdoor ?? null,
@@ -577,41 +604,37 @@ export default function CreateNewEventPage() {
 
                             <div>
                                 <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                                    画像URL（任意・複数可）
+                                    画像（任意・複数可）
                                 </label>
-                                <div className="flex gap-1.5 mb-2">
-                                    <input
-                                        type="url"
-                                        value={imageInput}
-                                        onChange={(e) => setImageInput(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addImage())}
-                                        placeholder="https://example.com/image.jpg"
-                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={addImage}
-                                        className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-xs font-medium transition-colors"
-                                    >
-                                        追加
-                                    </button>
-                                </div>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {images.map((url) => (
-                                        <span
-                                            key={url}
-                                            className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-[10px] flex items-center gap-1 max-w-full"
-                                        >
-                                            <span className="truncate max-w-[140px]">{url}</span>
-                                            <button
-                                                type="button"
-                                                onClick={() => removeImage(url)}
-                                                className="text-gray-500 hover:text-red-500 transition-colors"
-                                            >
-                                                ×
-                                            </button>
-                                        </span>
-                                    ))}
+                                <div className="space-y-3">
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            multiple
+                                            onChange={handleImageChange}
+                                            className="flex-1 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 cursor-pointer"
+                                        />
+                                    </div>
+                                    {images.length > 0 && (
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                            {images.map((url, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="relative w-full aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0"
+                                                >
+                                                    <img src={url} alt={`Preview ${index}`} className="w-full h-full object-cover" />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeImage(url)}
+                                                        className="absolute top-1 right-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
