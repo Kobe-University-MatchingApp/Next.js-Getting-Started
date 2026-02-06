@@ -62,7 +62,7 @@ export default function JoinConfirmPage({ params }: { params: Promise<{ id: stri
   // ローディング中
   if (loading) {
     return (
-      <div className="p-8 text-center">
+      <div className="p-8 text-center animate-slide-in-right">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
         <p className="mt-4 text-gray-600">読み込み中...</p>
       </div>
@@ -72,7 +72,7 @@ export default function JoinConfirmPage({ params }: { params: Promise<{ id: stri
   // エラーまたはイベントが見つからない
   if (error || !event) {
     return (
-      <div className="p-8 text-center">
+      <div className="p-8 text-center animate-slide-in-right">
         <p className="text-red-600">{error || 'イベントが見つかりません'}</p>
         <Link href="/find" className="mt-4 inline-block text-purple-600 hover:underline">
           イベント一覧に戻る
@@ -101,7 +101,7 @@ export default function JoinConfirmPage({ params }: { params: Promise<{ id: stri
   };
 
   return (
-    <div className="max-w-2xl mx-auto bg-gray-50 min-h-screen pb-48">
+    <div className="max-w-2xl mx-auto bg-gray-50 min-h-screen pb-48 animate-slide-in-right">
 
       {/* --- ヘッダー --- */}
       <div className="bg-white px-4 py-3 shadow-sm sticky top-0 z-10 flex items-center">

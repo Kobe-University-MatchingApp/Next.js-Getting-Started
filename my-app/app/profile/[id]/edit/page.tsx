@@ -126,7 +126,7 @@ export default async function EditProfilePage({ params }: { params: Promise<{ id
     }
 
     return (
-        <div className="max-w-2xl mx-auto p-6 bg-white rounded-xl shadow-lg mt-10 mb-20">
+        <div className="max-w-2xl mx-auto p-6 bg-white rounded-xl shadow-lg mt-10 mb-20 animate-slide-in-right">
             <div className="text-center mb-8">
                 <h1 className="text-3xl font-bold text-gray-800">プロフィール編集</h1>
                 <p className="text-gray-500 mt-2">情報を更新して、より良いマッチングを目指しましょう</p>

@@ -125,11 +125,11 @@ export default function ProfileEditPage() {
     };
 
     if (loading) {
-        return <div className="p-10 text-center">読み込み中...</div>;
+        return <div className="p-10 text-center animate-slide-in-right">読み込み中...</div>;
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-20">
+        <div className="min-h-screen bg-gray-50 pb-20 animate-slide-in-right">
             {/* ヘッダー */}
             <div className="bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-10">
                 <Link href="/profile" className="text-gray-600">

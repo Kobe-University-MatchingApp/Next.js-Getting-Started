@@ -266,7 +266,7 @@ export default function CreateNewEventPage() {
     const isGuest = !currentUser;
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-24">
+        <div className="min-h-screen bg-gray-50 pb-24 animate-slide-in-right">
             {/* 成功メッセージ */}
             {successMessage && (
                 <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 bg-green-500 text-white rounded-lg shadow-lg animate-pulse">

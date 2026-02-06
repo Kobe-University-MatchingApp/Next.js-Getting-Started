@@ -239,7 +239,7 @@ export default function EditEventPage() {
 
     if (loading || authLoading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center animate-slide-in-right">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
             </div>
         );
@@ -247,7 +247,7 @@ export default function EditEventPage() {
 
     if (notFound) {
         return (
-            <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+            <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 animate-slide-in-right">
                 <div className="text-6xl mb-4">😢</div>
                 <h2 className="text-xl font-bold text-gray-800 mb-2">イベントが見つかりません</h2>
                 <p className="text-sm text-gray-600 mb-6">削除されたか、URLが間違っています</p>
@@ -262,7 +262,7 @@ export default function EditEventPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-24">
+        <div className="min-h-screen bg-gray-50 pb-24 animate-slide-in-right">
             {/* 成功メッセージ */}
             {successMessage && (
                 <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 bg-green-500 text-white rounded-lg shadow-lg animate-pulse">

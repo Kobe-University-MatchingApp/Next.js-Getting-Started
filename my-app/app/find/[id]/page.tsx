@@ -19,7 +19,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   // エラーハンドリング
   if (error || !data) {
     logger.error('Supabaseからのデータ取得エラー:', error);
-    return <div className="p-8 text-center">イベントが見つかりません</div>;
+    return <div className="p-8 text-center animate-slide-in-right">イベントが見つかりません</div>;
   }
 
   // データを変換
@@ -35,7 +35,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   const participants = await getEventParticipantsWithProfile(id);
 
   return (
-    <div className="max-w-2xl mx-auto bg-white min-h-screen pb-48 shadow-xl">
+    <div className="max-w-2xl mx-auto bg-white min-h-screen pb-48 shadow-xl animate-slide-in-right">
 
       {/* --- ヘッダー画像エリア --- */}
       <div className="relative h-64 w-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center overflow-hidden">
