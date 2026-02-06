@@ -19,7 +19,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     let profile = await getProfileByShortId(id);
     if (!profile && isUuid) {
         profile = await getProfileById(id);
-        
+
         // UUIDでアクセスしており、かつそのユーザーにショートIDがある場合は、
         // URLを綺麗なショートID版に正規化するためリダイレクトする
         if (profile?.shortId) {
@@ -45,7 +45,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     };
 
     return (
-        <div className="py-3 space-y-3 min-h-screen pb-20">
+        <div className="py-3 space-y-3 min-h-screen pb-20 animate-slide-in-right">
             {/* ヘッダー */}
             <div className="bg-white border-b border-gray-200 p-4 mx-0 flex justify-between items-center">
                 <h1 className="text-xl font-bold text-gray-900">プロフィール</h1>

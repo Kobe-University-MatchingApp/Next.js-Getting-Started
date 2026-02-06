@@ -1,4 +1,5 @@
 import { Event } from '@/types/event';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * JSON文字列を型安全にパースするヘルパー関数
@@ -28,7 +29,7 @@ function parseJsonField<T>(value: any, defaultValue?: T): T | undefined {
             }
             return parsed as T;
         } catch (e) {
-            console.error('JSON parse error:', e);
+            logger.error('JSON parse error:', e);
             return defaultValue;
         }
     }

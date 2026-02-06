@@ -1,33 +1,20 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { EventFormData } from '@/types/event';
-import CreateFormModal from './_components/CreateFormModal';
 import HistoryModal from './_components/HistoryModal';
 import { createClient } from '@/utils/supabase/client';
+import { logger } from '@/lib/utils/logger';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const supabase = createClient();
-
-const emptyForm: EventFormData = {
-    title: '',
-    description: '',
-    category: '言語交換',
-    date: '',
-    dayOfWeek: 'mon',
-    period: 1,
-    location: '',
-    minParticipants: 2,
-    maxParticipants: 10,
-    fee: 0,
-    languages: [],
-    tags: [],
-    inoutdoor: 'in',
-};
 
 // ローカルストレージキー
 const DRAFT_KEY = 'event_draft';
 
 export default function CreateEventPage() {
+    const router = useRouter();
+
     // ユーザー認証状態 - UUID, shortId, name を取得
     const [currentUser, setCurrentUser] = useState<{
         id: string;
@@ -36,20 +23,8 @@ export default function CreateEventPage() {
     } | null>(null);
     const [authLoading, setAuthLoading] = useState(true);
 
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-    const [formData, setFormData] = useState<EventFormData>(emptyForm);
-    const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
-    const [tagInput, setTagInput] = useState('');
-
-    const [images, setImages] = useState<string[]>([]);
-
-    const [time, setTime] = useState('');
-
-    const [isEditMode, setIsEditMode] = useState(false);
-    const [editingId, setEditingId] = useState<string | null>(null);
 
     // History state
     const [historyLoading, setHistoryLoading] = useState(false);
@@ -58,16 +33,6 @@ export default function CreateEventPage() {
 
     // 下書き状態
     const [hasDraft, setHasDraft] = useState(false);
-
-    // ゲスト用臨時ユーザー名
-    const [guestName, setGuestName] = useState('');
-
-    // ゲスト確認ポップアップ
-    const [showGuestConfirm, setShowGuestConfirm] = useState(false);
-    const [pendingSubmitEvent, setPendingSubmitEvent] = useState<React.FormEvent | null>(null);
-
-    // 成功メッセージ
-    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     // ユーザー認証とprofile情報取得
     useEffect(() => {
@@ -92,7 +57,7 @@ export default function CreateEventPage() {
                     setCurrentUser(null);
                 }
             } catch (err) {
-                console.error('Auth error:', err);
+                logger.error('Auth error:', err);
                 setCurrentUser(null);
             } finally {
                 setAuthLoading(false);
@@ -108,86 +73,6 @@ export default function CreateEventPage() {
             setHasDraft(!!draft);
         }
     }, []);
-
-    const handleInputChange = (
-        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-    ) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]:
-                name === 'maxParticipants' ||
-                    name === 'minParticipants' ||
-                    name === 'fee' ||
-                    name === 'period'
-                    ? Number(value)
-                    : value,
-        }));
-    };
-
-    const setInOutDoor = (value: 'in' | 'out') => {
-        setFormData((prev) => ({ ...prev, inoutdoor: value }));
-    };
-
-    const toggleLanguage = (language: string) => {
-        setSelectedLanguages((prev) =>
-            prev.includes(language)
-                ? prev.filter((l) => l !== language)
-                : [...prev, language]
-        );
-    };
-
-    const addTag = () => {
-        const next = tagInput.trim();
-        if (next && !formData.tags?.includes(next)) {
-            setFormData((prev) => ({
-                ...prev,
-                tags: [...(prev.tags || []), next],
-            }));
-            setTagInput('');
-        }
-    };
-
-    const removeTag = (tag: string) => {
-        setFormData((prev) => ({
-            ...prev,
-            tags: prev.tags?.filter((t) => t !== tag),
-        }));
-    };
-
-    // 下書き保存
-    const saveDraft = () => {
-        const draft = {
-            formData,
-            selectedLanguages,
-            images,
-            time,
-            guestName,
-            savedAt: new Date().toISOString(),
-        };
-        localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-        setHasDraft(true);
-        setSuccessMessage('下書きを保存しました');
-        setTimeout(() => setSuccessMessage(null), 3000);
-    };
-
-    // 下書き読み込み
-    const loadDraft = () => {
-        const raw = localStorage.getItem(DRAFT_KEY);
-        if (raw) {
-            try {
-                const draft = JSON.parse(raw);
-                setFormData(draft.formData || emptyForm);
-                setSelectedLanguages(draft.selectedLanguages || []);
-                setImages(draft.images || []);
-                setTime(draft.time || '');
-                setGuestName(draft.guestName || '');
-                setIsCreateModalOpen(true);
-            } catch (e) {
-                console.error('Draft parse error:', e);
-            }
-        }
-    };
 
     // 下書き削除
     const clearDraft = () => {
@@ -214,16 +99,6 @@ export default function CreateEventPage() {
         return isHold && isOwn;
     };
 
-    const resetToCreateMode = () => {
-        setEditingId(null);
-        setIsEditMode(false);
-        setFormData(emptyForm);
-        setSelectedLanguages([]);
-        setImages([]);
-        setTagInput('');
-        setTime('');
-    };
-
     const fetchHistory = useCallback(async () => {
         setHistoryLoading(true);
         setHistoryError(null);
@@ -244,17 +119,13 @@ export default function CreateEventPage() {
 
             if (error) throw error;
             setHistoryEvents(data ?? []);
+
         } catch (err: any) {
             setHistoryError(err?.message ?? '履歴の取得に失敗しました');
         } finally {
             setHistoryLoading(false);
         }
     }, [currentUser]);
-
-    const openCreateNew = () => {
-        resetToCreateMode();
-        setIsCreateModalOpen(true);
-    };
 
     const openTemplateHistory = async () => {
         if (!currentUser) {
@@ -274,220 +145,39 @@ export default function CreateEventPage() {
         await fetchHistory();
     };
 
+    // テンプレートを選択したら新規作成ページへ遷移
     const onSelectTemplate = (row: any) => {
-        setFormData((prev) => ({
-            ...prev,
-            title: String(row?.title ?? ''),
-            description: String(row?.description ?? ''),
-            category: (row?.category ?? '言語交換') as any,
-            date: '',
-            dayOfWeek: String(row?.dayofweek ?? row?.dayOfWeek ?? prev.dayOfWeek ?? 'mon'),
-            period: Number(row?.period ?? prev.period ?? 1),
-            location: String(row?.location ?? ''),
-            minParticipants: Number(row?.minparticipants ?? row?.minParticipants ?? prev.minParticipants ?? 2),
-            maxParticipants: Number(row?.maxparticipants ?? row?.maxParticipants ?? prev.maxParticipants ?? 10),
-            fee: typeof row?.fee === 'number' ? row.fee : prev.fee,
-            tags: Array.isArray(row?.tags) ? row.tags : prev.tags,
-            inoutdoor:
-                row?.inoutdoor === 'out'
-                    ? 'out'
-                    : row?.inoutdoor === 'in'
-                        ? 'in'
-                        : prev.inoutdoor,
-        }));
-
-        setSelectedLanguages(Array.isArray(row?.languages) ? row.languages : []);
-        setImages(Array.isArray(row?.images) ? row.images : []);
-        setTime('');
-
-        setIsTemplateModalOpen(false);
-        setIsEditMode(false);
-        setEditingId(null);
-        setIsCreateModalOpen(true);
+        const templateData = {
+            formData: {
+                title: String(row?.title ?? ''),
+                description: String(row?.description ?? ''),
+                category: (row?.category ?? '言語交換') as any,
+                date: '',
+                dayOfWeek: String(row?.dayofweek ?? row?.dayOfWeek ?? 'mon'),
+                period: Number(row?.period ?? 1),
+                location: String(row?.location ?? ''),
+                minParticipants: Number(row?.minparticipants ?? row?.minParticipants ?? 2),
+                maxParticipants: Number(row?.maxparticipants ?? row?.maxParticipants ?? 10),
+                fee: typeof row?.fee === 'number' ? row.fee : 0,
+                tags: Array.isArray(row?.tags) ? row.tags : [],
+                inoutdoor: row?.inoutdoor === 'out' ? 'out' : row?.inoutdoor === 'in' ? 'in' : 'in',
+            },
+            languages: Array.isArray(row?.languages) ? row.languages : [],
+            images: Array.isArray(row?.images) ? row.images : [],
+            time: '',
+        };
+        const encoded = encodeURIComponent(JSON.stringify(templateData));
+        router.push(`/create/new?data=${encoded}`);
     };
 
+    // 編集を選択したら編集ページへ遷移
     const onSelectEdit = (row: any) => {
         if (!canEditEvent(row)) return;
-
-        setIsEditMode(true);
-        setEditingId(String(row?.id ?? ''));
-
-        setFormData((prev) => ({
-            ...prev,
-            title: String(row?.title ?? ''),
-            description: String(row?.description ?? ''),
-            category: (row?.category ?? '言語交換') as any,
-            date: String(row?.date ?? ''),
-            dayOfWeek: String(row?.dayofweek ?? row?.dayOfWeek ?? prev.dayOfWeek ?? 'mon'),
-            period: Number(row?.period ?? prev.period ?? 1),
-            location: String(row?.location ?? ''),
-            minParticipants: Number(row?.minparticipants ?? row?.minParticipants ?? prev.minParticipants ?? 2),
-            maxParticipants: Number(row?.maxparticipants ?? row?.maxParticipants ?? prev.maxParticipants ?? 10),
-            fee: typeof row?.fee === 'number' ? row.fee : prev.fee,
-            tags: Array.isArray(row?.tags) ? row.tags : prev.tags,
-            inoutdoor:
-                row?.inoutdoor === 'out'
-                    ? 'out'
-                    : row?.inoutdoor === 'in'
-                        ? 'in'
-                        : prev.inoutdoor,
-        }));
-
-        setSelectedLanguages(Array.isArray(row?.languages) ? row.languages : []);
-        setImages(Array.isArray(row?.images) ? row.images : []);
-        setTime(String(row?.time ?? row?.event_time ?? ''));
-
-        setIsEditModalOpen(false);
-        setIsCreateModalOpen(true);
-    };
-
-    // 実際の送信処理
-    const executeSubmit = async () => {
-        // ゲストの場合は臨時ID生成
-        const isGuest = !currentUser;
-        const organizerId = isGuest
-            ? `guest_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
-            : currentUser.id;  // UUID
-        const organizerName = isGuest
-            ? guestName.trim() || '匿名ゲスト'
-            : currentUser.name || '名前未設定';
-
-        const payload = {
-            id: `evt_${Date.now()}`,
-            title: formData.title,
-            description: formData.description,
-            category: formData.category,
-            date: formData.date,
-            dayofweek: formData.dayOfWeek,
-            period: formData.period,
-            location: formData.location,
-            minparticipants: formData.minParticipants ?? null,
-            maxparticipants: formData.maxParticipants,
-            currentparticipants: 0,
-            fee: formData.fee ?? 0,
-            languages: selectedLanguages,
-            organizer_id: organizerId,
-            organizer_name: organizerName,
-            organizer_avatar: null,
-            tags: formData.tags ?? [],
-            images,
-            inoutdoor: formData.inoutdoor ?? null,
-        };
-
-        if (!isEditMode) {
-            const { error } = await supabase.from('events').insert(payload as any);
-            if (error) {
-                alert(`保存に失敗しました: ${error.message}`);
-                return;
-            }
-            clearDraft();
-            setSuccessMessage('イベントが作成されました！');
-            setIsCreateModalOpen(false);
-            resetToCreateMode();
-            setTimeout(() => setSuccessMessage(null), 5000);
-            return;
-        }
-
-        if (!editingId) {
-            alert('編集対象が見つかりません');
-            return;
-        }
-
-        const { id: _drop, ...updatePayload } = payload as any;
-
-        const { error } = await supabase
-            .from('events')
-            .update(updatePayload)
-            .eq('id', editingId);
-
-        if (error) {
-            alert(`更新に失敗しました: ${error.message}`);
-            return;
-        }
-
-        setSuccessMessage('イベントを更新しました！');
-        setIsCreateModalOpen(false);
-        resetToCreateMode();
-        setTimeout(() => setSuccessMessage(null), 5000);
-    };
-
-    const onSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        // ゲストの場合は確認ポップアップを表示
-        if (!currentUser) {
-            setPendingSubmitEvent(e);
-            setShowGuestConfirm(true);
-            return;
-        }
-
-        await executeSubmit();
-    };
-
-    // ゲスト確認後の送信
-    const confirmGuestSubmit = async () => {
-        setShowGuestConfirm(false);
-        setPendingSubmitEvent(null);
-        await executeSubmit();
-    };
-
-    const cancelGuestSubmit = () => {
-        setShowGuestConfirm(false);
-        setPendingSubmitEvent(null);
+        router.push(`/create/edit/${row.id}`);
     };
 
     return (
         <div className="py-4 md:py-8">
-            {/* 成功メッセージ */}
-            {successMessage && (
-                <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 bg-green-500 text-white rounded-lg shadow-lg animate-pulse">
-                    {successMessage}
-                </div>
-            )}
-
-            {/* ゲスト確認ポップアップ */}
-            {showGuestConfirm && (
-                <div className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6">
-                        <div className="text-center mb-4">
-                            <span className="text-4xl">👤</span>
-                            <h3 className="text-lg font-bold text-gray-800 dark:text-white mt-2">
-                                ゲストとして投稿しますか？
-                            </h3>
-                        </div>
-                        <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg p-3 mb-4">
-                            <p className="text-sm text-amber-800 dark:text-amber-300">
-                                ⚠️ ゲスト投稿の場合：
-                            </p>
-                            <ul className="text-xs text-amber-700 dark:text-amber-400 mt-1 space-y-1">
-                                <li>• 後からイベントを編集できません</li>
-                                <li>• 履歴から再利用できません</li>
-                                <li>• 主催者として認証されません</li>
-                            </ul>
-                        </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                            表示される主催者名: <strong>{guestName.trim() || '匿名ゲスト'}</strong>
-                        </p>
-                        <div className="flex gap-3 mt-4">
-                            <button
-                                type="button"
-                                onClick={cancelGuestSubmit}
-                                className="flex-1 px-4 py-2.5 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg text-sm font-medium transition-colors"
-                            >
-                                キャンセル
-                            </button>
-                            <button
-                                type="button"
-                                onClick={confirmGuestSubmit}
-                                className="flex-1 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-bold transition-colors"
-                            >
-                                ゲストで投稿
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             <div className="max-w-4xl mx-auto px-4">
                 {/* ヘッダー */}
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 md:p-6 mb-4">
@@ -505,13 +195,12 @@ export default function CreateEventPage() {
                                 }
                             </p>
                         </div>
-                        <button
-                            type="button"
-                            onClick={openCreateNew}
-                            className="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition-all md:w-auto w-full"
+                        <Link
+                            href="/create/new"
+                            className="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition-all md:w-auto w-full text-center"
                         >
                             ✨ 新規作成
-                        </button>
+                        </Link>
                     </div>
                 </div>
 
@@ -558,13 +247,12 @@ export default function CreateEventPage() {
                                     保存された下書きがあります
                                 </p>
                                 <div className="flex gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={loadDraft}
-                                        className="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold transition-colors"
+                                    <Link
+                                        href="/create/new"
+                                        className="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold transition-colors text-center"
                                     >
                                         下書きを開く
-                                    </button>
+                                    </Link>
                                     <button
                                         type="button"
                                         onClick={clearDraft}
@@ -595,39 +283,6 @@ export default function CreateEventPage() {
                     </ul>
                 </div>
             </div>
-
-            <CreateFormModal
-                isOpen={isCreateModalOpen}
-                onClose={() => setIsCreateModalOpen(false)}
-                formData={formData}
-                onInputChange={handleInputChange}
-                setInOutDoor={setInOutDoor}
-                setFormData={setFormData}
-                selectedLanguages={selectedLanguages}
-                toggleLanguage={toggleLanguage}
-                tagInput={tagInput}
-                setTagInput={setTagInput}
-                addTag={addTag}
-                removeTag={removeTag}
-                images={images}
-                setImages={setImages}
-                time={time}
-                setTime={setTime}
-                onSubmit={onSubmit}
-                isEditMode={isEditMode}
-                resetToCreateMode={resetToCreateMode}
-                isTemplateModalOpen={isTemplateModalOpen}
-                isEditModalOpen={isEditModalOpen}
-                historyLoading={historyLoading}
-                historyError={historyError}
-                historyEvents={historyEvents}
-                editingId={editingId}
-                fetchHistory={fetchHistory}
-                saveDraft={saveDraft}
-                currentUser={currentUser}
-                guestName={guestName}
-                setGuestName={setGuestName}
-            />
 
             <HistoryModal
                 isOpen={isTemplateModalOpen}

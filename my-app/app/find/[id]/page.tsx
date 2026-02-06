@@ -6,6 +6,7 @@ import Link from 'next/link';
 import EventDetailClient from './_components/EventDetailClient';
 import { isEventCompleted } from '@/lib/utils/eventStatus';
 import { getEventParticipantsWithProfile } from '@/lib/eventParticipants';
+import { logger } from '@/lib/utils/logger';
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
 
@@ -17,8 +18,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
   // エラーハンドリング
   if (error || !data) {
-    console.error('Supabaseからのデータ取得エラー:', error);
-    return <div className="p-8 text-center">イベントが見つかりません</div>;
+    logger.error('Supabaseからのデータ取得エラー:', error);
+    return <div className="p-8 text-center animate-slide-in-right">イベントが見つかりません</div>;
   }
 
   // データを変換
@@ -34,7 +35,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
   const participants = await getEventParticipantsWithProfile(id);
 
   return (
-    <div className="max-w-2xl mx-auto bg-white min-h-screen pb-48 shadow-xl">
+    <div className="max-w-2xl mx-auto bg-white min-h-screen pb-48 shadow-xl animate-slide-in-right">
 
       {/* --- ヘッダー画像エリア --- */}
       <div className="relative h-64 w-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center overflow-hidden">
@@ -119,8 +120,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
               {participants.slice(0, 5).map((participant) => (
                 <div key={participant.id} className="w-10 h-10 rounded-full border-2 border-white bg-gray-200 overflow-hidden flex-shrink-0" title={participant.participantName}>
                   {participant.participantAvatar ? (
-                    <img 
-                      src={participant.participantAvatar} 
+                    <img
+                      src={participant.participantAvatar}
                       alt={participant.participantName}
                       className="w-full h-full object-cover"
                     />

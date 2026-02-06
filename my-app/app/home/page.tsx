@@ -10,6 +10,7 @@ import { getHomeEvents, getCurrentUserProfile } from '@/lib/home_recommend';
 import { Profile } from '@/types/profile';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { logger } from '@/lib/utils/logger';
 
 // フィルターの種類を定義
 type FilterType = 'all' | 'languages' | 'tags' | 'upcoming';
@@ -40,13 +41,11 @@ export default function HomePage() {
         if (!isMounted) return;
 
         if (!userProfile) {
-          console.error('ユーザープロフィールが見つかりません。ログインページにリダイレクトします。');
+          logger.error('ユーザープロフィールが見つかりません。ログインページにリダイレクトします。');
           setError('ログインが必要です');
           setTimeout(() => router.push('/login'), 1000);
           return;
         }
-
-        console.log('ユーザープロフィール:', userProfile);
 
         // ユーザー名と画像を設定
         setUserName(userProfile.name);
@@ -56,13 +55,12 @@ export default function HomePage() {
 
         // プロフィール情報に基づいてイベントを取得
         const eventsData = await getHomeEvents(userProfile);
-        console.log('取得したイベント:', eventsData);
 
         if (isMounted) {
           setEvents(eventsData);
         }
       } catch (error) {
-        console.error('Error fetching events:', error);
+        logger.error('Error fetching events:', error);
         if (isMounted) {
           setError('イベント取得に失敗しました');
         }

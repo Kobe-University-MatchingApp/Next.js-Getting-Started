@@ -5,6 +5,7 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabaseClient';
 import { Profile } from '@/types/profile';
 import { getProfileById } from '@/lib/profile';
+import { logger } from '@/lib/utils/logger';
 
 type UserContextType = {
     user: User | null;
@@ -24,7 +25,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         const initializeUser = async () => {
             try {
                 const { data: { session } } = await supabase.auth.getSession();
-                
+
                 if (session?.user) {
                     setUser(session.user);
                     // ユーザーIDに基づいてプロフィールを取得
@@ -35,7 +36,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                     setProfile(null);
                 }
             } catch (error) {
-                console.error('Error initializing user:', error);
+                logger.error('Error initializing user:', error);
             } finally {
                 setIsLoading(false);
             }
@@ -49,8 +50,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 setUser(session.user);
                 // プロフィールも再取得（必要に応じて）
                 if (!profile || profile.id !== session.user.id) {
-                     const userProfile = await getProfileById(session.user.id);
-                     setProfile(userProfile);
+                    const userProfile = await getProfileById(session.user.id);
+                    setProfile(userProfile);
                 }
             } else {
                 setUser(null);

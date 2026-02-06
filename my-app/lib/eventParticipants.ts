@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/client';
 import { EventParticipant, UserRegisteredEvent, ParticipantStatus } from '@/types/event';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * イベントに参加登録する
@@ -53,13 +54,13 @@ export async function registerForEvent(eventId: string): Promise<{ success: bool
             });
 
         if (insertError) {
-            console.error('参加登録エラー:', insertError);
+            logger.error('参加登録エラー:', insertError);
             return { success: false, error: '参加登録に失敗しました' };
         }
 
         return { success: true };
     } catch (error) {
-        console.error('参加登録エラー:', error);
+        logger.error('参加登録エラー:', error);
         return { success: false, error: '予期しないエラーが発生しました' };
     }
 }
@@ -88,13 +89,13 @@ export async function cancelEventRegistration(eventId: string): Promise<{ succes
             .in('status', ['registered', 'waitlist']); // 登録済み・ウェイティングリストのもののみキャンセル可能
 
         if (updateError) {
-            console.error('キャンセルエラー:', updateError);
+            logger.error('キャンセルエラー:', updateError);
             return { success: false, error: 'キャンセルに失敗しました' };
         }
 
         return { success: true };
     } catch (error) {
-        console.error('キャンセルエラー:', error);
+        logger.error('キャンセルエラー:', error);
         return { success: false, error: '予期しないエラーが発生しました' };
     }
 }
@@ -132,7 +133,7 @@ export async function getUserEventStatus(eventId: string): Promise<EventParticip
             notes: data.notes,
         };
     } catch (error) {
-        console.error('参加状態取得エラー:', error);
+        logger.error('参加状態取得エラー:', error);
         return null;
     }
 }
@@ -164,7 +165,7 @@ export async function getUserRegisteredEvents(): Promise<UserRegisteredEvent[]> 
             .order('registered_at', { ascending: false });
 
         if (error || !data) {
-            console.error('参加予定イベント取得エラー:', error);
+            logger.error('参加予定イベント取得エラー:', error);
             return [];
         }
 
@@ -213,7 +214,7 @@ export async function getUserRegisteredEvents(): Promise<UserRegisteredEvent[]> 
                 };
             });
     } catch (error) {
-        console.error('参加予定イベント取得エラー:', error);
+        logger.error('参加予定イベント取得エラー:', error);
         return [];
     }
 }
@@ -245,7 +246,7 @@ export async function getUserCompletedEvents(): Promise<UserRegisteredEvent[]> {
             .order('registered_at', { ascending: false });
 
         if (error || !data) {
-            console.error('参加済みイベント取得エラー:', error);
+            logger.error('参加済みイベント取得エラー:', error);
             return [];
         }
 
@@ -294,7 +295,7 @@ export async function getUserCompletedEvents(): Promise<UserRegisteredEvent[]> {
                 };
             });
     } catch (error) {
-        console.error('参加済みイベント取得エラー:', error);
+        logger.error('参加済みイベント取得エラー:', error);
         return [];
     }
 }
@@ -314,13 +315,13 @@ export async function getEventParticipants(eventId: string) {
             .order('registered_at', { ascending: true });
 
         if (error) {
-            console.error('参加者リスト取得エラー:', error);
+            logger.error('参加者リスト取得エラー:', error);
             return [];
         }
 
         return data || [];
     } catch (error) {
-        console.error('参加者リスト取得エラー:', error);
+        logger.error('参加者リスト取得エラー:', error);
         return [];
     }
 }
@@ -342,7 +343,7 @@ export async function getEventParticipantsWithProfile(eventId: string) {
             .order('registered_at', { ascending: true });
 
         if (error) {
-            console.error('参加者情報取得エラー:', error);
+            logger.error('参加者情報取得エラー:', error);
             return [];
         }
 
@@ -350,7 +351,7 @@ export async function getEventParticipantsWithProfile(eventId: string) {
 
         // ユーザーIDのリストを取得してプロフィール情報を一括取得
         const userIds = data.map(p => p.user_id).filter(Boolean);
-        
+
         if (userIds.length === 0) return [];
 
         // プロフィール情報を一括取得
@@ -360,7 +361,7 @@ export async function getEventParticipantsWithProfile(eventId: string) {
             .in('id', userIds);
 
         if (profilesError) {
-            console.error('プロフィール情報一括取得エラー:', profilesError);
+            logger.error('プロフィール情報一括取得エラー:', profilesError);
         }
 
         // プロフィール情報をMapにして高速検索
@@ -371,7 +372,7 @@ export async function getEventParticipantsWithProfile(eventId: string) {
         // 参加者情報にプロフィール情報をマージ
         const participantsWithProfiles = data.map(participant => {
             const profile = profilesMap.get(participant.user_id);
-            
+
             return {
                 id: participant.id,
                 eventId: participant.event_id,
@@ -387,7 +388,7 @@ export async function getEventParticipantsWithProfile(eventId: string) {
 
         return participantsWithProfiles;
     } catch (error) {
-        console.error('参加者詳細情報取得エラー:', error);
+        logger.error('参加者詳細情報取得エラー:', error);
         return [];
     }
 }
