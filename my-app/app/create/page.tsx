@@ -245,10 +245,7 @@ export default function CreateEventPage() {
 
             if (error) throw error;
             setHistoryEvents(data ?? []);
-            setLastDebug({
-                odName: currentUser?.name,
-                rows: (data ?? []).length
-            });
+
         } catch (err: any) {
             setHistoryError(err?.message ?? '履歴の取得に失敗しました');
         } finally {
