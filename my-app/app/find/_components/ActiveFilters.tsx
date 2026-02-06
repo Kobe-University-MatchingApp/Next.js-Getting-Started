@@ -87,12 +87,18 @@ export default function ActiveFilters({
             )}
 
             {/* 時間フィルター */}
-            {filters.time && (
+            {(filters.timeFrom || filters.timeTo) && (
                 <button
-                    onClick={() => clearFilter('time')}
+                    onClick={() => {
+                        setFilters({ ...filters, timeFrom: '', timeTo: '' });
+                    }}
                     className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-sm border border-gray-200"
                 >
-                    {filters.time}
+                    {filters.timeFrom && filters.timeTo
+                        ? `${filters.timeFrom}〜${filters.timeTo}`
+                        : filters.timeFrom
+                            ? `${filters.timeFrom}以降`
+                            : `${filters.timeTo}以前`}
                     <span className="text-gray-400">×</span>
                 </button>
             )}

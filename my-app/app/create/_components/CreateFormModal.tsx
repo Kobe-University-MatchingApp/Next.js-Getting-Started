@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { EventCategory, EventFormData } from '@/types/event';
 import { EVENT_CATEGORIES, AVAILABLE_LANGUAGES } from '@/lib/constants';
+import { useModal } from '@/app/_contexts/ModalContext';
 
 const categories: EventCategory[] = EVENT_CATEGORIES;
 const availableLanguages = AVAILABLE_LANGUAGES;
@@ -68,9 +69,6 @@ interface CreateFormModalProps {
     onSubmit: (e: React.FormEvent) => void;
     isEditMode: boolean;
     resetToCreateMode?: () => void;
-    debugOpen: boolean;
-    setDebugOpen: React.Dispatch<React.SetStateAction<boolean>>;
-    lastDebug: any;
     isTemplateModalOpen: boolean;
     isEditModalOpen: boolean;
     historyLoading: boolean;
@@ -104,9 +102,6 @@ export default function CreateFormModal({
     onSubmit,
     isEditMode,
     resetToCreateMode,
-    debugOpen,
-    setDebugOpen,
-    lastDebug,
     isTemplateModalOpen,
     isEditModalOpen,
     historyLoading,
@@ -119,8 +114,23 @@ export default function CreateFormModal({
     guestName = '',
     setGuestName,
 }: CreateFormModalProps) {
+    // モーダルコンテキストを使用してボトムナビを制御
+    const { setIsModalOpen } = useModal();
+
     // 画像入力のローカル状態
     const [imageInput, setImageInput] = useState('');
+
+    // モーダルの開閉に応じてボトムナビを制御し、背後のスクロールを防止
+    useEffect(() => {
+        if (isOpen) {
+            setIsModalOpen(true);
+            document.body.style.overflow = 'hidden';
+            return () => {
+                setIsModalOpen(false);
+                document.body.style.overflow = 'unset';
+            };
+        }
+    }, [isOpen, setIsModalOpen]);
 
     const addImage = () => {
         const url = imageInput.trim();
@@ -139,36 +149,26 @@ export default function CreateFormModal({
     const isGuest = !currentUser;
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center md:justify-center">
+        <div
+            className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center md:justify-center"
+            onClick={(e) => {
+                // 背景をクリックしても閉じないようにする
+                if (e.target === e.currentTarget) {
+                    e.stopPropagation();
+                }
+            }}
+        >
             <div className="bg-white dark:bg-gray-900 w-full md:w-[90%] md:max-w-3xl md:rounded-2xl rounded-t-2xl max-h-[95vh] md:max-h-[90vh] shadow-2xl flex flex-col">
                 {/* ヘッダー */}
                 <div className="flex-shrink-0 bg-white dark:bg-gray-900 rounded-t-2xl border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between">
+                    <h1 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-1.5">
+                        {isEditMode ? (
+                            <><EditIcon /> イベント編集</>
+                        ) : (
+                            <><SparklesIcon /> イベント作成</>
+                        )}
+                    </h1>
                     <div className="flex items-center gap-2">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                        >
-                            <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                        <h1 className="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-1.5">
-                            {isEditMode ? (
-                                <><EditIcon /> イベント編集</>
-                            ) : (
-                                <><SparklesIcon /> イベント作成</>
-                            )}
-                        </h1>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setDebugOpen((v) => !v)}
-                            className="px-2 py-1 bg-gray-600 text-white rounded text-[10px] font-medium"
-                        >
-                            Debug
-                        </button>
                         {isEditMode && resetToCreateMode && (
                             <button
                                 type="button"
@@ -178,39 +178,20 @@ export default function CreateFormModal({
                                 キャンセル
                             </button>
                         )}
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                        >
+                            <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
 
                 {/* スクロール可能なコンテンツエリア */}
                 <div className="flex-1 overflow-y-auto">
-                    {/* デバッグパネル */}
-                    {debugOpen && (
-                        <div className="bg-gray-900 text-green-400 p-3 mx-4 mt-4 rounded-lg text-[10px] overflow-x-auto font-mono">
-                            <div className="flex items-center justify-between mb-2">
-                                <p className="font-bold text-green-300">🔧 Debug Panel</p>
-                                <button
-                                    type="button"
-                                    className="px-2 py-1 bg-green-700 text-white rounded text-[10px]"
-                                    onClick={fetchHistory}
-                                >
-                                    fetchHistory()
-                                </button>
-                            </div>
-                            <pre className="whitespace-pre-wrap break-words">{JSON.stringify({
-                                currentUser: currentUser ? { id: currentUser.id.slice(0, 8) + '...', shortId: currentUser.shortId, name: currentUser.name } : null,
-                                guestName,
-                                isTemplateModalOpen,
-                                isEditModalOpen,
-                                historyLoading,
-                                historyError,
-                                historyCount: historyEvents.length,
-                                isEditMode,
-                                editingId,
-                                lastDebug,
-                            }, null, 2)}</pre>
-                        </div>
-                    )}
-
                     {/* ゲストモード警告 + 臨時ユーザー名入力 */}
                     {isGuest && (
                         <div className="mx-4 mt-4 p-4 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-xl">

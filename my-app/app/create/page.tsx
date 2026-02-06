@@ -67,10 +67,6 @@ export default function CreateEventPage() {
     const [showGuestConfirm, setShowGuestConfirm] = useState(false);
     const [pendingSubmitEvent, setPendingSubmitEvent] = useState<React.FormEvent | null>(null);
 
-    // debug panel
-    const [debugOpen, setDebugOpen] = useState(false);
-    const [lastDebug, setLastDebug] = useState<any>(null);
-
     // 成功メッセージ
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -625,9 +621,6 @@ export default function CreateEventPage() {
                 onSubmit={onSubmit}
                 isEditMode={isEditMode}
                 resetToCreateMode={resetToCreateMode}
-                debugOpen={debugOpen}
-                setDebugOpen={setDebugOpen}
-                lastDebug={lastDebug}
                 isTemplateModalOpen={isTemplateModalOpen}
                 isEditModalOpen={isEditModalOpen}
                 historyLoading={historyLoading}

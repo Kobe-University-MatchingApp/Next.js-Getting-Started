@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { Event } from '@/types/event';
-import { DAYS_OF_WEEK, PERIODS } from '@/lib/constants';
 import { isEventCompleted } from '@/lib/utils/eventStatus';
 
 interface EventCardProps {
@@ -15,8 +14,8 @@ export default function EventCard({ event }: EventCardProps) {
     return (
         <Link href={`/find/${event.id}`}>
             <div className={`border-b border-gray-200 transition-colors p-4 ${isCompleted
-                    ? 'bg-gray-100 hover:bg-gray-150 opacity-75'
-                    : 'bg-white hover:bg-gray-50'
+                ? 'bg-gray-100 hover:bg-gray-150 opacity-75'
+                : 'bg-white hover:bg-gray-50'
                 }`}>
                 {/* タイトルとカテゴリー */}
                 <div className="flex items-start justify-between mb-3">
@@ -41,9 +40,7 @@ export default function EventCard({ event }: EventCardProps) {
                     }`}>
                     <div className="flex items-center gap-2">
                         <span className="font-medium text-gray-700">📅</span>
-                        <span>
-                            {event.date} · {DAYS_OF_WEEK.find(d => d.id === event.dayOfWeek)?.label}曜{PERIODS.find(p => p.id === event.period)?.label} ({PERIODS.find(p => p.id === event.period)?.time})
-                        </span>
+                        <span>{event.date}</span>
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">

@@ -2,15 +2,21 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { Event } from '@/types/event';
 import EventCard from '@/app/_components/EventCard';
-import FilterModal from './FilterModal';
 import ActiveFilters from './_components/ActiveFilters';
 import { useModal } from '@/app/_contexts/ModalContext';
 import { useEventFilters } from './_hooks/useEventFilters';
 import { useScrollVisibility } from '@/lib/hooks/useScrollVisibility';
+import { isEventCompleted } from '@/lib/utils/eventStatus';
 import Link from 'next/link';
+
+// FilterModal を動的インポート
+const FilterModal = dynamic(() => import('./FilterModal'), {
+    ssr: false,
+});
 
 // コンポーネントのプロパティ型定義
 interface FindEventsClientProps {
@@ -37,6 +43,22 @@ export default function FindEventsClient({ initialEvents }: FindEventsClientProp
 
     // スクロールに応じてフローティングボタンの表示制御
     const showFloatingButton = useScrollVisibility();
+
+    // ソート処理：未終了イベントを作成日時降順で先に表示し、次に終了済みを追加
+    const sortedEvents = useMemo(() => {
+        const notCompleted = filteredEvents.filter(event => !isEventCompleted(event.date));
+        const completed = filteredEvents.filter(event => isEventCompleted(event.date));
+
+        // IDを数値に変換して降順ソート（新しいものが先）
+        notCompleted.sort((a, b) => {
+            const idA = parseInt(a.id) || 0;
+            const idB = parseInt(b.id) || 0;
+            return idB - idA;
+        });
+
+        // 未終了イベントの後に終了済みイベントを追加
+        return [...notCompleted, ...completed];
+    }, [filteredEvents]);
 
     // モーダル開閉時にグローバル状態を更新
     useEffect(() => {
@@ -86,49 +108,52 @@ export default function FindEventsClient({ initialEvents }: FindEventsClientProp
             />
 
             {/* フローティング絞り込みボタン */}
-            <button
-                onClick={() => setIsFilterModalOpen(true)}
-                className={`fixed bottom-20 right-4 z-40 flex items-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-full shadow-lg text-sm font-medium hover:bg-blue-700 transition-all duration-300 ${showFloatingButton ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16 pointer-events-none'
-                    }`}
-            >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                </svg>
-                項目で絞り込み
-            </button>
+            {showFloatingButton && (
+                <button
+                    onClick={() => setIsFilterModalOpen(true)}
+                    className="fixed bottom-20 right-4 z-40 flex items-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-full shadow-lg text-sm font-medium hover:bg-blue-700 transition-all duration-300"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                    項目で絞り込み
+                </button>
+            )}
 
             {/* 絞り込みモーダル */}
-            <FilterModal
-                isOpen={isFilterModalOpen}
-                onClose={() => setIsFilterModalOpen(false)}
-                filters={filters}
-                setFilters={setFilters}
-                clearAllFilters={clearAllFilters}
-                resultCount={filteredEvents.length}
-            />
+            {isFilterModalOpen && (
+                <FilterModal
+                    isOpen={isFilterModalOpen}
+                    onClose={() => setIsFilterModalOpen(false)}
+                    filters={filters}
+                    setFilters={setFilters}
+                    clearAllFilters={clearAllFilters}
+                    resultCount={filteredEvents.length}
+                />
+            )}
 
             {/* イベント件数 */}
-            {(filteredEvents.length !== initialEvents.length || activeFilterCount > 0) && (
+            {(sortedEvents.length !== initialEvents.length || activeFilterCount > 0) && (
                 <div className="mx-2 mb-2">
                     <div className="flex items-center gap-2">
                         <p className="text-sm font-semibold text-gray-900">
-                            {filteredEvents.length}件のイベント
+                            {sortedEvents.length}件のイベント
                         </p>
                     </div>
                 </div>
             )}
 
             {/* イベント一覧 */}
-            {filteredEvents.length > 0 && (
+            {sortedEvents.length > 0 && (
                 <div className="space-y-0 mx-0 pb-20">
-                    {filteredEvents.map((event) => (
+                    {sortedEvents.map((event) => (
                         <EventCard key={event.id} event={event} />
                     ))}
                 </div>
             )}
 
             {/* 検索結果なし */}
-            {filteredEvents.length === 0 && (
+            {sortedEvents.length === 0 && (
                 <div className="text-center py-12 bg-white rounded-lg shadow-sm mx-2">
                     <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
