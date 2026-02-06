@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { Event } from '@/types/event';
 import { transformSupabaseEventRows } from '@/lib/transformers/eventTransformer';
 import FindEventsClient from './FindEventsClient';
+import { logger } from '@/lib/utils/logger';
 
 // サーバーコンポーネントとしてイベントデータを取得して、
 // クライアントコンポーネントに渡す
@@ -22,7 +23,7 @@ export default async function FindEventsPage() {
     }
 
     // エラーがあればログに出力し、空の配列を使用
-    console.error('Supabaseからのデータ取得エラー:', error);
+    logger.error('Supabaseからのデータ取得エラー:', error);
     events = [];
     return <FindEventsClient initialEvents={events} />;
 

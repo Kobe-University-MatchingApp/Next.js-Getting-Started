@@ -6,6 +6,7 @@ import Link from 'next/link';
 import EventDetailClient from './_components/EventDetailClient';
 import { isEventCompleted } from '@/lib/utils/eventStatus';
 import { getEventParticipantsWithProfile } from '@/lib/eventParticipants';
+import { logger } from '@/lib/utils/logger';
 
 export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
 
@@ -17,7 +18,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
 
   // エラーハンドリング
   if (error || !data) {
-    console.error('Supabaseからのデータ取得エラー:', error);
+    logger.error('Supabaseからのデータ取得エラー:', error);
     return <div className="p-8 text-center">イベントが見つかりません</div>;
   }
 
@@ -119,8 +120,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ id
               {participants.slice(0, 5).map((participant) => (
                 <div key={participant.id} className="w-10 h-10 rounded-full border-2 border-white bg-gray-200 overflow-hidden flex-shrink-0" title={participant.participantName}>
                   {participant.participantAvatar ? (
-                    <img 
-                      src={participant.participantAvatar} 
+                    <img
+                      src={participant.participantAvatar}
                       alt={participant.participantName}
                       className="w-full h-full object-cover"
                     />

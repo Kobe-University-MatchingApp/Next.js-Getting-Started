@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabaseClient';
 import { Profile } from '@/types/profile';
 import { generateShortId } from '@/lib/utils/id_generator';
+import { logger } from '@/lib/utils/logger';
 
 // DBデータをProfile型に変換するヘルパー関数
 function mapToProfile(data: any): Profile {
@@ -37,7 +38,7 @@ export async function getProfile(name: String): Promise<Profile | null> {
 
     // エラーハンドリング（レコードが見つからない場合はエラーではない）
     if (error) {
-        console.error('Error fetching profile:', error);
+        logger.error('Error fetching profile:', error);
         return null;
     }
 
@@ -57,7 +58,7 @@ export async function getProfileById(id: string): Promise<Profile | null> {
         .single();
 
     if (error) {
-        console.error('Error fetching profile by id:', error);
+        logger.error('Error fetching profile by id:', error);
         return null;
     }
 
@@ -82,7 +83,7 @@ export async function getProfileByShortId(shortId: string): Promise<Profile | nu
         .maybeSingle();
 
     if (error) {
-        console.error('Error fetching profile by short_id:', error);
+        logger.error('Error fetching profile by short_id:', error);
         return null;
     }
 

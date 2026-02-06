@@ -3,15 +3,16 @@ import { getProfileById, getProfileByShortId } from '@/lib/profile';
 import { notFound, redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import ProfileForm from '../../_components/ProfileForm';
+import { logger } from '@/lib/utils/logger';
 
 export default async function EditProfilePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    
+
     // UUID形式かどうかの簡易チェック
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
     const supabase = await createClient();
-     
+
     // プロフィールデータを取得
     let profile = await getProfileByShortId(id);
     if (!profile && isUuid) {
@@ -21,13 +22,13 @@ export default async function EditProfilePage({ params }: { params: Promise<{ id
     if (!profile) {
         return notFound();
     }
-    
+
     // 認証チェック
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
         redirect('/login');
     }
-    
+
     // 本人確認（自分のプロフィール以外は編集できない）
     // profile.id は常にUUIDなので、user.idと比較できる
     if (user.id !== profile.id) {
@@ -51,7 +52,7 @@ export default async function EditProfilePage({ params }: { params: Promise<{ id
         const interestsJson = formData.get('interestsJson') as string;
         const learningLanguagesJson = formData.get('learningLanguagesJson') as string;
         const exchangeGoalsJson = formData.get('exchangeGoalsJson') as string;
-        
+
         const interests = interestsJson ? JSON.parse(interestsJson) : [];
         const learningLanguagesRaw = learningLanguagesJson ? JSON.parse(learningLanguagesJson) : [];
         const exchangeGoals = exchangeGoalsJson ? JSON.parse(exchangeGoalsJson) : [];
@@ -63,23 +64,14 @@ export default async function EditProfilePage({ params }: { params: Promise<{ id
             return acc;
         }, {});
 
-        // --- デバッグ用ログ ---
-        console.log('--- Profile Update Debug ---');
-        console.log('ID:', id);
-        console.log('Interests (Raw):', interestsJson);
-        console.log('Interests (Parsed):', interests);
-        console.log('Learning Languages:', learningLanguages);
-        console.log('Language Level:', languageLevel);
-        // ----------------------
-
         if (!name || !ageStr || !location || !nativeLanguage) {
-            console.error('必須項目が不足しています');
+            logger.error('必須項目が不足しています');
             return;
         }
         const age = parseInt(ageStr);
 
         let imageUrls = profile?.images || [];
-        
+
         // 新しい画像がアップロードされた場合
         if (imageFile && imageFile.size > 0) {
             const fileName = `${user?.id}-${Date.now()}-${imageFile.name}`;
@@ -94,13 +86,13 @@ export default async function EditProfilePage({ params }: { params: Promise<{ id
                 // 既存の画像を置き換えるか、追加するか。今回は先頭に追加してメイン画像とする
                 imageUrls = [publicUrlData.publicUrl, ...imageUrls];
             } else {
-                console.error('Image upload error:', uploadError);
+                logger.error('Image upload error:', uploadError);
             }
         }
 
         // profile.id は常にUUIDなので、これを使用する（idはshortIdの可能性がある）
         const profileUuid = profile?.id;
-        
+
         const { data: updateData, error } = await supabase
             .from('profiles')
             .update({
@@ -120,18 +112,13 @@ export default async function EditProfilePage({ params }: { params: Promise<{ id
             .select(); // 更新されたデータを取得して確認
 
         if (error) {
-            console.error('Error updating profile (Supabase):', error);
+            logger.error('Error updating profile (Supabase):', error);
             return;
         }
-        
+
         // 更新件数チェック
         if (!updateData || updateData.length === 0) {
-            console.error('!!! Update Warning: No rows were updated. !!!');
-            console.error('Possible causes:');
-            console.error('1. ID mismatch (Profile not found)');
-            console.error('2. RLS (Row Level Security) policies are blocking the update');
-        } else {
-            console.log('Update Success:', updateData);
+            logger.error('Update Warning: No rows were updated');
         }
 
         revalidatePath(`/profile/${id}`);
@@ -144,7 +131,7 @@ export default async function EditProfilePage({ params }: { params: Promise<{ id
                 <h1 className="text-3xl font-bold text-gray-800">プロフィール編集</h1>
                 <p className="text-gray-500 mt-2">情報を更新して、より良いマッチングを目指しましょう</p>
             </div>
-            
+
             <ProfileForm initialData={profile} action={updateProfile} />
         </div>
     );

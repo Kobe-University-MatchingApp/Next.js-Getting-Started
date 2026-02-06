@@ -4,7 +4,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient'; // Supabaseクライアントをインポート
+import { supabase } from '@/lib/supabaseClient';
+import { logger } from '@/lib/utils/logger';
 
 export default function ProfileEditPage() {
     const router = useRouter();
@@ -50,7 +51,7 @@ export default function ProfileEditPage() {
                     .single();
 
                 if (error) {
-                    console.error('Error fetching profile:', error);
+                    logger.error('Error fetching profile:', error);
                     // まだプロフィールがない場合は、新規作成として扱うのでエラーにしない
                 }
 
@@ -64,7 +65,7 @@ export default function ProfileEditPage() {
                     });
                 }
             } catch (error) {
-                console.error('Error:', error);
+                logger.error('Error:', error);
             } finally {
                 setLoading(false);
             }
@@ -116,7 +117,7 @@ export default function ProfileEditPage() {
             router.push('/profile'); // プロフィール画面に戻る
 
         } catch (error) {
-            console.error('Error updating profile:', error);
+            logger.error('Error updating profile:', error);
             alert('更新に失敗しました。');
         } finally {
             setSaving(false);
@@ -132,18 +133,18 @@ export default function ProfileEditPage() {
             {/* ヘッダー */}
             <div className="bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-10">
                 <Link href="/profile" className="text-gray-600">
-                   ← キャンセル
+                    ← キャンセル
                 </Link>
                 <h1 className="text-lg font-bold text-gray-900">プロフィール編集</h1>
                 <div className="w-10"></div>
             </div>
 
             <form onSubmit={handleSubmit} className="p-4 space-y-6 max-w-lg mx-auto">
-                
+
                 {/* --- 画像選択セクション --- */}
                 <div className="space-y-4 bg-white p-4 rounded-lg shadow-sm">
                     <p className="text-sm font-bold text-gray-700">アイコン設定</p>
-                    
+
                     {/* 現在のアイコンプレビュー */}
                     <div className="flex justify-center">
                         <div className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden border-2 border-blue-100">
@@ -164,9 +165,8 @@ export default function ProfileEditPage() {
                                     key={index}
                                     type="button"
                                     onClick={() => selectImage(imgUrl)}
-                                    className={`w-12 h-12 rounded-full overflow-hidden border-2 transition-all ${
-                                        formData.image_url === imgUrl ? 'border-blue-500 scale-110' : 'border-transparent hover:border-gray-300'
-                                    }`}
+                                    className={`w-12 h-12 rounded-full overflow-hidden border-2 transition-all ${formData.image_url === imgUrl ? 'border-blue-500 scale-110' : 'border-transparent hover:border-gray-300'
+                                        }`}
                                 >
                                     <img src={imgUrl} alt={`Avatar ${index}`} className="w-full h-full object-cover" />
                                 </button>
