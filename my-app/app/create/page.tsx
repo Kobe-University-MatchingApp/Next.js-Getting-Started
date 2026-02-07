@@ -199,6 +199,34 @@ export default function CreateEventPage() {
         setHasDraft(false);
     };
 
+    // 時間からperiodを計算する関数
+    const getPeriodFromTime = (timeStr: string): number => {
+        if (!timeStr) return 0;
+        
+        // HH:MM形式から時間と分を取得
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        if (isNaN(hours) || isNaN(minutes)) return 0;
+        
+        const totalMinutes = hours * 60 + minutes;
+        
+        // 各時限の時間範囲（分単位）
+        // 1限: 8:50-10:20 (530-620)
+        // 2限: 10:40-12:10 (640-730)
+        // 3限: 13:20-14:50 (800-890)
+        // 4限: 15:10-16:40 (910-1000)
+        // 5限: 17:00-18:30 (1020-1110)
+        // 6限: 19:00-20:30 (1140-1230)
+        
+        if (totalMinutes >= 530 && totalMinutes <= 620) return 1;
+        if (totalMinutes >= 640 && totalMinutes <= 730) return 2;
+        if (totalMinutes >= 800 && totalMinutes <= 890) return 3;
+        if (totalMinutes >= 910 && totalMinutes <= 1000) return 4;
+        if (totalMinutes >= 1020 && totalMinutes <= 1110) return 5;
+        if (totalMinutes >= 1140 && totalMinutes <= 1230) return 6;
+        
+        return 0;
+    };
+
     const computeStatus = (dateText: string | null | undefined) => {
         if (!dateText) return 'hold' as const;
         const d = new Date(dateText);
@@ -366,8 +394,9 @@ export default function CreateEventPage() {
             description: formData.description,
             category: formData.category,
             date: formData.date,
+            time: time,  // 時間フィールドを追加
             dayofweek: formData.dayOfWeek,
-            period: formData.period,
+            period: getPeriodFromTime(time),  // periodを自動設定
             location: formData.location,
             minparticipants: formData.minParticipants ?? null,
             maxparticipants: formData.maxParticipants,
