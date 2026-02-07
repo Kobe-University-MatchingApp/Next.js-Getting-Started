@@ -6,10 +6,13 @@ export default function LoginPage() {
   const supabase = createClient()
 
   const handleLogin = async () => {
+    // 環境変数があればそれを使用、なければlocation.originを使用
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
+    
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${location.origin}/auth/callback`,
+        redirectTo: `${siteUrl}/auth/callback`,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
