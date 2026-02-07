@@ -73,6 +73,8 @@ export default function CreateNewEventPage() {
     const [guestName, setGuestName] = useState('');
     const [showGuestConfirm, setShowGuestConfirm] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [customCategory, setCustomCategory] = useState('');
+    const [useCustomCategory, setUseCustomCategory] = useState(false);
 
     // ユーザー認証
     useEffect(() => {
@@ -241,18 +243,24 @@ export default function CreateNewEventPage() {
             }
         }
 
+        // カテゴリを決定（カスタムカテゴリが有効で入力がある場合はそちらを使用）
+        const finalCategory = useCustomCategory && customCategory.trim() 
+            ? customCategory.trim() 
+            : formData.category;
+
+        const eventId = `evt_${Date.now()}`;
         const payload = {
-            id: `evt_${Date.now()}`,
+            id: eventId,
             title: formData.title,
             description: formData.description,
-            category: formData.category,
+            category: finalCategory,
             date: formData.date,
             dayofweek: formData.dayOfWeek,
             period: formData.period,
             location: formData.location,
             minparticipants: formData.minParticipants ?? null,
             maxparticipants: formData.maxParticipants,
-            currentparticipants: 0,
+            currentparticipants: isGuest ? 0 : 1, // ログインユーザーは作成者として参加
             fee: formData.fee ?? 0,
             languages: selectedLanguages,
             organizer_id: organizerId,
@@ -267,6 +275,22 @@ export default function CreateNewEventPage() {
         if (error) {
             alert(`保存に失敗しました: ${error.message}`);
             return;
+        }
+
+        // ログインユーザーの場合、作成者を参加者として登録
+        if (!isGuest && currentUser) {
+            const { error: participantError } = await supabase
+                .from('event_participants')
+                .insert({
+                    event_id: eventId,
+                    user_id: currentUser.id,
+                    status: 'registered',
+                });
+            
+            if (participantError) {
+                logger.error('参加者登録エラー:', participantError);
+                // イベント作成は成功しているので、エラーをログに残すだけ
+            }
         }
 
         localStorage.removeItem(DRAFT_KEY);
@@ -436,8 +460,11 @@ export default function CreateNewEventPage() {
                                         <button
                                             key={category}
                                             type="button"
-                                            onClick={() => setFormData((prev) => ({ ...prev, category }))}
-                                            className={`py-2 px-2 rounded-lg text-xs font-medium transition-all ${formData.category === category
+                                            onClick={() => {
+                                                setFormData((prev) => ({ ...prev, category }));
+                                                setUseCustomCategory(false);
+                                            }}
+                                            className={`py-2 px-2 rounded-lg text-xs font-medium transition-all ${!useCustomCategory && formData.category === category
                                                 ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md'
                                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                                 }`}
@@ -445,6 +472,31 @@ export default function CreateNewEventPage() {
                                             {category}
                                         </button>
                                     ))}
+                                </div>
+                                {/* カスタムカテゴリ入力 */}
+                                <div className="mt-3">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <input
+                                            type="checkbox"
+                                            id="useCustomCategory"
+                                            checked={useCustomCategory}
+                                            onChange={(e) => setUseCustomCategory(e.target.checked)}
+                                            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                        />
+                                        <label htmlFor="useCustomCategory" className="text-xs text-gray-600">
+                                            カスタムカテゴリを使用
+                                        </label>
+                                    </div>
+                                    {useCustomCategory && (
+                                        <input
+                                            type="text"
+                                            value={customCategory}
+                                            onChange={(e) => setCustomCategory(e.target.value)}
+                                            placeholder="例: ボードゲーム"
+                                            className="w-full px-3 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none text-sm bg-purple-50"
+                                            maxLength={20}
+                                        />
+                                    )}
                                 </div>
                             </div>
 
