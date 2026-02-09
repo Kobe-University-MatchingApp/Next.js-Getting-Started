@@ -142,11 +142,20 @@ export default function EditEventPage() {
                     setCustomCategory(data.category || '');
                 }
 
+                // data.dateから日付と時間を分離
+                const dateStr = data.date || '';
+                const dateOnly = dateStr.split(' ')[0] || dateStr.split('T')[0] || '';
+                const timeOnly = dateStr.includes(' ')
+                    ? dateStr.split(' ')[1]?.substring(0, 5)
+                    : dateStr.includes('T')
+                        ? dateStr.split('T')[1]?.substring(0, 5)
+                        : '';
+
                 setFormData({
                     title: data.title || '',
                     description: data.description || '',
                     category: isCustomCategory ? '言語交換' : (data.category || '言語交換'),
-                    date: data.date || '',
+                    date: dateOnly,
                     dayOfWeek: data.dayofweek || 'mon',
                     period: data.period || 1,
                     location: data.location || '',
@@ -159,6 +168,7 @@ export default function EditEventPage() {
                 });
                 setSelectedLanguages(data.languages || []);
                 setImages(data.images || []);
+                setTime(timeOnly);
 
                 // 参加者数を取得
                 const { count } = await supabase
@@ -244,13 +254,18 @@ export default function EditEventPage() {
             ? customCategory.trim()
             : formData.category;
 
+        // 日付と時間を結合
+        const combinedDateTime = time
+            ? `${formData.date} ${time}:00`
+            : formData.date;
+
         // 参加者がいる場合は時間関連のみ更新可能
         const payload = canFullEdit
             ? {
                 title: formData.title,
                 description: formData.description,
                 category: finalCategory,
-                date: formData.date,
+                date: combinedDateTime,
                 dayofweek: formData.dayOfWeek,
                 period: formData.period,
                 location: formData.location,
@@ -264,7 +279,7 @@ export default function EditEventPage() {
             }
             : {
                 // 参加者がいる場合は日時のみ編集可能
-                date: formData.date,
+                date: combinedDateTime,
                 dayofweek: formData.dayOfWeek,
                 period: formData.period,
             };

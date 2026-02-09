@@ -255,7 +255,7 @@ function CreateNewEventContent() {
                     .select('images')
                     .eq('id', currentUser.id)
                     .single();
-                
+
                 if (profile?.images && Array.isArray(profile.images) && profile.images.length > 0) {
                     organizerAvatar = profile.images[0];
                 }
@@ -266,9 +266,14 @@ function CreateNewEventContent() {
         }
 
         // カテゴリを決定（カスタムカテゴリが有効で入力がある場合はそちらを使用）
-        const finalCategory = useCustomCategory && customCategory.trim() 
-            ? customCategory.trim() 
+        const finalCategory = useCustomCategory && customCategory.trim()
+            ? customCategory.trim()
             : formData.category;
+
+        // 日付と時間を結合
+        const combinedDateTime = time
+            ? `${formData.date} ${time}:00`
+            : formData.date;
 
         const eventId = `evt_${Date.now()}`;
         const payload = {
@@ -276,7 +281,7 @@ function CreateNewEventContent() {
             title: formData.title,
             description: formData.description,
             category: finalCategory,
-            date: formData.date,
+            date: combinedDateTime,
             dayofweek: formData.dayOfWeek,
             period: formData.period,
             location: formData.location,
@@ -308,7 +313,7 @@ function CreateNewEventContent() {
                     user_id: currentUser.id,
                     status: 'registered',
                 });
-            
+
             if (participantError) {
                 logger.error('参加者登録エラー:', participantError);
                 // イベント作成は成功しているので、エラーをログに残すだけ
